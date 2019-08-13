@@ -66,29 +66,34 @@ def EXAMPLE_model_classification(time_dim, features_dim, user_parameters=['nient
     #always return model AND p!!!
     return model, p
 
-class EmoModel1layer(nn.Module):
-    def __init__(self):
-        super(EmoModel1layer, self).__init__()
-        self.inner_state = True
-        self.conv1 = nn.Conv2d(1, channels, kernel_size=kernel_size_1)
-        self.multiscale1 = MultiscaleConv2d(1, channels, kernel_size=kernel_size_1, scale_factors=stretch_factors,
-                                           output_type=output_type, stretch_penality_lambda= stretch_penality_lambda)
-        self.pool = nn.MaxPool2d(pool_size[0], pool_size[1])
-        self.hidden = nn.Linear(fc_insize, hidden_size)
-        self.out = nn.Linear(hidden_size, num_classes)
 
-    def forward(self, X):
-        training_state = self.training
-        if layer_type == 'conv':
-            X = F.relu(self.conv1(X))
-        if layer_type == 'multi':
-            X = F.relu(self.multiscale1(X, training_state))
-        X = X.reshape(X.size(0), -1)
-        X = F.relu(self.hidden(X))
-        X = self.out(X)
+def dummy_autoencoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'hidden_size': 2000
+    }
 
-        return X
+    p = parse_parameters(p, user_parameters)
 
+    #always return model AND p!!!
+    class model(nn.Module):
+        def __init__(self):
+            super(model, self).__init__()
+            self.hidden = nn.Linear(fc_insize, hidden_size)
+            self.out = nn.Linear(hidden_size, time_dim)
+
+        def forward(self, X):
+
+            X = self.out(X)
+
+            return X
+
+    return model, p
 
 if __name__ == '__main__':
     main()

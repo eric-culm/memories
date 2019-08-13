@@ -79,9 +79,7 @@ cfg.read(config)
 DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
 
 predictors_name = dataset + '_predictors.npy'
-target_name = dataset + '_target.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
-TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
 
 #default training parameters
 train_split = cfg.getfloat('training_defaults', 'train_split')
@@ -99,7 +97,7 @@ regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda
 optimizer = cfg.get('training_defaults', 'optimizer')
 percs = [train_split, validation_split, test_split]
 
-
+sys.exit(0)
 #path for saving best val loss and best val acc models
 BVL_model_path = SAVE_MODEL
 
@@ -158,8 +156,8 @@ def main():
     test_target_path = os.path.join(folds_dataset_path, test_target_path)
 
     #compute which actors put in train, val, test for current fold
-    dummy = np.load(TARGET_LOAD)
-    dummy = dummy.item()
+    predictors_merged = np.load(PREDICTORS_LOAD)
+    predictors_merged = predictors_merged.item()
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
     #TRAIN/VAL/TEST IN A BALANCED WAY
@@ -168,15 +166,14 @@ def main():
     train_list = fold_actors_list[int(num_fold)]['train']
     val_list = fold_actors_list[int(num_fold)]['val']
     test_list = fold_actors_list[int(num_fold)]['test']
-    del dummy
+    #del dummy
 
     #if tensors of current fold has not been computed:
     if not os.path.exists(test_target_path):
         #load merged dataset, compute and save current tensors
-        predictors_merged = np.load(PREDICTORS_LOAD)
-        target_merged = np.load(TARGET_LOAD)
-        predictors_merged = predictors_merged.item()
-        target_merged = target_merged.item()
+
+        #predictors_merged = np.load(PREDICTORS_LOAD)
+        #predictors_merged = predictors_merged.item()
 
         print ('\n building dataset for current fold')
         print ('\n training:')
@@ -216,20 +213,6 @@ def main():
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
 
-    #OVERFITTING TEST!!! REMOVE THESE LINES FOR PROPER TRAINING
-    '''
-    validation_predictors = training_predictors.copy()
-    validation_target = training_target.copy()
-    '''
-
-    #normalize labels between 0 and 1
-    '''
-    max_labels = [np.max(training_target), np.max(validation_target), np.max(test_target)]
-    max_val = float(np.max(max_labels))
-    training_target = np.divide(training_target, max_val)
-    validation_target = np.divide(validation_target, max_val)
-    test_target = np.divide(test_target, max_val)
-    '''
 
     #select a subdataset for testing (to be commented when normally trained)
     '''
