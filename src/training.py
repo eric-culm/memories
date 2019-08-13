@@ -55,7 +55,7 @@ except IndexError:
     print ('')
     print ('saving results at: ' + SAVE_RESULTS)
     print ('')
-    print ('saving model at: ' + SAVE_MODEL + '.hdf5')
+    print ('saving model at: ' + SAVE_MODEL)
     print ('')
 
 
@@ -97,7 +97,6 @@ regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda
 optimizer = cfg.get('training_defaults', 'optimizer')
 percs = [train_split, validation_split, test_split]
 
-sys.exit(0)
 #path for saving best val loss and best val acc models
 BVL_model_path = SAVE_MODEL
 
@@ -167,6 +166,8 @@ def main():
     val_list = fold_actors_list[int(num_fold)]['val']
     test_list = fold_actors_list[int(num_fold)]['test']
     #del dummy
+
+    sys.exit(0)
 
     #if tensors of current fold has not been computed:
     if not os.path.exists(test_target_path):
