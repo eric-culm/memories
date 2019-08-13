@@ -176,31 +176,22 @@ def main():
 
         print ('\n building dataset for current fold')
         print ('\n training:')
-        training_predictors, training_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, train_list)
+        training_predictors, training_target = uf.build_matrix_dataset(predictors_merged, train_list)
         print ('\n validation:')
 
-        validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, val_list)
+        validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged, val_list)
         print ('\n test:')
-        test_predictors, test_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, test_list)
+        test_predictors, test_target = uf.build_matrix_dataset(predictors_merge, test_list)
 
         np.save(train_pred_path, training_predictors)
-        np.save(train_target_path, training_target)
         np.save(val_pred_path, validation_predictors)
-        np.save(val_target_path, validation_target)
         np.save(test_pred_path, test_predictors)
-        np.save(test_target_path, test_target)
 
     else:
         #load pre-computed tensors
         training_predictors = np.load(train_pred_path)
-        training_target = np.load(train_target_path)
         validation_predictors = np.load(val_pred_path)
-        validation_target = np.load(val_target_path)
         test_predictors = np.load(test_pred_path)
-        test_target = np.load(test_target_path)
 
     #select a subdataset for testing (to be commented when normally trained)
     '''
