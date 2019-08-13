@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'daic'
+    dataset = 'digits'
     architecture = 'EXAMPLE_model_regression'
     parameters = ['niente = 0']
     task_type = 'regression'
@@ -58,27 +58,11 @@ except IndexError:
     print ('saving model at: ' + SAVE_MODEL + '.hdf5')
     print ('')
 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_ID)
 
 import loadconfig
 import configparser
 import json
-import keras
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Model
-from keras.layers import Input, Convolution2D, MaxPooling2D, Dense, Dropout, Activation, Flatten, Reshape
-from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import ELU
-from keras.callbacks import EarlyStopping, ModelCheckpoint, History
-from keras.utils import np_utils
-from keras.backend import int_shape
-from keras.models import load_model
-from keras import regularizers
-from keras import optimizers
-from keras import backend as K
-from sklearn.metrics import classification_report
-from sklearn.metrics import f1_score, precision_score, recall_score
+import torch
 import numpy as np
 import define_models as choose_model
 import utility_functions as uf
@@ -113,22 +97,11 @@ num_epochs = cfg.getint('training_defaults', 'num_epochs')
 learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
 regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
 optimizer = cfg.get('training_defaults', 'optimizer')
-
-
 percs = [train_split, validation_split, test_split]
 
-if task_type == 'classification':
-    loss_function = 'categorical_crossentropy'
-    metrics_list = ['accuracy']
-elif task_type == 'regression':
-    loss_function = 'MSE'
-    metrics_list = ['MAE']
-
-else:
-    raise ValueError('task_type can be only: multilabel_classification, binary_classification or regression')
 
 #path for saving best val loss and best val acc models
-BVL_model_path = SAVE_MODEL + '.hdf5'
+BVL_model_path = SAVE_MODEL
 
 #OVERWRITE DEFAULT PARAMETERS IF IN XVAL MODE
 try:
@@ -140,14 +113,9 @@ try:
 except IndexError:
     pass
 
+device = torch.device('cuda:' + str(gpu_ID))
 
 #define optimizer ADD HERE DIFFERENT OPTIMIZERS!!!!!!!
-if optimizer == 'adam':
-    opt = optimizers.Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
-elif optimizer == 'sgd':
-    opt.optimizers.SGD(lr=learning_rate)
-else:
-    raise ValueError('Bad optimizer chosen')
 
 #build dict with all UPDATED training parameters
 training_parameters = {'train_split': train_split,
@@ -276,20 +244,29 @@ def main():
 
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
-    if reshaping_type == 'cnn':
-        training_predictors = training_predictors.reshape(training_predictors.shape[0], training_predictors.shape[1],training_predictors.shape[2], 1)
-        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], validation_predictors.shape[1], validation_predictors.shape[2], 1)
-        test_predictors = test_predictors.reshape(test_predictors.shape[0], test_predictors.shape[1], test_predictors.shape[2], 1)
-        time_dim = training_predictors.shape[1]
-        features_dim = training_predictors.shape[2]
-    elif reshaping_type == 'rnn':
-        time_dim = training_predictors.shape[1]
-        features_dim = training_predictors.shape[2]
-    elif reshaping_type == 'none':
-        time_dim = training_predictors.shape[1]
-        features_dim = training_predictors.shape[2]
-    else:
-        raise ValueError('wrong reshaping type')
+    #reshape
+    training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
+    validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
+    test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
+
+    #convert to tensor
+    train_predictors = torch.tensor(training_predictors).float().to(device)
+    val_predictors = torch.tensor(validation_predictors).float().to(device)
+    test_predictors = torch.tensor(test_predictors).float().to(device)
+
+    #build dataset from tensors
+    #target i == predictors because autoencoding
+    tr_dataset = utils.TensorDataset(train_predictors,train_predictors)
+    val_dataset = utils.TensorDataset(val_predictors, val_predictors)
+    test_dataset = utils.TensorDataset(test_predictors, test_predictors)
+
+    #build data loader from dataset
+    tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=True)
+    val_data = utils.DataLoader(val_dataset, batch_size, shuffle=False)
+    test_data = utils.DataLoader(test_dataset, batch_size, shuffle=False)  #no batch here!!
+    #DNN input shape
+    time_dim = training_predictors.shape[1]
+    features_dim = training_predictors.shape[2]
 
 
     #load and compile model (model is in locals()['model'])
@@ -300,13 +277,6 @@ def main():
     print (locals()['model'].summary())
     #print (locals()['model_parameters'])
 
-    #callbacks
-    best_model = ModelCheckpoint(SAVE_MODEL, monitor=save_best_model_metric, save_best_only=True, mode=save_best_model_mode)  #save the best model
-    early_stopping_monitor = EarlyStopping(patience=patience)  #stops training when the model is not improving
-    if early_stopping:
-        callbacks_list = [early_stopping_monitor, best_model]
-    else:
-        callbacks_list = [best_model]
 
     #run training
     if not os.path.exists(results_path):
@@ -316,152 +286,199 @@ def main():
         os.makedirs(model_folder)
 
 
-    #if training with generator
-    if generator:  #if loading one batch at time to GPU
-        datagen = ImageDataGenerator()
+    #compute number of parameters
+    tot_params = sum([np.prod(p.size()) for p in model.parameters()])
+    print ('')
+    print ('Total paramters: ' + str(tot_params))
 
-        history = locals()['model'].fit_generator(datagen.flow(training_predictors, training_target, batch_size=batch_size,
-                shuffle=shuffle_training_data), validation_data=datagen.flow(validation_predictors, validation_target, batch_size=batch_size,
-                shuffle=False), validation_steps=len(validation_target)/batch_size, callbacks=callbacks_list,
-                steps_per_epoch=len(training_target)/batch_size, epochs=num_epochs, shuffle=shuffle_training_data)
+    #define optimizer and loss function
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate,
+                           weight_decay=regularization_lambda)
+    model.train()
+    criterion = nn.CrossEntropyLoss()
 
-    else:  #if loading all dataset to GPU
-        history = locals()['model'].fit(training_predictors,training_target, epochs=num_epochs,
-                                validation_data=(validation_predictors,validation_target), callbacks=callbacks_list,
-                                batch_size=batch_size, shuffle=shuffle_training_data)
+    total_step = len(tr_data)
+    loss_list = []
+    train_loss_hist = []
+    val_loss_hist = []
+    train_acc_hist = []
+    val_acc_hist = []
+    patience_vec = []
 
-    train_loss_hist = history.history['loss']
-    val_loss_hist = history.history['val_loss']
-    if task_type == 'classification':
-        train_acc_hist = history.history['acc']
-        val_acc_hist = history.history['val_acc']
+    #TRAINING LOOP
+    #iterate epochs
+    for epoch in range(num_epochs):
+        model.train()
+        print ('\n')
+        string = 'Epoch: ' + str(epoch+1) + ' '
+        #iterate batches
+        for i, (sounds, truth) in enumerate(tr_data):
+            optimizer.zero_grad()
+            outputs = model(sounds)
+            loss = criterion(outputs, truth)
+            loss.backward()
+            #print progress and update history, optimizer step
+            perc = int(i / len(tr_data) * 20)
+            inv_perc = int(20 - perc - 1)
+            loss_print_t = str(np.round(loss.item(), decimals=3))
+            string2 = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_print_t
+            print ('\r', string2, end='')
+            optimizer.step()
+            #end of batch loop
 
-    #compute results on the best saved model
-    K.clear_session()  #free GPU
-    best_model = load_model(SAVE_MODEL)  #load best saved model
+        #validation loss, training and val accuracy computation
+        #after current epoch training
+        model.eval()
+        train_batch_losses = []
+        val_batch_losses = []
+        with torch.no_grad():
+            #compute training accuracy and loss
+            for i, (sounds, truth) in enumerate(tr_data):
+                optimizer.zero_grad()
+                tr_outputs = model(sounds)
+                temp_tr_loss = criterion(tr_outputs, truth)
+                train_batch_losses.append(temp_tr_loss.item())
+            #compute validation accuracy and loss
+            for i, (sounds, truth) in enumerate(val_data):
+                optimizer.zero_grad()
+                val_outputs = model(sounds)
+                temp_val_loss = criterion(val_outputs, truth)
+                val_batch_losses.append(temp_val_loss.item())
+            #end of epoch loop
 
-    if generator:
-        #del training_generator  #delete shuffled generator
-        #build non shuffled generator
-        train_score = best_model.evaluate_generator(datagen.flow(training_predictors, training_target,
-                        batch_size=batch_size, shuffle=False), steps=len(training_target)/batch_size)
-        val_score = best_model.evaluate_generator(datagen.flow(validation_predictors, validation_target,
-                        batch_size=batch_size, shuffle=False), steps=len(validation_target)/batch_size)
-        test_score = best_model.evaluate_generator(datagen.flow(test_predictors, test_target,
-                        batch_size=batch_size, shuffle=False), steps=len(test_target)/batch_size)
+        #compute train and val mean accuracy and loss of current epoch
+        train_epoch_loss = np.mean(train_batch_losses)
+        train_epoch_acc = np.mean(train_batch_accs)
+        val_epoch_loss = np.mean(val_batch_losses)
+        val_epoch_acc = np.mean(val_batch_accs)
 
-        train_pred = best_model.predict_generator(datagen.flow(training_predictors, training_target,
-                        batch_size=batch_size, shuffle=False), steps=len(training_target)/batch_size)
-        val_pred = best_model.predict_generator(datagen.flow(validation_predictors, validation_target,
-                        batch_size=batch_size, shuffle=False), steps=len(validation_target)/batch_size)
-        test_pred = best_model.predict_generator(datagen.flow(test_predictors, test_target,
-                        batch_size=batch_size, shuffle=False), steps=len(test_target)/batch_size)
-    else:
-        train_score = best_model.evaluate(training_predictors, training_target)
-        val_score = best_model.evaluate(validation_predictors, validation_target)
-        test_score = best_model.evaluate(test_predictors, test_target)
-        train_pred = best_model.predict(training_predictors)
-        val_pred = best_model.predict(validation_predictors)
-        test_pred = best_model.predict(test_predictors)
+        #append values to histories
+        train_loss_hist.append(train_epoch_loss)
+        train_acc_hist.append(train_epoch_acc)
+        val_loss_hist.append(val_epoch_loss)
+        val_acc_hist.append(val_epoch_acc)
+
+
+        #print loss and accuracy of the current epoch
+        print ('\r', 'train_loss: ' + str(train_epoch_loss) + '| val_loss: ' + str(val_epoch_loss))
+
+        #save best model (metrics = loss)
+        if save_best_only == True:
+            if epoch == 0:
+                torch.save(model.state_dict(), BVL_model_path)
+                print ('saved_BVL')
+                saved_epoch = epoch + 1
+            else:
+                best_loss = min(val_loss_hist[:-1])  #not looking at curr_loss
+                best_acc = max(val_acc_hist[:-1])  #not looking at curr_loss
+                curr_loss = val_loss_hist[-1]
+                curr_acc = val_acc_hist[-1]
+                if curr_loss < best_loss:
+                    torch.save(model.state_dict(), BVL_model_path)
+                    print ('saved_BVL')  #SUBSTITUTE WITH SAVE MODEL FUNC
+                    saved_epoch = epoch + 1
+
+        utilstring = 'dataset: ' + str(dataset) + ', exp: ' + str(num_experiment) + ', run: ' + str(num_run) + ', fold: ' + str(num_fold)
+        print (utilstring)
+
+
+        #early stopping
+        if early_stopping and epoch >= patience:
+            prev_loss = val_hist[-2]
+            curr_loss = val_hist[-1]
+            if curr_loss < prev_loss:
+                patience_vec = []
+            else:
+                patience_vec.append(curr_loss)
+                if len(patience_vec) == patience:
+                    print ('\n')
+                    print ('Training stopped with patience = ' + str(patience) + ', saved at epoch = ' + str(saved_epoch))
+                    break
+
+        #AS LAST THING, AFTER OPTIMIZER.STEP AND EVENTUAL MODEL SAVING
+        #AVERAGE MULTISCALE CONV KERNELS!!!!!!!!!!!!!!!!!!!!!!!!!
+        if training_mode == 'train_and_eval' or training_mode == 'only_gradient' or training_mode == 'only_train':
+            model.multiscale1.update_kernels()
+            if network_type == '3_layer':
+                model.multiscale2.update_kernels()
+                model.multiscale3.update_kernels()
+        elif training_mode =='only_eval':
+            pass
+        else:
+            raise NameError ('Invalid training mode')
+            print ('Given mode: ' + str(training_mode))
+
+        #END OF EPOCH
+
+    #compute train, val and test accuracy LOADING the best saved model
+    #best validation loss
+    #init batch results
+
+
+    train_batch_losses = []
+    val_batch_losses = []
+    test_batch_losses = []
+
+
+    model.load_state_dict(torch.load(BVL_model_path), strict=False)
+    model.eval()
+    with torch.no_grad():
+        #train acc
+        for i, (sounds, truth) in enumerate(tr_data):
+            optimizer.zero_grad()
+            temp_pred = model(sounds)
+            temp_loss = criterion(temp_pred, truth)
+            train_batch_losses.append(temp_loss)
+        #val acc
+        for i, (sounds, truth) in enumerate(val_data):
+            optimizer.zero_grad()
+            temp_pred = model(sounds)
+            temp_loss = criterion(temp_pred, truth)
+            val_batch_losses.append(temp_loss)
+        #test acc
+        for i, (sounds, truth) in enumerate(test_data):
+            optimizer.zero_grad()
+            temp_pred = model(sounds)
+            temp_loss = criterion(temp_pred, truth)
+            test_batch_losses.append(temp_loss)
+
+
+    #compute rounded mean of losses
+    train_loss = torch.mean(torch.tensor(train_batch_losses)).cpu().numpy()
+    val_loss = torch.mean(torch.tensor(val_batch_losses)).cpu().numpy()
+    test_loss = torch.mean(torch.tensor(test_batch_losses)).cpu().numpy()
+
+
+    #print results COMPUTED ON THE BEST SAVED MODEL
+    print('')
+    print ('train loss: ' + str(train_loss))
+    print ('val loss: ' + str(val_loss))
+    print ('test loss: ' + str(test_loss))
+
+
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
+
+    #save results in temp dict file
+    temp_results = {}
+    #save accuracy
+    temp_results['train_acc_BVL'] = train_acc_BVL
+    temp_results['val_acc_BVL'] = val_acc_BVL
+    temp_results['test_acc_BVL'] = test_acc_BVL
+    temp_results['train_acc_BVA'] = train_acc_BVA
+    temp_results['val_acc_BVA'] = val_acc_BVA
+    temp_results['test_acc_BVA'] = test_acc_BVA
+
+
 
 
     #save results in temp dict file
     temp_results = {}
 
-    #save loss
-    temp_results['train_loss'] = train_score[0]
-    temp_results['val_loss'] = val_score[0]
-    temp_results['test_loss'] = test_score[0]
 
-    #if classification compute also f1, precision, recall
-    if task_type == 'classification':
-        #pred
-        train_pred = np.argmax(train_pred, axis=1)
-        val_pred = np.argmax(val_pred, axis=1)
-        test_pred = np.argmax(test_pred, axis=1)
-        #precision
-        train_precision = precision_score(train_pred, np.argmax(training_target, axis=1) , average="macro")
-        val_precision = precision_score(val_pred, np.argmax(validation_target, axis=1) , average="macro")
-        test_precision = precision_score(test_pred, np.argmax(test_target, axis=1) , average="macro")
-        #recall
-        train_recall = recall_score(train_pred, np.argmax(training_target, axis=1) , average="macro")
-        val_recall = recall_score(val_pred, np.argmax(validation_target, axis=1) , average="macro")
-        test_recall = recall_score(test_pred, np.argmax(test_target, axis=1) , average="macro")
-        #f1
-        train_f1 = f1_score(train_pred, np.argmax(training_target, axis=1) , average="macro")
-        val_f1 = f1_score(val_pred, np.argmax(validation_target, axis=1) , average="macro")
-        test_f1 = f1_score(test_pred, np.argmax(test_target, axis=1) , average="macro")
-
-        temp_results['train_acc'] = train_score[1]
-        temp_results['val_acc'] = val_score[1]
-        temp_results['test_acc'] = test_score[1]
-
-        temp_results['train_f1'] = train_f1
-        temp_results['val_f1'] = val_f1
-        temp_results['test_f1'] = test_f1
-
-        temp_results['train_precision'] = train_precision
-        temp_results['val_precision'] = val_precision
-        temp_results['test_precision'] = test_precision
-
-        temp_results['train_recall'] = train_recall
-        temp_results['val_recall'] = val_recall
-        temp_results['test_recall'] = test_recall
-    #save acc if classification append classification metrics
-    elif task_type == 'regression':
-        temp_results['train_MAE'] = train_score[1]
-        temp_results['val_MAE'] = val_score[1]
-        temp_results['test_MAE'] = test_score[1]
-
-        temp_results['train_RMSE'] = np.sqrt(train_score[0])
-        temp_results['val_RMSE'] = np.sqrt(val_score[0])
-        temp_results['test_RMSE'] = np.sqrt(test_score[0])
-
-    #save history
-    temp_results['train_loss_hist'] = train_loss_hist
-    temp_results['val_loss_hist'] = val_loss_hist
-    if task_type == 'classification':
-        temp_results['train_acc_hist'] = train_acc_hist
-        temp_results['val_acc_hist'] = val_acc_hist
-
-    #save actors present in current fold
-    temp_results['training_actors'] = train_list
-    temp_results['validation_actors'] = val_list
-    temp_results['test_actors'] = test_list
-
-    #save parameters dict
-    for i in training_parameters.keys():
-        if i in locals()['model_parameters'].keys():
-            del locals()['model_parameters'][i]
-
-    with open(parameters_path, 'w') as f:
-        f.write('%s\n' % ('TRAINING PARAMETERS:'))
-        for key, value in training_parameters.items():
-            f.write('%s:%s\n' % (key, value))
-        f.write('%s\n' % (''))
-        f.write('%s\n' % ('MODEL PARAMETERS:'))
-        for key, value in locals()['model_parameters'].items():
-            f.write('%s:%s\n' % (key, value))
 
     np.save(results_path, temp_results)
 
-    #print train results
-    print ('')
-    print ('\n train results:')
-    for i in temp_results.keys():
-        if 'hist' not in i:
-            if 'train' in i:
-                print (str(i) + ': ' + str(temp_results[i]))
-    print ('\n val results:')
-    for i in temp_results.keys():
-        if 'hist' not in i:
-            if 'val' in i:
-                print (str(i) + ': ' + str(temp_results[i]))
-    print ('\n test results:')
-    for i in temp_results.keys():
-        if 'hist' not in i:
-            if 'test' in i:
-                print (str(i) + ': ' + str(temp_results[i]))
 
 if __name__ == '__main__':
     main()
