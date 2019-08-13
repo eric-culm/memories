@@ -166,7 +166,6 @@ def main():
     test_list = fold_actors_list[int(num_fold)]['test']
     #del dummy
 
-    sys.exit(0)
 
     #if tensors of current fold has not been computed:
     if not os.path.exists(test_target_path):
@@ -203,6 +202,14 @@ def main():
         test_predictors = np.load(test_pred_path)
         test_target = np.load(test_target_path)
 
+    #select a subdataset for testing (to be commented when normally trained)
+    '''
+    bound = 30
+    training_predictors = training_predictors[:bound]
+    validation_predictors = validation_predictors[:bound]
+    test_predictors = test_predictors[:bound]
+    '''
+
     #normalize to 0 mean and unity std (according to training set mean and std)
     tr_mean = np.mean(training_predictors)
     tr_std = np.std(training_predictors)
@@ -213,17 +220,9 @@ def main():
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
 
+    sys.exit(0)
 
-    #select a subdataset for testing (to be commented when normally trained)
-    '''
-    bound = 30
-    training_predictors = training_predictors[:bound]
-    training_target = training_target[:bound]
-    validation_predictors = validation_predictors[:bound]
-    validation_target = validation_target[:bound]
-    test_predictors = test_predictors[:bound]
-    test_target = test_target[:bound]
-    '''
+
 
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
