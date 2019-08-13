@@ -98,6 +98,7 @@ percs = [train_split, validation_split, test_split]
 
 #path for saving best val loss and best val acc models
 BVL_model_path = SAVE_MODEL
+recompute_matrices = False
 
 #OVERWRITE DEFAULT PARAMETERS IF IN XVAL MODE
 try:
@@ -153,45 +154,72 @@ def main():
     test_pred_path = os.path.join(folds_dataset_path, test_pred_path)
     test_target_path = os.path.join(folds_dataset_path, test_target_path)
 
-    #compute which actors put in train, val, test for current fold
-    predictors_merged = np.load(PREDICTORS_LOAD)
-    predictors_merged = predictors_merged.item()
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
-    #TRAIN/VAL/TEST IN A BALANCED WAY
-    foldable_list = list(predictors_merged.keys())
-    fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
-    train_list = fold_actors_list[int(num_fold)]['train']
-    val_list = fold_actors_list[int(num_fold)]['val']
-    test_list = fold_actors_list[int(num_fold)]['test']
-    #del dummy
+
 
 
     #if tensors of current fold has not been computed:
-    if not os.path.exists(test_target_path):
-        #load merged dataset, compute and save current tensors
-
-        #predictors_merged = np.load(PREDICTORS_LOAD)
-        #predictors_merged = predictors_merged.item()
-
+    if recompute_matrices:
+        #compute which actors put in train, val, test for current fold
+        predictors_merged = np.load(PREDICTORS_LOAD)
+        predictors_merged = predictors_merged.item()
+        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
+        #TRAIN/VAL/TEST IN A BALANCED WAY
+        foldable_list = list(predictors_merged.keys())
+        fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+        train_list = fold_actors_list[int(num_fold)]['train']
+        val_list = fold_actors_list[int(num_fold)]['val']
+        test_list = fold_actors_list[int(num_fold)]['test']
+        #del dummy
         print ('\n building dataset for current fold')
         print ('\n training:')
-        training_predictors, training_target = uf.build_matrix_dataset(predictors_merged, train_list)
+        training_predictors = uf.build_matrix_dataset(predictors_merged, train_list)
         print ('\n validation:')
-
-        validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged, val_list)
+        validation_predictors = uf.build_matrix_dataset(predictors_merged, val_list)
         print ('\n test:')
-        test_predictors, test_target = uf.build_matrix_dataset(predictors_merge, test_list)
+        test_predictors = uf.build_matrix_dataset(predictors_merge, test_list)
 
         np.save(train_pred_path, training_predictors)
         np.save(val_pred_path, validation_predictors)
         np.save(test_pred_path, test_predictors)
 
     else:
-        #load pre-computed tensors
-        training_predictors = np.load(train_pred_path)
-        validation_predictors = np.load(val_pred_path)
-        test_predictors = np.load(test_pred_path)
+
+        if not os.path.exists(test_target_path):
+            #load merged dataset, compute and save current tensors
+
+            #predictors_merged = np.load(PREDICTORS_LOAD)
+            #predictors_merged = predictors_merged.item()
+            #compute which actors put in train, val, test for current fold
+            predictors_merged = np.load(PREDICTORS_LOAD)
+            predictors_merged = predictors_merged.item()
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
+            #TRAIN/VAL/TEST IN A BALANCED WAY
+            foldable_list = list(predictors_merged.keys())
+            fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+            train_list = fold_actors_list[int(num_fold)]['train']
+            val_list = fold_actors_list[int(num_fold)]['val']
+            test_list = fold_actors_list[int(num_fold)]['test']
+            #del dummy
+
+            print ('\n building dataset for current fold')
+            print ('\n training:')
+            training_predictors, training_target = uf.build_matrix_dataset(predictors_merged, train_list)
+            print ('\n validation:')
+            validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged, val_list)
+            print ('\n test:')
+            test_predictors, test_target = uf.build_matrix_dataset(predictors_merge, test_list)
+
+            np.save(train_pred_path, training_predictors)
+            np.save(val_pred_path, validation_predictors)
+            np.save(test_pred_path, test_predictors)
+
+        else:
+            #load pre-computed tensors
+            training_predictors = np.load(train_pred_path)
+            validation_predictors = np.load(val_pred_path)
+            test_predictors = np.load(test_pred_path)
 
     #select a subdataset for testing (to be commented when normally trained)
     '''
