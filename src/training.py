@@ -35,10 +35,9 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'digits'
-    architecture = 'EXAMPLE_model_regression'
+    dataset = 'sc09'
+    architecture = 'dummy_autoencoder'
     parameters = ['niente = 0']
-    task_type = 'regression'
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
     parameters_path = results_path + '/parameters'
