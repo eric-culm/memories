@@ -205,11 +205,11 @@ def main():
 
             print ('\n building dataset for current fold')
             print ('\n training:')
-            training_predictors, training_target = uf.build_matrix_dataset(predictors_merged, train_list)
+            training_predictors = uf.build_matrix_dataset(predictors_merged, train_list)
             print ('\n validation:')
-            validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged, val_list)
+            validation_predictors = uf.build_matrix_dataset(predictors_merged, val_list)
             print ('\n test:')
-            test_predictors, test_target = uf.build_matrix_dataset(predictors_merge, test_list)
+            test_predictors = uf.build_matrix_dataset(predictors_merge, test_list)
 
             np.save(train_pred_path, training_predictors)
             np.save(val_pred_path, validation_predictors)
