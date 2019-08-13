@@ -209,7 +209,7 @@ def main():
             print ('\n validation:')
             validation_predictors = uf.build_matrix_dataset(predictors_merged, val_list)
             print ('\n test:')
-            test_predictors = uf.build_matrix_dataset(predictors_merge, test_list)
+            test_predictors = uf.build_matrix_dataset(predictors_merged, test_list)
 
             np.save(train_pred_path, training_predictors)
             np.save(val_pred_path, validation_predictors)
