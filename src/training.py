@@ -159,7 +159,7 @@ def main():
     #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
     #TRAIN/VAL/TEST IN A BALANCED WAY
-    foldable_list = list(dummy.keys())
+    foldable_list = list(predictors_merged.keys())
     fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
     train_list = fold_actors_list[int(num_fold)]['train']
     val_list = fold_actors_list[int(num_fold)]['val']
