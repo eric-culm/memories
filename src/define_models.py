@@ -137,7 +137,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.latent_dim = latent_dim
             self.post_proc_filt_len = post_proc_filt_len
             self.verbose = verbose
-            self.fc1 = nn.DataParallel(nn.Linear(latent_dim, 256 * model_size))
+            self.fc1 = nn.Linear(latent_dim, 256 * model_size)
             self.tconv1 = None
             self.tconv2 = None
             self.tconv3 = None
@@ -151,36 +151,21 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.upsample = upsample
 
             if self.upsample:
-                self.upSampConv1 = nn.DataParallel(
-                    UpsampleConvLayer(16 * model_size, 8 * model_size, 25, stride=1, upsample=4))
-                self.upSampConv2 = nn.DataParallel(
-                    UpsampleConvLayer(8 * model_size, 4 * model_size, 25, stride=1, upsample=4))
-                self.upSampConv3 = nn.DataParallel(
-                    UpsampleConvLayer(4 * model_size, 2 * model_size, 25, stride=1, upsample=4))
-                self.upSampConv4 = nn.DataParallel(
-                    UpsampleConvLayer(2 * model_size, model_size, 25, stride=1, upsample=4))
-                self.upSampConv5 = nn.DataParallel(
-                    UpsampleConvLayer(model_size, num_channels, 25, stride=1, upsample=4))
+                self.upSampConv1 = UpsampleConvLayer(16 * model_size, 8 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv2 = UpsampleConvLayer(8 * model_size, 4 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv3 = UpsampleConvLayer(4 * model_size, 2 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv4 = UpsampleConvLayer(2 * model_size, model_size, 25, stride=1, upsample=4)
+                self.upSampConv5 = UpsampleConvLayer(model_size, num_channels, 25, stride=1, upsample=4)
 
             else:
-                self.tconv1 = nn.DataParallel(
-                    nn.ConvTranspose1d(16 * model_size, 8 * model_size, 25, stride=4, padding=11,
-                                       output_padding=1))
-                self.tconv2 = nn.DataParallel(
-                    nn.ConvTranspose1d(8 * model_size, 4 * model_size, 25, stride=4, padding=11,
-                                       output_padding=1))
-                self.tconv3 = nn.DataParallel(
-                    nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11,
-                                       output_padding=1))
-                self.tconv4 = nn.DataParallel(
-                    nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11,
-                                       output_padding=1))
-                self.tconv5 = nn.DataParallel(
-                    nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11,
-                                       output_padding=1))
+                self.tconv1 = nn.ConvTranspose1d(16 * model_size, 8 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv2 = nn.ConvTranspose1d(8 * model_size, 4 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv3 = nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv4 = nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv5 = nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11, output_padding=1)
 
             if post_proc_filt_len:
-                self.ppfilter1 = nn.DataParallel(nn.Conv1d(num_channels, num_channels, post_proc_filt_len))
+                self.ppfilter1 = nn.Conv1d(num_channels, num_channels, post_proc_filt_len)
 
             for m in self.modules():
                 if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
