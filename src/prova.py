@@ -11,10 +11,20 @@ decoder = decoder.to(device)
 reparametrize, p = def_mod.reparametrize(1,1)
 reparametrize = reparametrize.to(device)
 
+vae, p = def_mod.vae(1,1)
+vae = vae.to(device)
 
 
 
 
+input1 = np.random.rand(16348)
+input1 = input1.reshape(1,1,16348)
+input1 = torch.tensor(input1).float().to(device)
+y1 = vae(input1)
+print ('RECONSTRUCTED')
+print (y1.shape)
+
+'''
 input1 = np.random.rand(16348)
 input1 = input1.reshape(1,1,16348)
 input1 = torch.tensor(input1).float().to(device)
@@ -40,3 +50,4 @@ input3 = torch.tensor(input3).float().to(device)
 r = reparametrize(input2, input3)
 print ('REPARAMETRIZED')
 print (r.shape)
+'''
