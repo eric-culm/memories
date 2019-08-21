@@ -9,7 +9,7 @@ encoder = encoder.to(device)
 
 input = np.random.rand(100)
 input = input.reshape(1,100)
-input = torch.tensor(input).cuda()
+input = torch.tensor(input).float().to(device)
 
 y = encoder(input)
 print (y.shape)
