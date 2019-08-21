@@ -5,6 +5,7 @@ import torch
 encoder, p = def_mod.WAVE_encoder(1,1)
 
 input = np.random.rand(100)
+input = input.reshape(1,100)
 input = torch.tensor(input).cuda()
 
 y = encoder(input)
