@@ -270,7 +270,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             for m in self.modules():
                 if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
-                    nn.init.kaiming_normal(m.weight.data)
+                    nn.init.kaiming_normal_(m.weight.data)
 
         def forward(self, x):
             x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
