@@ -299,6 +299,8 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             return F.sigmoid(self.fc1(x))
 
+    out = WAVE_decoder()
+
     return out, p
 
 if __name__ == '__main__':
