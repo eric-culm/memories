@@ -351,8 +351,8 @@ def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
     }
     p = parse_parameters(p, user_parameters)
 
-    encoder_object = WAVE_encoder(time_dim, features_dim, user_parameters)
-    decoder_object = WAVE_decoder(time_dim, features_dim, user_parameters)
+    encoder_object, dummy = WAVE_encoder(time_dim, features_dim, user_parameters)
+    decoder_object, dummy = WAVE_decoder(time_dim, features_dim, user_parameters)
     reparametrize_object = reparametrize(time_dim, features_dim, user_parameters)
 
     class WAVE_VAE(nn.Module):
