@@ -275,23 +275,23 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     nn.init.kaiming_normal(m.weight.data)
 
         def forward(self, x):
-            x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.conv1(x))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv2(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.conv2(x))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv3(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.conv3(x))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv4(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.conv4(x))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv5(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.conv5(x))
             if self.verbose:
                 print(x.shape)
 
