@@ -36,7 +36,7 @@ except IndexError:
     #nogenerator
     generator = True
     dataset = 'digits'
-    architecture = 'dummy_autoencoder'
+    architecture = 'WAVE_VAE'
     parameters = ['niente = 0']
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
