@@ -254,7 +254,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     p = parse_parameters(p, user_parameters)
 
     class WAVE_decoder(nn.Module):
-        def __init__(self, model_size=64, num_channels=1, shift_factor=2, alpha=0.2, verbose=False, latent_size=100):
+        def __init__(self, model_size=8, num_channels=1, shift_factor=2, alpha=0.2, verbose=False, latent_size=100):
             super(WAVE_decoder, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
