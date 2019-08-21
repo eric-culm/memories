@@ -7,6 +7,7 @@ from torch import nn
 from torch import optim
 import torch.nn.functional as F
 import torch.utils.data as utils
+from torch.autograd import Variable
 import sys
 
 def parse_parameters(defaults, parameters):
@@ -322,7 +323,7 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
         def forward(self, mu, logvar):
             if self.training:
                 std = logvar.mul(0.5).exp_()  # type: Variable
-                eps = Variable(std.data.new(std.size()).normal_())
+                eps = std.data.new(std.size()).normal_()
 
                 return eps.mul(std).add_(mu)
 
