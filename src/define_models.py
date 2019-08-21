@@ -316,12 +316,10 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
 
     class reparametrize(nn.Module):
         def __init__(self):
-        super(reparametrize, self).__init__()
-        #nothing
+            super(reparametrize, self).__init__()
+            #nothing
 
         def forward(self, mu, logvar):
-
-
             if self.training:
                 std = logvar.mul(0.5).exp_()  # type: Variable
                 eps = Variable(std.data.new(std.size()).normal_())
