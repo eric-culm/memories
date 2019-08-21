@@ -268,7 +268,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
             self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
             self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
-            self.fc1 = nn.Linear(256 * model_size, )
+            self.fc1 = nn.Linear(256 * model_size, latent_size)
 
 
 
