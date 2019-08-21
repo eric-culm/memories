@@ -3,6 +3,10 @@ import numpy as np
 import configparser
 import matplotlib.pyplot as plt
 import torch
+from torch import nn
+from torch import optim
+import torch.nn.functional as F
+import torch.utils.data as utils
 import sys
 
 def parse_parameters(defaults, parameters):
@@ -67,25 +71,223 @@ def dummy_autoencoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'hidden_size': 2000
+    'fc_insize':32000,
+    'hidden_size': 200
     }
 
     p = parse_parameters(p, user_parameters)
 
     #always return model AND p!!!
-    class model(nn.Module):
+    class model1(nn.Module):
         def __init__(self):
-            super(model, self).__init__()
-            self.hidden = nn.Linear(fc_insize, hidden_size)
-            self.out = nn.Linear(hidden_size, time_dim)
-
+            super(model1, self).__init__()
+            self.hidden = nn.Linear(p['fc_insize'], 20)
+            self.out = nn.Linear(20, p['fc_insize'])
         def forward(self, X):
 
+            X = self.hidden(X)
             X = self.out(X)
-
             return X
 
-    return model, p
+
+    out = model1()
+
+    return out, p
+
+def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'fc_insize':32000,
+    'hidden_size': 200
+    }
+
+    p = parse_parameters(p, user_parameters)
+    class UpsampleConvLayer(torch.nn.Module):
+        def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
+            super(UpsampleConvLayer, self).__init__()
+            self.upsample = upsample
+            if upsample:
+                self.upsample_layer = torch.nn.Upsample(scale_factor=upsample)
+                reflection_padding = kernel_size // 2
+                self.reflection_pad = torch.nn.ConstantPad1d(reflection_padding, value = 0)
+    #             self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
+                self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
+
+        def forward(self, x):
+            x_in = x
+            if self.upsample:
+                x_in = self.upsample_layer(x_in)
+            out = self.reflection_pad(x_in)
+            out = self.conv1d(out)
+            return out
+
+            #always return model AND p!!!
+    class WAVE_encoder(nn.Module):
+        def __init__(self, model_size=64, ngpus=1, num_channels=1, latent_dim=100,
+                    post_proc_filt_len=512, verbose=False, upsample=True):
+            super(WAVE_encoder, self).__init__()
+            self.ngpus = ngpus
+            self.model_size = model_size # d
+            self.num_channels = num_channels # c
+            self.latent_dim = latent_dim
+            self.post_proc_filt_len = post_proc_filt_len
+            self.verbose = verbose
+            self.fc1 = nn.DataParallel(nn.Linear(latent_dim, 256 * model_size))
+            self.tconv1 = None
+            self.tconv2 = None
+            self.tconv3 = None
+            self.tconv4 = None
+            self.tconv5 = None
+            self.upSampConv1 = None
+            self.upSampConv2 = None
+            self.upSampConv3 = None
+            self.upSampConv4 = None
+            self.upSampConv5 = None
+            self.upsample = upsample
+
+            if self.upsample:
+                self.upSampConv1 = nn.DataParallel(
+                    UpsampleConvLayer(16 * model_size, 8 * model_size, 25, stride=1, upsample=4))
+                self.upSampConv2 = nn.DataParallel(
+                    UpsampleConvLayer(8 * model_size, 4 * model_size, 25, stride=1, upsample=4))
+                self.upSampConv3 = nn.DataParallel(
+                    UpsampleConvLayer(4 * model_size, 2 * model_size, 25, stride=1, upsample=4))
+                self.upSampConv4 = nn.DataParallel(
+                    UpsampleConvLayer(2 * model_size, model_size, 25, stride=1, upsample=4))
+                self.upSampConv5 = nn.DataParallel(
+                    UpsampleConvLayer(model_size, num_channels, 25, stride=1, upsample=4))
+
+            else:
+                self.tconv1 = nn.DataParallel(
+                    nn.ConvTranspose1d(16 * model_size, 8 * model_size, 25, stride=4, padding=11,
+                                       output_padding=1))
+                self.tconv2 = nn.DataParallel(
+                    nn.ConvTranspose1d(8 * model_size, 4 * model_size, 25, stride=4, padding=11,
+                                       output_padding=1))
+                self.tconv3 = nn.DataParallel(
+                    nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11,
+                                       output_padding=1))
+                self.tconv4 = nn.DataParallel(
+                    nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11,
+                                       output_padding=1))
+                self.tconv5 = nn.DataParallel(
+                    nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11,
+                                       output_padding=1))
+
+            if post_proc_filt_len:
+                self.ppfilter1 = nn.DataParallel(nn.Conv1d(num_channels, num_channels, post_proc_filt_len))
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal(m.weight.data)
+
+        def forward(self, x):
+
+                x = self.fc1(x).view(-1, 16 * self.model_size, 16)
+                x = F.relu(x)
+                output = None
+                if self.verbose:
+                    print(x.shape)
+
+                if self.upsample:
+                    x = F.relu(self.upSampConv1(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.upSampConv2(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.upSampConv3(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.upSampConv4(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = F.tanh(self.upSampConv5(x))
+                else:
+                    x = F.relu(self.tconv1(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.tconv2(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.tconv3(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.tconv4(x))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = F.tanh(self.tconv5(x))
+
+                if self.verbose:
+                    print(output.shape)
+
+                if self.post_proc_filt_len:
+                    # Pad for "same" filtering
+                    if (self.post_proc_filt_len % 2) == 0:
+                        pad_left = self.post_proc_filt_len // 2
+                        pad_right = pad_left - 1
+                    else:
+                        pad_left = (self.post_proc_filt_len - 1) // 2
+                        pad_right = pad_left
+                    output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
+                    if self.verbose:
+                        print(output.shape)
+
+                return output
+
+
+
+    out = WAVE_encoder()
+
+    return out, p
+
+
+def WAVE_autoencodercwedge(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'fc_insize':32000,
+    'hidden_size': 200
+    }
+
+    p = parse_parameters(p, user_parameters)
+
+    #always return model AND p!!!
+    class WAVE_encoder(nn.Module):
+        def __init__(self, model_size=64, num_channels=1, shift_factor=2, alpha=0.2):
+            super(WAVE_encoder, self).__init__()
+            self.model_size = model_size # d
+            self.num_channels = num_channels # c
+            self.shift_factor = shift_factor # n
+            self.alpha = alpha
+            # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
+            self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
+            self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
+            self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
+            self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
+            self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
+
+
+    out = model1()
+
+    return out, p
 
 if __name__ == '__main__':
     main()
