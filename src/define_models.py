@@ -337,6 +337,8 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
 
     out = reparametrize()
 
+    return out
+
 def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
