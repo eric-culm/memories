@@ -240,7 +240,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     return out, p
 
 
-def WAVE_autoencodercwedge(time_dim, features_dim, user_parameters=['niente = 0']):
+def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
     in the UI script
@@ -251,26 +251,53 @@ def WAVE_autoencodercwedge(time_dim, features_dim, user_parameters=['niente = 0'
     'fc_insize':32000,
     'hidden_size': 200
     }
-
     p = parse_parameters(p, user_parameters)
 
-    #always return model AND p!!!
-    class WAVE_encoder(nn.Module):
-        def __init__(self, model_size=64, num_channels=1, shift_factor=2, alpha=0.2):
-            super(WAVE_encoder, self).__init__()
+    class WAVE_decoder(nn.Module):
+        def __init__(self, model_size=64, num_channels=1, shift_factor=2, alpha=0.2, verbose=False, latent_size=100):
+            super(WAVE_decoder, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
             self.shift_factor = shift_factor # n
             self.alpha = alpha
+            self.verbose = verbose
+            self.latent_size = latent_size
             # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
             self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
             self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
             self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
             self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
             self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
+            self.fc1 = nn.Linear(256 * model_size, )
 
 
-    out = model1()
+
+        def forward(self, x):
+            x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv2(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv3(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv4(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv5(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = x.view(-1, 256 * self.model_size)
+            if self.verbose:
+                print(x.shape)
+
+            return F.sigmoid(self.fc1(x))
 
     return out, p
 
