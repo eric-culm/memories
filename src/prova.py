@@ -8,8 +8,10 @@ encoder, p = def_mod.WAVE_encoder(1,1)
 encoder = encoder.to(device)
 decoder, p = def_mod.WAVE_decoder(1,1)
 decoder = decoder.to(device)
+'''
 reparametrize, p = def_mod.reparametrize(1,1)
 reparametrize = reparametrize.to(device)
+'''
 
 vae, p = def_mod.vae(1,1)
 vae = vae.to(device)
