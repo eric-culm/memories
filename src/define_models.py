@@ -195,7 +195,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     if self.verbose:
                         print(x.shape)
 
-                    output = F.tanh(self.upSampConv5(x))
+                    output = torch.tanh(self.upSampConv5(x))
                 else:
                     x = F.relu(self.tconv1(x))
                     if self.verbose:
