@@ -168,7 +168,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             for m in self.modules():
                 if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
-                    nn.init.kaiming_normal(m.weight.data)
+                    nn.init.kaiming_normal_(m.weight.data)
 
         def forward(self, x):
 
