@@ -17,7 +17,7 @@ y = encoder(input)
 print (y.shape)
 
 input1 = np.random.rand(16348)
-input1 = input.reshape(1,16348)
+input1 = input1.reshape(1,16348)
 input1 = torch.tensor(input1).float().to(device)
 y1 = decoder(input1)
 print (y1.shape)
