@@ -111,7 +111,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             super(UpsampleConvLayer, self).__init__()
             self.upsample = upsample
             if upsample:
-                self.upsample_layer = F.interpolate(scale_factor=upsample)
+                self.upsample_layer = torch.nn.Upsample(scale_factor=upsample)
                 reflection_padding = kernel_size // 2
                 self.reflection_pad = torch.nn.ConstantPad1d(reflection_padding, value = 0)
     #             self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
