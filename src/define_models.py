@@ -128,7 +128,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #always return model AND p!!!
     class WAVE_encoder(nn.Module):
-        def __init__(self, model_size=64, ngpus=1, num_channels=1, latent_dim=100,
+        def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
                     post_proc_filt_len=512, verbose=False, upsample=True):
             super(WAVE_encoder, self).__init__()
             self.ngpus = ngpus
