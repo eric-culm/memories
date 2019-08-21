@@ -37,7 +37,6 @@ input3 = np.random.rand(100)
 input3 = input3.reshape(1,100)
 input3 = torch.tensor(input3).float().to(device)
 
-print ('equal:' + str(input2==input3))
 r = reparametrize(input2, input3)
 print ('REPARAMETRIZED')
 print (r.shape)

@@ -102,6 +102,7 @@ def main(input_folder):
     for i in contents:
         curr_predictors = preprocess_datapoint(i)
         if not np.isnan(np.std(curr_predictors)):
+            print (curr_predictors.shape)
             predictors[i] = curr_predictors
         uf.print_bar(index, num_sounds)
         index += 1

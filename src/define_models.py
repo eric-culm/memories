@@ -337,4 +337,34 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
 
     out = reparametrize()
 
+def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':True
+    }
+    p = parse_parameters(p, user_parameters)
+
+    encoder_object = WAVE_encoder(time_dim, features_dim, user_parameters)
+    decoder_object = WAVE_decoder(time_dim, features_dim, user_parameters)
+    reparametrize_object = reparametrize(time_dim, features_dim, user_parameters)
+
+    class WAVE_VAE(nn.Module):
+        def __init__(self, encoder=encoder_object, decoder=decoder_object, reparametrize=reparametrize_object):
+            super(WAVE_VAE, self).__init__()
+            self.encoder = encoder
+            self.decoder = decoder
+            self.reparametrize = reparametrize
+
+        def forward(self, x):
+            mu, logvar = self.encoder(x)
+            z = self.reparameterize(mu, logvar)
+            out = self.decode(z), mu, logvar
+
+            return out, mu, logvar
+
     return out, p

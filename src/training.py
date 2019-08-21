@@ -143,6 +143,29 @@ training_parameters = {'train_split': train_split,
     'optimizer': optimizer
     }
 
+def loss_function(recon_x, x, mu, logvar):
+    # how well do input x and output recon_x agree?
+    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))
+
+    # KLD is Kullback–Leibler divergence -- how much does one learned
+    # distribution deviate from another, in this specific case the
+    # learned distribution from the unit Gaussian
+
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # - D_{KL} = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    # note the negative D_{KL} in appendix B of the paper
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    '''
+    # Normalise by same number of elements as in reconstruction
+    KLD /= p['batch_size'] * time_dim * features_dim
+    '''
+
+    # BCE tries to make our reconstruction as accurate as possible
+    # KLD tries to push the distributions as close as possible to unit Gaussian
+    return BCE + KLD
+
 def main():
     #CREATE DATASET
     #load numpy data
@@ -308,7 +331,6 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
     model.train()
-    criterion = nn.MSELoss()
 
     total_step = len(tr_data)
     loss_list = []
@@ -327,8 +349,8 @@ def main():
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
             optimizer.zero_grad()
-            outputs = model(sounds)
-            loss = criterion(outputs, truth)
+            outputs, mu, logvar = model(sounds)
+            loss = loss_function(outputs, truth, mu, logvar)
             loss.backward()
             #print progress and update history, optimizer step
             perc = int(i / len(tr_data) * 20)
@@ -348,15 +370,15 @@ def main():
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
                 optimizer.zero_grad()
-                tr_outputs = model(sounds)
-                temp_tr_loss = criterion(tr_outputs, truth)
-                train_batch_losses.append(temp_tr_loss.item())
+                outputs, mu, logvar = model(sounds)
+                loss = loss_function(outputs, truth, mu, logvar)
+                train_batch_losses.append(loss.item())
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
                 optimizer.zero_grad()
-                val_outputs = model(sounds)
-                temp_val_loss = criterion(val_outputs, truth)
-                val_batch_losses.append(temp_val_loss.item())
+                outputs, mu, logvar = model(sounds)
+                loss = loss_function(outputs, truth, mu, logvar)
+                val_batch_losses.append(loss.item())
 
             #save sounds if specified
             ts_preds = []
@@ -456,20 +478,20 @@ def main():
         #train acc
         for i, (sounds, truth) in enumerate(tr_data):
             optimizer.zero_grad()
-            temp_pred = model(sounds)
-            temp_loss = criterion(temp_pred, truth)
+            temp_pred, mu, logvar = model(sounds)
+            temp_loss = loss_function(temp_pred, truth, mu, logvar)
             train_batch_losses.append(temp_loss)
         #val acc
         for i, (sounds, truth) in enumerate(val_data):
             optimizer.zero_grad()
-            temp_pred = model(sounds)
-            temp_loss = criterion(temp_pred, truth)
+            temp_pred, mu, logvar = model(sounds)
+            temp_loss = loss_function(temp_pred, truth, mu, logvar)
             val_batch_losses.append(temp_loss)
         #test acc
         for i, (sounds, truth) in enumerate(test_data):
             optimizer.zero_grad()
-            temp_pred = model(sounds)
-            temp_loss = criterion(temp_pred, truth)
+            temp_pred, mu, logvar = model(sounds)
+            temp_loss = loss_function(temp_pred, truth, mu, logvar)
             test_batch_losses.append(temp_loss)
 
 
