@@ -17,7 +17,7 @@ cfg.read(config)
 #get values from config file
 
 SR = cfg.getint('sampling', 'sr_target')
-DUR = cfg.getint('preprocessing', 'sequence_length')
+DUR = cfg.getfloat('preprocessing', 'sequence_length')
 SEQUENCE_LENGTH = cfg.getfloat('preprocessing', 'sequence_length')
 SEQUENCE_OVERLAP = cfg.getfloat('preprocessing', 'sequence_overlap')
 #in
