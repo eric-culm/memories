@@ -13,7 +13,7 @@ reparametrize, p = def_mod.reparametrize(1,1)
 reparametrize = reparametrize.to(device)
 '''
 
-vae, p = def_mod.vae(1,1)
+vae, p = def_mod.WAVE_VAE(1,1)
 vae = vae.to(device)
 
 
