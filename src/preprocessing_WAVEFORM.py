@@ -36,7 +36,7 @@ def prepare_sound(input_sound):
     of one sound file from the OMG dataset
     '''
     raw_samples, sr = librosa.core.load(input_sound, sr=SR)  #read audio
-    dur_samps = SR * DUR
+    dur_samps = int(np.round(SR * DUR))
     if SEGMENTATION:
         # if segment cut initial and final silence if present
         samples = uf.strip_silence(raw_samples)

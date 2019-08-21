@@ -303,5 +303,39 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
-if __name__ == '__main__':
-    main()
+def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    RICORDARE!!!! CHE IN INFERENCE BUTTA FUORI LA MEDIA
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':True
+    }
+    p = parse_parameters(p, user_parameters)
+
+    class reparametrize(nn.Module):
+        def __init__(self):
+        super(reparametrize, self).__init__()
+        #nothing
+
+        def forward(self, mu, logvar):
+
+
+            if self.training:
+                std = logvar.mul(0.5).exp_()  # type: Variable
+                eps = Variable(std.data.new(std.size()).normal_())
+
+                return eps.mul(std).add_(mu)
+
+            else:
+                # During inference, we simply spit out the mean of the
+                # learned distribution for the current input.  We could
+                # use a random sample from the distribution, but mu of
+                # course has the highest probability.
+                return mu
+
+
+    out = reparametrize()
+
+    return out, p
