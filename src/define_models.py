@@ -95,7 +95,7 @@ def dummy_autoencoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
-def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     GENERATOR: from latent dim to 1-sec sound
     '''
@@ -126,10 +126,10 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             return out
 
             #always return model AND p!!!
-    class WAVE_encoder(nn.Module):
+    class WAVE_decoder(nn.Module):
         def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
                     post_proc_filt_len=512, verbose=p['verbose'], upsample=True):
-            super(WAVE_encoder, self).__init__()
+            super(WAVE_decoder, self).__init__()
             self.ngpus = ngpus
             self.model_size = model_size # d
             self.num_channels = num_channels # c
@@ -239,7 +239,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     return out, p
 
 
-def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
     in the UI script
@@ -251,9 +251,9 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     }
     p = parse_parameters(p, user_parameters)
 
-    class WAVE_decoder(nn.Module):
+    class WAVE_encoder(nn.Module):
         def __init__(self, model_size=8, num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
-            super(WAVE_decoder, self).__init__()
+            super(WAVE_encoder, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
             self.shift_factor = shift_factor # n
