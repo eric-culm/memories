@@ -25,12 +25,19 @@ mu, logvar = encoder(input1)
 print ('ENCODED')
 print (mu.shape, logvar.shape)
 
+r = reparametrize(mu, logvar)
+print ('REPARAMETRIZED')
+print (r.shape)
+
 input = np.random.rand(100)
 input = input.reshape(1,100)
 input = torch.tensor(input).float().to(device)
 y = decoder(input)
 print ('DECODED')
 print (y.shape)
+
+
+
 
 
 '''
@@ -46,9 +53,6 @@ input3 = np.random.rand(100)
 input3 = input3.reshape(1,100)
 input3 = torch.tensor(input3).float().to(device)
 
-r = reparametrize(input2, input3)
-print ('REPARAMETRIZED')
-print (r.shape)
 
 
 
