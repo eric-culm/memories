@@ -4,8 +4,8 @@ import torch
 
 device = torch.device('cuda:0')
 
-encoder, p = def_mod.WAVE_encoder(1,1)
-encoder = encoder.to(device)
+#encoder, p = def_mod.WAVE_encoder(1,1)
+#encoder = encoder.to(device)
 decoder, p = def_mod.WAVE_decoder(1,1)
 decoder = decoder.to(device)
 
