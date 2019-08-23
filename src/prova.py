@@ -18,8 +18,8 @@ vae = vae.to(device)
 
 
 
-input1 = np.random.rand(16348)
-input1 = input1.reshape(1,1,16348)
+input1 = np.random.rand(16384)
+input1 = input1.reshape(1,1,16384)
 input1 = torch.tensor(input1).float().to(device)
 mu, logvar = encoder(input1)
 print ('ENCODED')
