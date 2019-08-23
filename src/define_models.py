@@ -368,7 +368,7 @@ def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
         def forward(self, x):
             mu, logvar = self.encoder(x)
             z = self.reparametrize(mu, logvar)
-            reconstructed = self.decode(z), mu, logvar
+            reconstructed = self.decoder(z)
 
             return reconstructed, mu, logvar
 
