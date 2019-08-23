@@ -342,6 +342,84 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out
 
+def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class simple_encoder_class(nn.Module):
+        def __init__(self, ):
+            super(simple_encoder_class, self, latent_dim=100).__init__()
+            self.fc1 = nn.Linear(16384, 10000)
+            self.fc2 = nn.Linear(10000, 8000)
+            self.fc3 = nn.Linear(8000, 5000)
+            self.fc4 = nn.Linear(5000, 2000)
+            self.fc5 = nn.Linear(2000, 1000)
+            self.fc6_1 = nn.Linear(1000, latent_dim)
+            self.fc6_2 = nn.Linear(1000, latent_dim)
+
+        def forward(self, x):
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x = F.relu(self.fc3(x))
+            x = F.relu(self.fc4(x))
+            x = F.relu(self.fc5(x))
+            x1 = F.sigmoid(self.fc6_1(x))
+            x2 = F.sigmoid(self.fc6_1(x))
+
+            return x1, x2
+
+    out = simple_encoder_class()
+
+    return out, p
+
+
+def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class simple_decoder_class(nn.Module):
+        def __init__(self, ):
+            super(simple_encoder_class, self, latent_dim=100).__init__()
+            self.fc1 = nn.Linear(latent_dim, 1000)
+            self.fc2 = nn.Linear(1000, 2000)
+            self.fc3 = nn.Linear(2000, 5000)
+            self.fc4 = nn.Linear(5000, 8000)
+            self.fc5 = nn.Linear(8000, 10000)
+            self.fc6 = nn.Linear(10000, 16384)
+
+
+        def forward(self, x):
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x = F.relu(self.fc3(x))
+            x = F.relu(self.fc4(x))
+            x = F.relu(self.fc5(x))
+            x = F.tanh(self.fc6(x))
+
+            return x
+
+    out = simple_decoder_class()
+
+    return out, p
+
 def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter

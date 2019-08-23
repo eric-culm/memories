@@ -37,8 +37,8 @@ except IndexError:
     generator = True
     dataset = 'digits'
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'WAVE_encoder'
-    decoder_architecture = 'WAVE_decoder'
+    encoder_architecture = 'simple_encoder'
+    decoder_architecture = 'simple_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64']
 
@@ -291,7 +291,7 @@ def main():
     print (training_predictors.shape)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
-
+    '''
     tr_mean = np.mean(training_predictors)
     tr_std = np.std(training_predictors)
     training_predictors = np.subtract(training_predictors, tr_mean)
@@ -300,7 +300,7 @@ def main():
     validation_predictors = np.divide(validation_predictors, tr_std)
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
-    
+    '''
 
     #sys.exit(0)
 
