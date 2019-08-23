@@ -163,7 +163,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                 self.tconv4 = nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11, output_padding=1)
                 self.tconv5 = nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11, output_padding=1)
 
-            self.out_layer = nn.Linear(model_size*num_channels, 16384)
+            self.out_layer = nn.Linear(200, 16384)
 
 
             if post_proc_filt_len:
