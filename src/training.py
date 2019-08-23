@@ -397,9 +397,12 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
-        model.train()
+        encoder.train()
+        decoder.train()
+        reparametrize.train()
+
         print ('\n')
-        string = 'Epoch: ' + str(epoch+1) + ' '
+        string = 'Epoch: []' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
             optimizer_encoder.zero_grad()
