@@ -382,7 +382,9 @@ def main():
     optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
 
-    model.train()
+    encoder.train()
+    decoder.train()
+    reparametrize.train()
 
     total_step = len(tr_data)
     loss_list = []
@@ -400,7 +402,8 @@ def main():
         string = 'Epoch: ' + str(epoch+1) + ' '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
-            optimizer.zero_grad()
+            optimizer_encoder.zero_grad()
+            optimizer_decoder.zero_grad()
 
             mu, logvar = encoder(sounds)
             z = reparametrize(mu, logvar)
@@ -427,23 +430,45 @@ def main():
 
         #validation loss, training and val accuracy computation
         #after current epoch training
-        model.eval()
-        train_batch_losses = []
-        val_batch_losses = []
+        encoder.eval()
+        decoder.eval()
+        reparametrize.eval()
+
+        train_batch_losses_e = []
+        val_batch_losses_e = []
+        train_batch_losses_d = []
+        val_batch_losses_d = []
+
         with torch.no_grad():
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
+                optimizer_encoder.zero_grad()
+                optimizer_decoder.zero_grad()
 
-                optimizer.zero_grad()
-                outputs, mu, logvar = model(sounds)
-                loss = loss_function(outputs, truth, mu, logvar)
-                train_batch_losses.append(loss.item())
+                mu, logvar = encoder(sounds)
+                z = reparametrize(mu, logvar)
+                outputs = self.decoder(z)
+
+                loss_encoder = loss_function_encoder(mu, logvar)
+                loss_decoder = loss_function_encoder(outputs, truth)
+
+                train_batch_losses_e.append(loss_encoder.item())
+                train_batch_losses_d.append(loss_decoder.item())
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
-                optimizer.zero_grad()
-                outputs, mu, logvar = model(sounds)
-                loss = loss_function(outputs, truth, mu, logvar)
-                val_batch_losses.append(loss.item())
+                optimizer_encoder.zero_grad()
+                optimizer_decoder.zero_grad()
+
+                mu, logvar = encoder(sounds)
+                z = reparametrize(mu, logvar)
+                outputs = self.decoder(z)
+
+                loss_encoder = loss_function_encoder(mu, logvar)
+                loss_decoder = loss_function_encoder(outputs, truth)
+
+
+                val_batch_losses_e.append(loss_encoder.item())
+                val_batch_losses_d.append(loss_decoder.item())
 
             #save sounds if specified
             ts_preds = []
@@ -461,10 +486,17 @@ def main():
 
                     #train sounds
                     for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
-                        optimizer.zero_grad()
-                        tr_outputs = model(sounds)
-                        tr_outputs = tr_outputs[0].cpu().numpy()
-                        tr_preds.append(tr_outputs)
+                        optimizer_encoder.zero_grad()
+                        optimizer_decoder.zero_grad()
+
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = self.decoder(z)
+
+                        outputs = outputs[0].cpu().numpy()
+                        tr_preds.append(outputs)
+
+
                     tr_preds = np.array(tr_preds)
                     tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
                     for i in range(save_sounds_n):
@@ -479,10 +511,17 @@ def main():
 
                     #test sounds
                     for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
-                        optimizer.zero_grad()
-                        ts_outputs = model(sounds)
-                        ts_outputs = ts_outputs[0].cpu().numpy()
-                        ts_preds.append(ts_outputs)
+                        optimizer_encoder.zero_grad()
+                        optimizer_decoder.zero_grad()
+
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = self.decoder(z)
+
+                        outputs = outputs[0].cpu().numpy()
+                        outputs = outputs[0].cpu().numpy()
+                        ts_preds.appendoutputs)
+
                     ts_preds = np.array(ts_preds)
                     ts_preds = ts_preds.reshape(ts_preds.shape[0]*ts_preds.shape[1], ts_preds.shape[2], ts_preds.shape[3])
                     for i in range(save_sounds_n):
@@ -496,15 +535,12 @@ def main():
                         uf.wavwrite(sound, SR, sound_path)
 
 
-
                     print ('')
                     print ('generated sounds saved')
 
-
-
             #end of epoch loop
 
-
+        sys.exit(0)
         #compute train and val mean accuracy and loss of current epoch
         train_epoch_loss = np.mean(train_batch_losses)
         val_epoch_loss = np.mean(val_batch_losses)
@@ -620,6 +656,7 @@ def main():
 
 
     np.save(results_path, temp_results)
+
 
 
 if __name__ == '__main__':
