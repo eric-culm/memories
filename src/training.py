@@ -145,10 +145,9 @@ training_parameters = {'train_split': train_split,
 
 def loss_function(recon_x, x, mu, logvar):
     # how well do input x and output recon_x agree?
-    print ('MERDA')
-    print (recon_x.shape, x.shape)
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))
 
+    #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
+    BCE = F.binary_cross_entropy(recon_x, x)
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
     # learned distribution from the unit Gaussian
