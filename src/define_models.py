@@ -350,13 +350,13 @@ def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'verbose':True
+    'verbose':False
     }
     p = parse_parameters(p, user_parameters)
 
-    encoder_object, dummy = WAVE_encoder(time_dim, features_dim, user_parameters)
-    decoder_object, dummy = WAVE_decoder(time_dim, features_dim, user_parameters)
-    reparametrize_object = reparametrize(time_dim, features_dim, user_parameters)
+    encoder_object, dummy = WAVE_encoder(time_dim, features_dim, user_parameters=['verbose=False'])
+    decoder_object, dummy = WAVE_decoder(time_dim, features_dim, user_parameters=['verbose=False'])
+    reparametrize_object = reparametrize(time_dim, features_dim, user_parameters=['verbose=False'])
 
     class WAVE_VAE(nn.Module):
         def __init__(self, encoder=encoder_object, decoder=decoder_object, reparametrize=reparametrize_object):
