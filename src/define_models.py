@@ -251,7 +251,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     }
     p = parse_parameters(p, user_parameters)
 
-    class WAVE_encoder(nn.Module):
+    class WAVE_encoder_class(nn.Module):
         def __init__(self, model_size=8, num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
             super(WAVE_encoder, self).__init__()
             self.model_size = model_size # d
@@ -299,7 +299,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             return torch.sigmoid(self.fc1(x))
 
-    out = WAVE_decoder()
+    out = WAVE_encoder_class()
 
     return out, p
 
