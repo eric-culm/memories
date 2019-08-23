@@ -422,7 +422,7 @@ def main():
             loss_decoder = loss_function_encoder(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_joint = loss_function_joint(outputs, truth)
+            loss_joint = loss_function_joint(outputs, truth, mu, logvar)
             loss_joint.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
