@@ -361,7 +361,7 @@ def main():
             optimizer.zero_grad()
             outputs, mu, logvar = model(sounds)
             loss = loss_function(outputs, truth, mu, logvar)
-            loss.backward()
+            loss.backward(retain_graph=True)
             #print progress and update history, optimizer step
             perc = int(i / len(tr_data) * 20)
             inv_perc = int(20 - perc - 1)
