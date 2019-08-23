@@ -122,7 +122,7 @@ except IndexError:
     pass
 
 #device = torch.device('cuda:' + str(gpu_ID))
-device = torch.device('cpu')
+device = torch.device('cuda:0')
 
 
 #define optimizer ADD HERE DIFFERENT OPTIMIZERS!!!!!!!
