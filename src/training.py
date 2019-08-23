@@ -151,7 +151,7 @@ def loss_function(recon_x, x, mu, logvar):
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
 
-    BCE = F.binary_cross_entropy(recon_x_0to1, x_0to1)
+    recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     # KLD is Kullback–Leibler divergence -- how much does one learned
