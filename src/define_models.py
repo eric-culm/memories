@@ -373,7 +373,7 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             x = F.relu(self.fc4(x))
             x = F.relu(self.fc5(x))
             x1 = F.sigmoid(self.fc6_1(x))
-            x2 = F.sigmoid(self.fc6_1(x))
+            x2 = F.sigmoid(self.fc6_2(x))
 
             return x1, x2
 
