@@ -70,6 +70,7 @@ from torch import nn
 from torch import optim
 import torch.nn.functional as F
 import torch.utils.data as utils
+from audtorch import metrics
 import numpy as np
 import define_models as choose_model
 import utility_functions as uf
@@ -147,7 +148,9 @@ training_parameters = {'train_split': train_split,
     'optimizer': optimizer
     }
 
-def loss_function_joint(recon_x, x, mu, logvar):
+CCC_loss =  metrics.ConcordanceCC()
+
+def loss_function_joint_old(recon_x, x, mu, logvar):
     # how well do input x and output recon_x agree?
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
@@ -156,6 +159,7 @@ def loss_function_joint(recon_x, x, mu, logvar):
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     recon_loss /= recon_x.shape[-1]
+
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
     # learned distribution from the unit Gaussian
@@ -183,6 +187,27 @@ def loss_function_joint(recon_x, x, mu, logvar):
     #return recon_loss + KLD
     return recon_loss
 
+def loss_function_joint(recon_x, x, mu, logvar):
+
+    recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    '''
+    # Normalise by same number of elements as in reconstruction
+    KLD /= p['batch_size'] * time_dim * features_dim
+    '''
+
+
+    recon_loss /= batch_size
+    KLD /= batch_size
+    #print ('')
+    #print (recon_loss, KLD)
+
+    # BCE tries to make our reconstruction as accurate as possible
+    # KLD tries to push the distributions as close as possible to unit Gaussian
+
+    joint_loss = recon_loss + KLD
+    return joint_loss
+
 def loss_function_encoder(mu, logvar):
 
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
@@ -192,8 +217,8 @@ def loss_function_encoder(mu, logvar):
 
 def loss_function_decoder(recon_x, x):
 
-    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
-    recon_loss /= recon_x.shape[-1]
+    recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
+
     recon_loss /= batch_size
 
     return recon_loss
