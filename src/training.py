@@ -520,7 +520,7 @@ def main():
 
                         outputs = outputs[0].cpu().numpy()
                         outputs = outputs[0].cpu().numpy()
-                        ts_preds.appendoutputs)
+                        ts_preds.append(outputs)
 
                     ts_preds = np.array(ts_preds)
                     ts_preds = ts_preds.reshape(ts_preds.shape[0]*ts_preds.shape[1], ts_preds.shape[2], ts_preds.shape[3])
