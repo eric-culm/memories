@@ -152,7 +152,7 @@ def loss_function(recon_x, x, mu, logvar):
 
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
-
+    recon_loss /= recon_x.shape[-1]
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
     # learned distribution from the unit Gaussian
