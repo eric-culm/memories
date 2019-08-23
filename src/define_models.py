@@ -127,7 +127,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #always return model AND p!!!
     class WAVE_decoder_class(nn.Module):
-        def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
+        def __init__(self, model_size=20, ngpus=1, num_channels=1, latent_dim=100,
                     post_proc_filt_len=0, verbose=p['verbose'], upsample=False):
             super(WAVE_decoder_class, self).__init__()
             self.ngpus = ngpus
