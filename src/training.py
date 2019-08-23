@@ -369,6 +369,8 @@ def main():
         with torch.no_grad():
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
+                print ('culo')
+                print (sounds.shape. truth.shape)
                 optimizer.zero_grad()
                 outputs, mu, logvar = model(sounds)
                 loss = loss_function(outputs, truth, mu, logvar)
