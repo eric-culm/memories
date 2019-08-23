@@ -532,6 +532,8 @@ def main():
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
+                        print ('figa')
+                        print (outputs.shape)
 
                         outputs = outputs.cpu().numpy()
                         tr_preds.append(outputs)
