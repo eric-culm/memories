@@ -425,7 +425,7 @@ def main():
             loss_d_print_t = str(np.round(loss_decoder.item(), decimals=3))
 
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss_encoder: ' + loss_e_print_t + ' loss_decoder: ' + loss_d_print_t
-            print ('\r', string_pregress, end='')
+            print ('\r', string_progress, end='')
 
             optimizer_encoder.step()
             optimizer_decoder.step()
