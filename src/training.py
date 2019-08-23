@@ -402,7 +402,7 @@ def main():
         reparametrize.train()
 
         print ('\n')
-        string = 'Epoch: []' + str(epoch+1) + '/' + str(num_epochs) + '] '
+        string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
             optimizer_encoder.zero_grad()
@@ -501,6 +501,8 @@ def main():
 
 
                     tr_preds = np.array(tr_preds)
+                    print('culo')
+                    print (tr_preds.shape)
                     tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
                     for i in range(save_sounds_n):
                         sound = tr_preds[i]
