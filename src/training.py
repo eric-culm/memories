@@ -145,8 +145,7 @@ training_parameters = {'train_split': train_split,
 
 def loss_function(recon_x, x, mu, logvar):
     # how well do input x and output recon_x agree?
-    print ('\nMERDA')
-    print (recon_x.shape, x.shape)
+
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
@@ -355,8 +354,7 @@ def main():
         string = 'Epoch: ' + str(epoch+1) + ' '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
-            print ('culo')
-            print (sounds.shape ,truth.shape)
+
             optimizer.zero_grad()
             outputs, mu, logvar = model(sounds)
             loss = loss_function(outputs, truth, mu, logvar)
