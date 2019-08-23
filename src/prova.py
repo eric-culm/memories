@@ -4,8 +4,8 @@ import torch
 
 device = torch.device('cuda:0')
 #a
-#encoder, p = def_mod.WAVE_encoder(1,1)
-#encoder = encoder.to(device)
+encoder, p = def_mod.WAVE_encoder(1,1)
+encoder = encoder.to(device)
 decoder, p = def_mod.WAVE_decoder(1,1)
 decoder = decoder.to(device)
 
@@ -18,6 +18,13 @@ vae = vae.to(device)
 
 
 
+input1 = np.random.rand(16348)
+input1 = input1.reshape(1,1,16348)
+input1 = torch.tensor(input1).float().to(device)
+y1 = encoder(input1)
+print ('ENCODED')
+print (y1.shape)
+
 input = np.random.rand(100)
 input = input.reshape(1,100)
 input = torch.tensor(input).float().to(device)
@@ -27,12 +34,7 @@ print (y.shape)
 
 
 '''
-input1 = np.random.rand(16348)
-input1 = input1.reshape(1,1,16348)
-input1 = torch.tensor(input1).float().to(device)
-y1 = decoder(input1)
-print ('DECODED')
-print (y1.shape)
+
 
 
 
