@@ -535,8 +535,8 @@ def main():
                         print ('figa')
                         print (outputs.shape)
 
-                        outputs = outputs.cpu().numpy()
-                        for single_sound in truth:
+                        outputs = truth.cpu().numpy()
+                        for single_sound in outputs:
                             tr_preds.append(single_sound)
 
 
