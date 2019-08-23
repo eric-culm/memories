@@ -253,7 +253,7 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     class WAVE_encoder_class(nn.Module):
         def __init__(self, model_size=8, num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
-            super(WAVE_encoder, self).__init__()
+            super(WAVE_encoder_class, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
             self.shift_factor = shift_factor # n
