@@ -37,7 +37,11 @@ except IndexError:
     generator = True
     dataset = 'digits'
     architecture = 'WAVE_VAE'
+    encoder_architecture = 'WAVE_encoder'
+    decoder_architecture = 'WAVE_decoder'
+    reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=True', 'model_size=64']
+    
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
     parameters_path = results_path + '/parameters'
