@@ -275,9 +275,9 @@ def main():
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
     #reshape
-    training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
-    validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
-    test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
+    training_predictors = training_predictors.reshape(1, 1, training_predictors.shape[0])
+    validation_predictors = validation_predictors.reshape(1, 1, validation_predictors.shape[0])
+    test_predictors = test_predictors.reshape(1, 1, test_predictors.shape[0])
 
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float().to(device)
