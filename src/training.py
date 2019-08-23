@@ -189,7 +189,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
 
 def loss_function_joint(recon_x, x, mu, logvar):
 
-    recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
+    recon_loss = 1. - torch.abs(CCC_loss(recon_x, x))
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     '''
     # Normalise by same number of elements as in reconstruction
@@ -220,7 +220,10 @@ def loss_function_encoder(mu, logvar):
 
 def loss_function_decoder(recon_x, x):
 
-    recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
+    print ('stramerda')
+    print (rexon_x.shape, x.shape)
+    recon_loss = 1. 1 -  torch.abs(CCC_loss(recon_x, x))
+    print (recon_loss)
 
     #recon_loss /= batch_size
 
