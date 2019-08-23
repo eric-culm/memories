@@ -176,7 +176,9 @@ def loss_function(recon_x, x, mu, logvar):
 
     # BCE tries to make our reconstruction as accurate as possible
     # KLD tries to push the distributions as close as possible to unit Gaussian
-    return recon_loss + KLD
+
+    #return recon_loss + KLD
+    return recon_loss
 
 def main():
     #CREATE DATASET
