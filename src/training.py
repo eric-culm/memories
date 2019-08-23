@@ -150,8 +150,8 @@ def loss_function(recon_x, x, mu, logvar):
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
 
-    recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
-    #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
+    #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
+    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
@@ -393,8 +393,6 @@ def main():
             tr_preds = []
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
-
-
 
                     curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
                     curr_sounds_path_test = os.path.join(gen_sounds_path, 'test' , 'epoch_'+str(epoch))
