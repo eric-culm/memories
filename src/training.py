@@ -145,7 +145,7 @@ training_parameters = {'train_split': train_split,
 
 def loss_function(recon_x, x, mu, logvar):
     # how well do input x and output recon_x agree?
-
+    b_s = recon_x.shape[0]  #get batch size
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
@@ -167,6 +167,9 @@ def loss_function(recon_x, x, mu, logvar):
     # Normalise by same number of elements as in reconstruction
     KLD /= p['batch_size'] * time_dim * features_dim
     '''
+
+    recon_loss /= b_s
+    KLD /= b_s
 
     # BCE tries to make our reconstruction as accurate as possible
     # KLD tries to push the distributions as close as possible to unit Gaussian
