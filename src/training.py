@@ -197,7 +197,7 @@ def loss_function_joint(recon_x, x, mu, logvar):
     '''
 
 
-    recon_loss /= batch_size
+    #recon_loss /= batch_size
     KLD /= batch_size
     #print ('')
     #print (recon_loss, KLD)
