@@ -330,8 +330,9 @@ def main():
     #sys.exit(0)
 
     tr_pred = []
-    tr_pred.append(training_predictors[0])
-    tr_pred.append(training_predictors[0])
+    for i in range(100):
+        tr_pred.append(training_predictors[0])
+
     tr_pred = np.array(tr_pred)
     training_predictors = tr_pred
     validation_predictors = training_predictors
