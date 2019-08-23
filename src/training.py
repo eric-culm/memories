@@ -329,12 +329,13 @@ def main():
 
     #sys.exit(0)
 
-    #OVERFITTING TEST!!!!!!!!!!!!!!!!!!!!!!!!!!
-    training_predictors = np.array(list(training_predictors[0],training_predictors[0]))
+    tr_pred = []
+    tr_pred.append(training_predictors[0])
+    tr_pred.append(training_predictors[0])
+    tr_pred = np.array(tr_pred)
+    training_predictors = tr_pred
     validation_predictors = training_predictors
     test_predictors = test_predictors
-
-
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
     #reshape
