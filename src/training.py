@@ -222,11 +222,6 @@ def loss_function_decoder(recon_x, x):
 
 
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
-    print (recon_loss)
-
-    #recon_loss /= batch_size
-
-    #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     return recon_loss
 
@@ -531,8 +526,8 @@ def main():
 
                     #train sounds
                     for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
-                        optimizer_encoder.zero_grad()
-                        optimizer_decoder.zero_grad()
+                        #optimizer_encoder.zero_grad()
+                        optimizer_joint.zero_grad()
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
@@ -563,8 +558,8 @@ def main():
 
                     #test sounds
                     for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
-                        optimizer_encoder.zero_grad()
-                        optimizer_decoder.zero_grad()
+                        #optimizer_encoder.zero_grad()
+                        optimizer_joint.zero_grad()
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
