@@ -393,7 +393,10 @@ def main():
             tr_preds = []
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
-                    curr_sounds_path_train = os.path.join(gen_sounds_path, '/training/epoch_'+str(epoch))
+
+
+
+                    curr_sounds_path_train = os.path.join(gen_sounds_path, 'training/epoch_'+str(epoch))
                     curr_sounds_path_test = os.path.join(gen_sounds_path, 'test/epoch_'+str(epoch))
 
                     if not os.path.exists(curr_sounds_path_train):
