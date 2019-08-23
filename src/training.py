@@ -413,10 +413,13 @@ def main():
 
     #define optimizers
     joint_parameters = list(encoder.parameters()) + list(decoder.parameters())
+    '''
     optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
     optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
+    '''
+
     optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
                            weight_decay=regularization_lambda)
 
@@ -445,8 +448,8 @@ def main():
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
-            optimizer_encoder.zero_grad()
-            optimizer_decoder.zero_grad()
+            #optimizer_encoder.zero_grad()
+            #optimizer_decoder.zero_grad()
             optimizer_joint.zero_grad()
 
             mu, logvar = encoder(sounds)
@@ -455,7 +458,7 @@ def main():
 
             loss_encoder = loss_function_encoder(mu, logvar)
             #loss_encoder.backward(retain_graph=True)
-            loss_decoder = loss_function_encoder(outputs, truth)
+            loss_decoder = loss_function_decoder(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
             loss_joint = loss_function_joint(outputs, truth, mu, logvar)
