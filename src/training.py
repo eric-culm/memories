@@ -536,7 +536,7 @@ def main():
                         print (outputs.shape)
 
                         outputs = outputs.cpu().numpy()
-                        for single_sound in outputs:
+                        for single_sound in truth:
                             tr_preds.append(single_sound)
 
 
