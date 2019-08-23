@@ -147,9 +147,8 @@ training_parameters = {'train_split': train_split,
     'optimizer': optimizer
     }
 
-def loss_function(recon_x, x, mu, logvar):
+def loss_function_joint(recon_x, x, mu, logvar):
     # how well do input x and output recon_x agree?
-    b_s = recon_x.shape[0]  #get batch size
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
@@ -173,8 +172,8 @@ def loss_function(recon_x, x, mu, logvar):
     '''
 
 
-    recon_loss /= b_s
-    KLD /= b_s
+    recon_loss /= batch_size
+    KLD /= batch_size
     #print ('')
     #print (recon_loss, KLD)
 
@@ -377,10 +376,15 @@ def main():
     print ('Total paramters: ' + str(encoder_params+decoder_params))
 
     #define optimizers
+    joint_parameters = list(encoder.parameters()) + list(decoder.parameters())
     optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
     optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
+    optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
+                           weight_decay=regularization_lambda)
+
+
 
     encoder.train()
     decoder.train()
@@ -407,15 +411,19 @@ def main():
         for i, (sounds, truth) in enumerate(tr_data):
             optimizer_encoder.zero_grad()
             optimizer_decoder.zero_grad()
+            optimizer_joint.zero_grad()
 
             mu, logvar = encoder(sounds)
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
             loss_encoder = loss_function_encoder(mu, logvar)
-            loss_encoder.backward(retain_graph=True)
+            #loss_encoder.backward(retain_graph=True)
             loss_decoder = loss_function_encoder(outputs, truth)
-            loss_decoder.backward(retain_graph=True)
+            #loss_decoder.backward(retain_graph=True)
+
+            loss_joint = loss_function_joint(outputs, truth)
+            loss_joint.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
             perc = int(i / len(tr_data) * 20)
@@ -427,8 +435,7 @@ def main():
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss_encoder: ' + loss_e_print_t + ' loss_decoder: ' + loss_d_print_t
             print ('\r', string_progress, end='')
 
-            optimizer_encoder.step()
-            optimizer_decoder.step()
+            optimizer_joint.step()
             #end of batch loop
 
         #validation loss, training and val accuracy computation
@@ -445,8 +452,7 @@ def main():
         with torch.no_grad():
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
-                optimizer_encoder.zero_grad()
-                optimizer_decoder.zero_grad()
+                optimizer_joint.zero_grad()
 
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
@@ -459,8 +465,7 @@ def main():
                 train_batch_losses_d.append(loss_decoder.item())
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
-                optimizer_encoder.zero_grad()
-                optimizer_decoder.zero_grad()
+                optimizer_joint.zero_grad()
 
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
