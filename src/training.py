@@ -206,6 +206,9 @@ def loss_function_joint(recon_x, x, mu, logvar):
     # KLD tries to push the distributions as close as possible to unit Gaussian
 
     joint_loss = recon_loss + KLD
+
+    joint_loss = MSELoss(recon_x,x)
+
     return joint_loss
 
 def loss_function_encoder(mu, logvar):
@@ -219,7 +222,9 @@ def loss_function_decoder(recon_x, x):
 
     recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
 
-    #recon_loss /= batch_size
+    recon_loss /= batch_size
+
+    recon_loss = MSE_Loss(recon_x,x)
 
     return recon_loss
 
