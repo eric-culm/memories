@@ -171,8 +171,8 @@ def loss_function(recon_x, x, mu, logvar):
 
     recon_loss /= b_s
     KLD /= b_s
-    print ('')
-    print (recon_loss, KLD)
+    #print ('')
+    #print (recon_loss, KLD)
 
     # BCE tries to make our reconstruction as accurate as possible
     # KLD tries to push the distributions as close as possible to unit Gaussian
