@@ -222,9 +222,9 @@ def loss_function_decoder(recon_x, x):
 
     recon_loss = -1. *  torch.abs(CCC_loss(recon_x, x))
 
-    recon_loss /= batch_size
+    #recon_loss /= batch_size
 
-    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
+    #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     return recon_loss
 
