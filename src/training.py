@@ -224,6 +224,7 @@ def loss_function_decoder(recon_x, x):
     print (rexon_x.shape, x.shape)
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
     print (recon_loss)
+    recon_loss = 1
 
     #recon_loss /= batch_size
 
