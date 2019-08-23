@@ -148,7 +148,12 @@ def loss_function(recon_x, x, mu, logvar):
     print ('\nMERDA')
     print (recon_x.shape, x.shape)
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
-    BCE = F.binary_cross_entropy(recon_x, x)
+    recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
+    x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
+
+    BCE = F.binary_cross_entropy(recon_x_0to1, x_0to1)
+    #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
+
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
     # learned distribution from the unit Gaussian
@@ -166,7 +171,7 @@ def loss_function(recon_x, x, mu, logvar):
 
     # BCE tries to make our reconstruction as accurate as possible
     # KLD tries to push the distributions as close as possible to unit Gaussian
-    return BCE + KLD
+    return recon_loss + KLD
 
 def main():
     #CREATE DATASET
