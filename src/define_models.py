@@ -266,7 +266,8 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
             self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
             self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
-            self.fc1 = nn.Linear(256 * model_size, latent_size)
+            self.fc1_1 = nn.Linear(256 * model_size, latent_size)
+            self.fc1_2 = nn.Linear(256 * model_size, latent_size)
 
             for m in self.modules():
                 if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
@@ -297,7 +298,10 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             if self.verbose:
                 print(x.shape)
 
-            return torch.sigmoid(self.fc1(x))
+            mu = torch.sigmoid(self.fc1_1(x))
+            logvar = torch.sigmoid(self.fc1_2(x))
+
+            return mu, logvar
 
     out = WAVE_encoder_class()
 
