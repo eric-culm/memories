@@ -548,6 +548,7 @@ def main():
                     for i in range(save_sounds_n):
                         sound = tr_preds[i]
                         sound = sound.flatten()
+                        print (sound[:10])
                         #normalize
                         sound = np.divide(sound, np.max(sound))
                         sound = np.multiply(sound, 0.8)
