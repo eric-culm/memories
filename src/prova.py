@@ -37,30 +37,11 @@ y = decoder(r)
 print ('DECODED')
 print (y.shape)
 
+print ('\nAUTO')
 
-
-
-
-'''
-
-
-
-
-input2 = np.random.rand(100)
-input2 = input2.reshape(1,100)
-input2 = torch.tensor(input2).float().to(device)
-
-input3 = np.random.rand(100)
-input3 = input3.reshape(1,100)
-input3 = torch.tensor(input3).float().to(device)
-
-
-
-
-input1 = np.random.rand(16348)
-input1 = input1.reshape(1,1,16348)
-input1 = torch.tensor(input1).float().to(device)
+input_vae = np.random.rand(16348)
+input_vae = input1.reshape(1,1,16348)
+input_vae = torch.tensor(input_vae).float().to(device)
 y1 = vae(input1)
 print ('RECONSTRUCTED')
 print (y1.shape)
-'''
