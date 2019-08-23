@@ -180,6 +180,26 @@ def loss_function(recon_x, x, mu, logvar):
     #return recon_loss + KLD
     return recon_loss
 
+def loss_function_encoder(mu, logvar):
+
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    KLD /= b_s
+
+    return KLD
+
+def loss_function_decoder(recon_x, x):
+
+    b_s = recon_x.shape[0]  #get batch size
+    recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
+    x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
+
+    #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
+    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
+    recon_loss /= recon_x.shape[-1]
+    recon_loss /= b_s
+
+    return recon_loss
+
 def main():
     #CREATE DATASET
     #load numpy data
@@ -273,6 +293,7 @@ def main():
     print (training_predictors.shape)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
+    '''
     tr_mean = np.mean(training_predictors)
     tr_std = np.std(training_predictors)
     training_predictors = np.subtract(training_predictors, tr_mean)
@@ -281,6 +302,7 @@ def main():
     validation_predictors = np.divide(validation_predictors, tr_std)
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
+    '''
 
     #sys.exit(0)
 
@@ -314,12 +336,18 @@ def main():
 
 
     #load model (model is in locals()['model'])
-    print('\n loading model...')
-    model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
-    exec(model_string)
+    print('\n loading models...')
+    encoder_string = 'encoder_class, encoder_parameters = choose_model.' + encoder_architecture + '(time_dim, features_dim, parameters)'
+    decoder_string = 'decoder_class, decoder_parameters = choose_model.' + decoder_architecture + '(time_dim, features_dim, parameters)'
+    reparametrize_string = 'reparametrize_class = choose_model.' + reparametrize_architecture + '(time_dim, features_dim, parameters)'
 
-    model = locals()['model_class'].to(device)
+    exec(encoder_string)
+    exec(decoder_string)
+    exec(reparametrize_string)
 
+    encoder = locals()['encoder_class'].to(device)
+    decoder = locals()['decoder_class'].to(device)
+    reparametrize = locals()['reparametrize_class'].to(device)
 
 
     #run training
@@ -337,13 +365,19 @@ def main():
 
 
     #compute number of parameters
-    tot_params = sum([np.prod(p.size()) for p in model.parameters()])
+    encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
+    decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
     print ('')
-    print ('Total paramters: ' + str(tot_params))
+    print ('Encoder paramters: ' + str(encoder_params))
+    print ('Decoder paramters: ' + str(decoder_params))
+    print ('Total paramters: ' + str(encoder_params+decoder_params))
 
-    #define optimizer and loss function
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate,
+    #define optimizers
+    optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
+    optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
+                           weight_decay=regularization_lambda)
+
     model.train()
 
     total_step = len(tr_data)
@@ -362,18 +396,29 @@ def main():
         string = 'Epoch: ' + str(epoch+1) + ' '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
-
             optimizer.zero_grad()
-            outputs, mu, logvar = model(sounds)
-            loss = loss_function(outputs, truth, mu, logvar)
-            loss.backward(retain_graph=True)
+
+            mu, logvar = encoder(sounds)
+            z = reparametrize(mu, logvar)
+            outputs = self.decoder(z)
+
+            loss_encoder = loss_function_encoder(mu, logvar)
+            loss_encoder.backward(retain_graph=True)
+            loss_decoder = loss_function_encoder(outputs, truth)
+            loss_decoder.backward(retain_graph=True)
+
             #print progress and update history, optimizer step
             perc = int(i / len(tr_data) * 20)
             inv_perc = int(20 - perc - 1)
-            loss_print_t = str(np.round(loss.item(), decimals=3))
-            string2 = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_print_t
-            print ('\r', string2, end='')
-            optimizer.step()
+
+            loss_e_print_t = str(np.round(loss_encoder.item(), decimals=3))
+            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=3))
+
+            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss_encoder: ' + loss_e_print_t + ' loss_decoder: ' + loss_d_print_t
+            print ('\r', string_pregress, end='')
+
+            optimizer_encoder.step()
+            optimizer_decoder.step()
             #end of batch loop
 
         #validation loss, training and val accuracy computation

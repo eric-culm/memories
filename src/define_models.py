@@ -127,8 +127,8 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #always return model AND p!!!
     class WAVE_decoder_class(nn.Module):
-        def __init__(self, model_size=20, ngpus=1, num_channels=1, latent_dim=100,
-                    post_proc_filt_len=0, verbose=p['verbose'], upsample=False):
+        def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
+                    post_proc_filt_len=512, verbose=p['verbose'], upsample=False):
             super(WAVE_decoder_class, self).__init__()
             self.ngpus = ngpus
             self.model_size = model_size # d
@@ -162,9 +162,6 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                 self.tconv3 = nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11, output_padding=1)
                 self.tconv4 = nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11, output_padding=1)
                 self.tconv5 = nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11, output_padding=1)
-
-            self.out_layer = nn.Linear(200, 16384)
-
 
             if post_proc_filt_len:
                 self.ppfilter1 = nn.Conv1d(num_channels, num_channels, post_proc_filt_len)
@@ -216,16 +213,11 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     if self.verbose:
                         print(x.shape)
 
-
-
                     output = torch.tanh(self.tconv5(x))
 
                 if self.verbose:
                     print(output.shape)
 
-                output = torch.tanh(self.out_layer(output))
-
-                '''
                 if self.post_proc_filt_len:
                     # Pad for "same" filtering
                     if (self.post_proc_filt_len % 2) == 0:
@@ -237,7 +229,6 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
                     if self.verbose:
                         print(output.shape)
-                '''
 
                 return output
 
