@@ -37,7 +37,7 @@ except IndexError:
     generator = True
     dataset = 'digits'
     architecture = 'WAVE_VAE'
-    parameters = ['niente = 0']
+    parameters = ['verbose=False', 'model_size=64']
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
     parameters_path = results_path + '/parameters'
