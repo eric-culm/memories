@@ -207,7 +207,7 @@ def loss_function_joint(recon_x, x, mu, logvar):
 
     joint_loss = recon_loss + KLD
 
-    joint_loss = nn.MSELoss(recon_x,x)
+    joint_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     return joint_loss
 
@@ -224,7 +224,7 @@ def loss_function_decoder(recon_x, x):
 
     recon_loss /= batch_size
 
-    recon_loss = nn.MSE_Loss(recon_x,x)
+    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
 
     return recon_loss
 
