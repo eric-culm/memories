@@ -18,9 +18,15 @@ vae = vae.to(device)
 
 
 
+input = np.random.rand(100)
+input = input.reshape(1,100)
+input = torch.tensor(input).float().to(device)
+y = encoder(y1)
+print ('ENCODED')
+print (y.shape)
 
 
-
+'''
 input1 = np.random.rand(16348)
 input1 = input1.reshape(1,1,16348)
 input1 = torch.tensor(input1).float().to(device)
@@ -28,12 +34,7 @@ y1 = decoder(input1)
 print ('DECODED')
 print (y1.shape)
 
-input = np.random.rand(100)
-input = input.reshape(1,100)
-input = torch.tensor(input).float().to(device)
-y = encoder(y1)
-print ('ENCODED')
-print (y.shape)
+
 
 input2 = np.random.rand(100)
 input2 = input2.reshape(1,100)
@@ -46,6 +47,7 @@ input3 = torch.tensor(input3).float().to(device)
 r = reparametrize(input2, input3)
 print ('REPARAMETRIZED')
 print (r.shape)
+'''
 
 
 input1 = np.random.rand(16348)
