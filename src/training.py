@@ -501,8 +501,7 @@ def main():
 
 
                     tr_preds = np.array(tr_preds)
-                    print('culo')
-                    print (tr_preds.shape)
+
                     tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
                     for i in range(save_sounds_n):
                         sound = tr_preds[i]
@@ -543,18 +542,21 @@ def main():
                     print ('generated sounds saved')
 
             #end of epoch loop
-
-        sys.exit(0)
+        '''
         #compute train and val mean accuracy and loss of current epoch
-        train_epoch_loss = np.mean(train_batch_losses)
-        val_epoch_loss = np.mean(val_batch_losses)
+        train_epoch_loss_e = np.mean(train_batch_losses_e)
+        train_epoch_loss_d = np.mean(train_batch_losses_d)
+        val_epoch_loss_e = np.mean(val_batch_losses_e)
+        val_epoch_loss_d = np.mean(val_batch_losses_d)
 
         #append values to histories
-        train_loss_hist.append(train_epoch_loss)
-        val_loss_hist.append(val_epoch_loss)
+        train_loss_hist_e.append(train_epoch_loss_e)
+        train_loss_hist_d.append(train_epoch_loss_d)
+        val_loss_hist_e.append(val_epoch_loss_e)
+        val_loss_hist_d.append(val_epoch_loss_d)
 
         #print loss and accuracy of the current epoch
-        print ('\r', 'train_loss: ' + str(train_epoch_loss) + '| val_loss: ' + str(val_epoch_loss))
+        print ('\r', 'train_loss_encoder: ' + str(train_epoch_loss) + '| val_loss: ' + str(val_epoch_loss))
 
         #save best model (metrics = loss)
         if save_best_only == True:
@@ -661,7 +663,7 @@ def main():
 
     np.save(results_path, temp_results)
 
-
+    '''
 
 if __name__ == '__main__':
     main()
