@@ -496,7 +496,8 @@ def main():
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
 
-                        outputs = outputs[0].cpu().numpy()
+                        outputs = outputs.cpu().numpy()
+                        pr
                         tr_preds.append(outputs)
 
 
@@ -523,8 +524,7 @@ def main():
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
 
-                        outputs = outputs[0].cpu().numpy()
-                        outputs = outputs[0].cpu().numpy()
+                        outputs = outputs.cpu().numpy()
                         ts_preds.append(outputs)
 
                     ts_preds = np.array(ts_preds)
