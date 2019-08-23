@@ -497,7 +497,6 @@ def main():
                         outputs = decoder(z)
 
                         outputs = outputs.cpu().numpy()
-                        pr
                         tr_preds.append(outputs)
 
 
