@@ -207,7 +207,7 @@ def loss_function_joint(recon_x, x, mu, logvar):
 
     joint_loss = recon_loss + KLD
 
-    joint_loss = MSELoss(recon_x,x)
+    joint_loss = nn.MSELoss(recon_x,x)
 
     return joint_loss
 
@@ -224,7 +224,7 @@ def loss_function_decoder(recon_x, x):
 
     recon_loss /= batch_size
 
-    recon_loss = MSE_Loss(recon_x,x)
+    recon_loss = nn.MSE_Loss(recon_x,x)
 
     return recon_loss
 
