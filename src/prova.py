@@ -29,10 +29,11 @@ r = reparametrize(mu, logvar)
 print ('REPARAMETRIZED')
 print (r.shape)
 
-input = np.random.rand(100)
-input = input.reshape(1,100)
-input = torch.tensor(input).float().to(device)
-y = decoder(input)
+
+#input = np.random.rand(100)
+#input = input.reshape(1,100)
+#input = torch.tensor(input).float().to(device)
+y = decoder(r)
 print ('DECODED')
 print (y.shape)
 
