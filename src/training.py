@@ -410,7 +410,7 @@ def main():
 
             mu, logvar = encoder(sounds)
             z = reparametrize(mu, logvar)
-            outputs = self.decoder(z)
+            outputs = decoder(z)
 
             loss_encoder = loss_function_encoder(mu, logvar)
             loss_encoder.backward(retain_graph=True)
@@ -450,7 +450,7 @@ def main():
 
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
-                outputs = self.decoder(z)
+                outputs = decoder(z)
 
                 loss_encoder = loss_function_encoder(mu, logvar)
                 loss_decoder = loss_function_encoder(outputs, truth)
@@ -464,7 +464,7 @@ def main():
 
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
-                outputs = self.decoder(z)
+                outputs = decoder(z)
 
                 loss_encoder = loss_function_encoder(mu, logvar)
                 loss_decoder = loss_function_encoder(outputs, truth)
@@ -494,7 +494,7 @@ def main():
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
-                        outputs = self.decoder(z)
+                        outputs = decoder(z)
 
                         outputs = outputs[0].cpu().numpy()
                         tr_preds.append(outputs)
@@ -519,7 +519,7 @@ def main():
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
-                        outputs = self.decoder(z)
+                        outputs = decoder(z)
 
                         outputs = outputs[0].cpu().numpy()
                         outputs = outputs[0].cpu().numpy()
