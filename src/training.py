@@ -187,20 +187,20 @@ def loss_function(recon_x, x, mu, logvar):
 def loss_function_encoder(mu, logvar):
 
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    KLD /= b_s
+    KLD /= batch_size
 
     return KLD
 
 def loss_function_decoder(recon_x, x):
 
-    b_s = recon_x.shape[0]  #get batch size
-    recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
-    x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
+    #b_s = recon_x.shape[0]  #get batch size
+    #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
+    #x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
 
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     recon_loss /= recon_x.shape[-1]
-    recon_loss /= b_s
+    recon_loss /= batch_size
 
     return recon_loss
 
