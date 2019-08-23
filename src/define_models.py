@@ -356,8 +356,8 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
 
     class simple_encoder_class(nn.Module):
-        def __init__(self, ):
-            super(simple_encoder_class, self, latent_dim=100).__init__()
+        def __init__(self, latent_dim=100):
+            super(simple_encoder_class, self).__init__()
             self.fc1 = nn.Linear(16384, 10000)
             self.fc2 = nn.Linear(10000, 8000)
             self.fc3 = nn.Linear(8000, 5000)
@@ -396,8 +396,8 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
 
     class simple_decoder_class(nn.Module):
-        def __init__(self, ):
-            super(simple_encoder_class, self, latent_dim=100).__init__()
+        def __init__(self, latent_dim=100):
+            super(simple_decoder_class, self).__init__()
             self.fc1 = nn.Linear(latent_dim, 1000)
             self.fc2 = nn.Linear(1000, 2000)
             self.fc3 = nn.Linear(2000, 5000)
