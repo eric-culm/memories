@@ -192,11 +192,6 @@ def loss_function_encoder(mu, logvar):
 
 def loss_function_decoder(recon_x, x):
 
-    #b_s = recon_x.shape[0]  #get batch size
-    #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
-    #x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
-
-    #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     recon_loss /= recon_x.shape[-1]
     recon_loss /= batch_size
@@ -296,7 +291,7 @@ def main():
     print (training_predictors.shape)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
-    '''
+
     tr_mean = np.mean(training_predictors)
     tr_std = np.std(training_predictors)
     training_predictors = np.subtract(training_predictors, tr_mean)
@@ -305,7 +300,7 @@ def main():
     validation_predictors = np.divide(validation_predictors, tr_std)
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
-    '''
+    
 
     #sys.exit(0)
 
