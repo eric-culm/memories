@@ -17,7 +17,7 @@ vae, p = def_mod.WAVE_VAE(1,1)
 vae = vae.to(device)
 
 
-
+print ()
 input1 = np.random.rand(16384)
 input1 = input1.reshape(1,1,16384)
 input1 = torch.tensor(input1).float().to(device)
@@ -39,8 +39,8 @@ print (y.shape)
 
 print ('\nAUTO')
 
-input_vae = np.random.rand(16348)
-input_vae = input1.reshape(1,1,16348)
+input_vae = np.random.rand(16384)
+input_vae = input1.reshape(1,1,16384)
 input_vae = torch.tensor(input_vae).float().to(device)
 y1, mu, logvar = vae(input1)
 print ('RECONSTRUCTED')
