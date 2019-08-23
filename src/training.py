@@ -329,6 +329,10 @@ def main():
 
     #sys.exit(0)
 
+    #OVERFITTING TEST!!!!!!!!!!!!!!!!!!!!!!!!!!
+    training_predictors = training_predictors[0]
+    validation_predictors = training_predictors
+    test_predictors = test_predictors
 
 
     #reshape tensors
