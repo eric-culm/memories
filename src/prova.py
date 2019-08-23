@@ -21,7 +21,7 @@ vae = vae.to(device)
 input = np.random.rand(100)
 input = input.reshape(1,100)
 input = torch.tensor(input).float().to(device)
-y = encoder(y1)
+y = encoder(input)
 print ('ENCODED')
 print (y.shape)
 
