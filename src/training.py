@@ -390,11 +390,36 @@ def main():
 
             #save sounds if specified
             ts_preds = []
+            tr_preds = []
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
-                    curr_sounds_path = os.path.join(gen_sounds_path, 'epoch_'+str(epoch))
-                    if not os.path.exists(curr_sounds_path):
-                        os.makedirs(curr_sounds_path)
+                    curr_sounds_path_train = os.path.join(gen_sounds_path, '/training/epoch_'+str(epoch))
+                    curr_sounds_path_test = os.path.join(gen_sounds_path, 'test/epoch_'+str(epoch))
+
+                    if not os.path.exists(curr_sounds_path_train):
+                        os.makedirs(curr_sounds_path_train)
+                    if not os.path.exists(curr_sounds_path_test):
+                        os.makedirs(curr_sounds_path_test)
+
+                    #train sounds
+                    for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
+                        optimizer.zero_grad()
+                        tr_outputs = model(sounds)
+                        tr_outputs = tr_outputs[0].cpu().numpy()
+                        tr_preds.append(tr_outputs)
+                    tr_preds = np.array(tr_preds)
+                    tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
+                    for i in range(save_sounds_n):
+                        sound = tr_preds[i]
+                        sound = sound.flatten()
+                        #normalize
+                        sound = np.divide(sound, np.max(sound))
+                        sound = np.multiply(sound, 0.8)
+                        sound_name = 'gen_' + str(i) + '.wav'
+                        sound_path = os.path.join(curr_sounds_path_train, sound_name)
+                        uf.wavwrite(sound, SR, sound_path)
+
+                    #test sounds
                     for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
                         optimizer.zero_grad()
                         ts_outputs = model(sounds)
@@ -409,8 +434,11 @@ def main():
                         sound = np.divide(sound, np.max(sound))
                         sound = np.multiply(sound, 0.8)
                         sound_name = 'gen_' + str(i) + '.wav'
-                        sound_path = os.path.join(curr_sounds_path, sound_name)
+                        sound_path = os.path.join(curr_sounds_path_test, sound_name)
                         uf.wavwrite(sound, SR, sound_path)
+
+
+
                 print ('')
                 print ('generated sounds saved')
 
