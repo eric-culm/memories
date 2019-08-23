@@ -536,14 +536,15 @@ def main():
                         print (outputs.shape)
 
                         outputs = outputs.cpu().numpy()
-                        tr_preds.append(outputs)
+                        for single_sound in outputs:
+                            tr_preds.append(single_sound)
 
 
                     tr_preds = np.array(tr_preds)
                     print ('culo')
                     print (tr_preds.shape)
 
-                    tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
+                    #tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
                     for i in range(save_sounds_n):
                         sound = tr_preds[i]
                         sound = sound.flatten()
