@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 device = torch.device('cuda:0')
-
+#a
 #encoder, p = def_mod.WAVE_encoder(1,1)
 #encoder = encoder.to(device)
 decoder, p = def_mod.WAVE_decoder(1,1)
