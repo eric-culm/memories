@@ -95,7 +95,7 @@ def dummy_autoencoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
-def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     GENERATOR: from latent dim to 1-sec sound
     '''
@@ -126,7 +126,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             return out
 
             #always return model AND p!!!
-    class WAVE_decoder(nn.Module):
+    class WAVE_encoder(nn.Module):
         def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
                     post_proc_filt_len=512, verbose=p['verbose'], upsample=True):
             super(WAVE_encoder, self).__init__()
