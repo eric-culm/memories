@@ -538,6 +538,8 @@ def main():
 
 
                     tr_preds = np.array(tr_preds)
+                    print ('culo')
+                    print (tr_preds.shape)
 
                     tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
                     for i in range(save_sounds_n):
