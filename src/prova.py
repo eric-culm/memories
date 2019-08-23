@@ -17,7 +17,7 @@ vae, p = def_mod.WAVE_VAE(1,1)
 vae = vae.to(device)
 
 
-print ()
+print ('')
 input1 = np.random.rand(16384)
 input1 = input1.reshape(1,1,16384)
 input1 = torch.tensor(input1).float().to(device)

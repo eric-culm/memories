@@ -148,7 +148,7 @@ def loss_function(recon_x, x, mu, logvar):
     print ('\nMERDA')
     print (recon_x.shape, x.shape)
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
-    BCE = F.binary_cross_entropy(recon_x, x.view(-1, x.shape[-1]))
+    BCE = F.binary_cross_entropy(recon_x, x.)
     # KLD is Kullback–Leibler divergence -- how much does one learned
     # distribution deviate from another, in this specific case the
     # learned distribution from the unit Gaussian
