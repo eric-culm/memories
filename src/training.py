@@ -398,7 +398,7 @@ def main():
                     for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
                         optimizer.zero_grad()
                         ts_outputs = model(sounds)
-                        ts_outputs = ts_outputs.cpu().numpy()
+                        ts_outputs = ts_outputs[0].cpu().numpy()
                         ts_preds.append(ts_outputs)
                     ts_preds = np.array(ts_preds)
                     ts_preds = ts_preds.reshape(ts_preds.shape[0]*ts_preds.shape[1], ts_preds.shape[2], ts_preds.shape[3])
