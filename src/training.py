@@ -188,7 +188,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
     return recon_loss
 
 
-def loss_function_encoder(mu, logvar,kld_weight=-0.2):
+def loss_function_encoder(mu, logvar,kld_weight=-0.5):
 
     KLD = kld_weight * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
@@ -201,7 +201,7 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
+def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
@@ -212,8 +212,8 @@ def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
     #recon_loss = loss_function_decoder(recon_x, x)
 
     KLD = loss_function_encoder(mu, logvar, kld_weight)
-    #joint_loss = KLD + recon_loss
-    joint_loss = recon_loss
+    joint_loss = KLD + recon_loss
+    #joint_loss = recon_loss
 
     return joint_loss
 
