@@ -106,6 +106,8 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     'model_size': 64,
     'upsample': True
     }
+    print ('culo')
+    print (p)
 
     p = parse_parameters(p, user_parameters)
     class UpsampleConvLayer(torch.nn.Module):
