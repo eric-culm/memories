@@ -188,7 +188,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
     return recon_loss
 
 
-def loss_function_encoder(mu, logvar,kld_weight=-0.1):
+def loss_function_encoder(mu, logvar,kld_weight=-0.2):
 
     KLD = kld_weight * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
@@ -201,7 +201,7 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5):
+def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
 
     recon_loss = loss_function_decoder(recon_x, x)
     KLD = loss_function_encoder(mu, logvar, kld_weight)
@@ -315,17 +315,17 @@ def main():
     '''
 
     #sys.exit(0)
-    '''
+
     tr_pred = []
     for i in range(100):
         tr_pred.append(training_predictors[0])
-        tr_pred.append(training_predictors[1])
+        #tr_pred.append(training_predictors[1])
 
     tr_pred = np.array(tr_pred)
     training_predictors = tr_pred
     validation_predictors = training_predictors
     test_predictors = test_predictors
-    '''
+
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
     #reshape
