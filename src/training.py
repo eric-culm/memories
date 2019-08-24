@@ -187,10 +187,10 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
     #return recon_loss + KLD
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar):
+def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.1):
 
     recon_loss = 1. - torch.abs(CCC_loss(recon_x, x))
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    KLD = kld_weight * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     '''
     # Normalise by same number of elements as in reconstruction
     KLD /= p['batch_size'] * time_dim * features_dim
