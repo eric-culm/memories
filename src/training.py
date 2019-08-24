@@ -187,43 +187,28 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
     #return recon_loss + KLD
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.1):
 
-    recon_loss = 1. - torch.abs(CCC_loss(recon_x, x))
+def loss_function_encoder(mu, logvar,kld_weight=-0.1):
+
     KLD = kld_weight * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    '''
-    # Normalise by same number of elements as in reconstruction
-    KLD /= p['batch_size'] * time_dim * features_dim
-    '''
-
-
-    #recon_loss /= batch_size
-    KLD /= batch_size
-    #print ('')
-    #print (recon_loss, KLD)
-
-    # BCE tries to make our reconstruction as accurate as possible
-    # KLD tries to push the distributions as close as possible to unit Gaussian
-
-    joint_loss = recon_loss + KLD
-
-    joint_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
-
-    return joint_loss
-
-def loss_function_encoder(mu, logvar):
-
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
 
     return KLD
 
 def loss_function_decoder(recon_x, x):
 
-
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
 
     return recon_loss
+
+def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.1):
+
+    recon_loss = loss_function_decoder(recon_x, x)
+    KLD = loss_function_encoder(mu, logvar, kld_weight)
+    joint_loss = KLD + recon_loss
+
+    return joint_loss
+
 
 def main():
     #CREATE DATASET
