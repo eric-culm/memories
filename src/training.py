@@ -213,7 +213,7 @@ def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
 
     KLD = loss_function_encoder(mu, logvar, kld_weight)
     #joint_loss = KLD + recon_loss
-    joint loss = recon_loss
+    joint_loss = recon_loss
 
     return joint_loss
 
