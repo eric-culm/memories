@@ -212,7 +212,8 @@ def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
     recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
 
     KLD = loss_function_encoder(mu, logvar, kld_weight)
-    joint_loss = KLD + recon_loss
+    #joint_loss = KLD + recon_loss
+    joint loss = recon_loss
 
     return joint_loss
 
