@@ -330,7 +330,7 @@ def main():
     '''
 
     #sys.exit(0)
-
+    '''
     tr_pred = []
     for i in range(100):
         tr_pred.append(training_predictors[0])
@@ -340,6 +340,7 @@ def main():
     training_predictors = tr_pred
     validation_predictors = training_predictors
     test_predictors = test_predictors
+    '''
     #reshape tensors
     #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
     #reshape
