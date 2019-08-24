@@ -334,7 +334,7 @@ def main():
     tr_pred = []
     for i in range(100):
         tr_pred.append(training_predictors[0])
-        tr_pred.append(training_predictors[1])
+        #tr_pred.append(training_predictors[1])
 
     tr_pred = np.array(tr_pred)
     training_predictors = tr_pred
@@ -532,8 +532,7 @@ def main():
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
-                        print ('figa')
-                        print (outputs.shape)
+
 
                         outputs = outputs.cpu().numpy()
                         for single_sound in outputs:
