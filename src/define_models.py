@@ -102,7 +102,9 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'verbose':True
+    'verbose':True,
+    'model_size': 64,
+    'upsample': True
     }
 
     p = parse_parameters(p, user_parameters)
@@ -127,8 +129,8 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #always return model AND p!!!
     class WAVE_decoder_class(nn.Module):
-        def __init__(self, model_size=8, ngpus=1, num_channels=1, latent_dim=100,
-                    post_proc_filt_len=512, verbose=p['verbose'], upsample=False):
+        def __init__(self, model_size=p['model_size'], ngpus=1, num_channels=1, latent_dim=100,
+                    post_proc_filt_len=512, verbose=p['verbose'], upsample=p['upsample']):
             super(WAVE_decoder_class, self).__init__()
             self.ngpus = ngpus
             self.model_size = model_size # d
@@ -247,12 +249,13 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'verbose':True
+    'verbose':True,
+    'model_size':64
     }
     p = parse_parameters(p, user_parameters)
 
     class WAVE_encoder_class(nn.Module):
-        def __init__(self, model_size=8, num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
+        def __init__(self, model_size=p['model_size'], num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
             super(WAVE_encoder_class, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
