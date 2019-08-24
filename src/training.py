@@ -458,8 +458,9 @@ def main():
 
             loss_e_print_t = str(np.round(loss_encoder.item(), decimals=3))
             loss_d_print_t = str(np.round(loss_decoder.item(), decimals=3))
+            loss_j_print_t = str(np.round(loss_joint.item(), decimals=3))
 
-            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss_encoder: ' + loss_e_print_t + ' loss_decoder: ' + loss_d_print_t
+            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' KLD: ' + loss_e_print_t + ' CCC: ' + loss_d_print_t
             print ('\r', string_progress, end='')
 
             optimizer_joint.step()
