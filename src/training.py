@@ -40,7 +40,7 @@ except IndexError:
     encoder_architecture = 'WAVE_encoder'
     decoder_architecture = 'WAVE_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=True', 'model_size=8']
+    parameters = ['verbose=False', 'model_size=64']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
