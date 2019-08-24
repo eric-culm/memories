@@ -203,7 +203,11 @@ def loss_function_decoder(recon_x, x):
 
 def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.2):
 
-    recon_loss = loss_function_decoder(recon_x, x)
+    #recon_loss = loss_function_decoder(recon_x, x)
+
+    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
+    recon_loss /= recon_x.shape[-1]
+
     KLD = loss_function_encoder(mu, logvar, kld_weight)
     joint_loss = KLD + recon_loss
 
