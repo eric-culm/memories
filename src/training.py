@@ -40,7 +40,7 @@ except IndexError:
     encoder_architecture = 'simple_encoder'
     decoder_architecture = 'simple_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64']
+    parameters = ['verbose=True', 'model_size=8']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
