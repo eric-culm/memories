@@ -399,6 +399,78 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def small_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'variational':True,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class small_encoder_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
+            super(small_encoder_class, self).__init__()
+            self.variational = variational
+            self.fc1 = nn.Linear(16384, 512)
+            self.fc2 = nn.Linear(512, 200)
+            self.fc3_1 = nn.Linear(200, latent_dim)
+            self.fc3_2 = nn.Linear(200, latent_dim)
+
+        def forward(self, x):
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x1 = F.sigmoid(self.fc3_1(x))
+            if self.variational:
+                x2 = F.sigmoid(self.fc3_2(x))
+                return x1, x2
+            else:
+                return x1, x1
+
+    out = small_encoder_class()
+
+    return out, p
+
+def small_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class small_decoder_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim']):
+            super(small_decoder_class, self).__init__()
+            self.fc1 = nn.Linear(latent_dim, 200)
+            self.fc2 = nn.Linear(200, 512)
+            self.fc3 = nn.Linear(512, 16384)
+
+
+
+        def forward(self, x):
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
+            x = F.tanh(self.fc3(x))
+
+            return x
+
+    out = small_decoder_class()
+
+    return out, p
+
 
 def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''

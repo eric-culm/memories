@@ -37,8 +37,8 @@ except IndexError:
     generator = True
     dataset = 'digits'
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'simple_encoder'
-    decoder_architecture = 'simple_decoder'
+    encoder_architecture = 'small_encoder'
+    decoder_architecture = 'small_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True']
 
