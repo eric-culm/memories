@@ -366,7 +366,7 @@ def dummy_reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
             #nothing
 
         def forward(self, x, x1):
-            out = x
+            return x
 
 
     out = reparametrize()
