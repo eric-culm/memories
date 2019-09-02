@@ -189,7 +189,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def loss_function_encoder(mu, logvar, epoch=0, kld_weight=-0.5):
+def loss_function_encoder(mu, logvar, epoch, kld_weight=-0.5):
 
     if epoch < 100:
         kld_weight_epoch = 0
@@ -501,7 +501,7 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar)
+                loss_encoder = loss_function_encoder(mu, logvar, epoch)
                 loss_decoder = loss_function_encoder(outputs, truth)
 
                 train_batch_losses_e.append(loss_encoder.item())
@@ -514,7 +514,7 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar)
+                loss_encoder = loss_function_encoder(mu, logvar, epoch)
                 loss_decoder = loss_function_encoder(outputs, truth)
 
 
