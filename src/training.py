@@ -198,7 +198,10 @@ def loss_function_encoder(mu, logvar,kld_weight=-0.5):
 
 def loss_function_decoder(recon_x, x):
     print (torch.sum(mean_target))
+    print ('culo')
+    print (recon_x.shape)
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
+
     recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
 
     return recon_loss + recon_mean_distance
