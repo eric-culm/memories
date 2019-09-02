@@ -381,14 +381,17 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'verbose':False
+    'verbose':False,
+    'variational':True,
+    'latent_dim':100
     }
     p = parse_parameters(p, user_parameters)
 
 
     class simple_encoder_class(nn.Module):
-        def __init__(self, latent_dim=100):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
             super(simple_encoder_class, self).__init__()
+            self.variational = variational
             self.fc1 = nn.Linear(16384, 10000)
             self.fc2 = nn.Linear(10000, 8000)
             self.fc3 = nn.Linear(8000, 5000)
@@ -404,9 +407,11 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             x = F.relu(self.fc4(x))
             x = F.relu(self.fc5(x))
             x1 = F.sigmoid(self.fc6_1(x))
-            x2 = F.sigmoid(self.fc6_2(x))
-
-            return x1, x2
+            if self.variational:
+                x2 = F.sigmoid(self.fc6_2(x))
+                return x1, x2
+            else:
+                return x1, x1
 
     out = simple_encoder_class()
 
@@ -421,13 +426,14 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
     #default parameters
     p = {
-    'verbose':False
+    'verbose':False,
+    'latent_dim':100
     }
     p = parse_parameters(p, user_parameters)
 
 
     class simple_decoder_class(nn.Module):
-        def __init__(self, latent_dim=100):
+        def __init__(self, latent_dim=p['latent_dim']):
             super(simple_decoder_class, self).__init__()
             self.fc1 = nn.Linear(latent_dim, 1000)
             self.fc2 = nn.Linear(1000, 2000)
