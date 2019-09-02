@@ -456,9 +456,9 @@ def main():
             perc = int(i / len(tr_data) * 20)
             inv_perc = int(20 - perc - 1)
 
-            loss_e_print_t = str(np.round(loss_encoder.item(), decimals=3))
-            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=3))
-            loss_j_print_t = str(np.round(loss_joint.item(), decimals=3))
+            loss_e_print_t = str(np.round(loss_encoder.item(), decimals=5))
+            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=5)
+            loss_j_print_t = str(np.round(loss_joint.item(), decimals=5))
 
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' KLD: ' + loss_e_print_t + ' CCC: ' + loss_d_print_t
             print ('\r', string_progress, end='')
@@ -510,15 +510,48 @@ def main():
             ts_preds = []
             tr_preds = []
             if save_sounds:
+
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
 
                     curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
                     curr_sounds_path_test = os.path.join(gen_sounds_path, 'test' , 'epoch_'+str(epoch))
+                    curr_orig_path_training = os.path.join(gen_sounds_path, 'training', 'originals')
+                    curr_orig_path_test = os.path.join(gen_sounds_path, 'test', 'originals')
 
                     if not os.path.exists(curr_sounds_path_train):
                         os.makedirs(curr_sounds_path_train)
                     if not os.path.exists(curr_sounds_path_test):
                         os.makedirs(curr_sounds_path_test)
+                    if not os.path.exists(curr_orig_path_training):
+                        os.makedirs(curr_orig_path_training)
+                    if not os.path.exists(curr_orig_path_test):
+                        os.makedirs(curr_orig_path_test)
+
+                    #train originals
+                    for i, (sounds, truth) in enumerate(tr_data):
+                        if i <= save_sounds_n-1:
+                            truth = truth.cpu().numpy()
+                            truth = truth.flatten()
+                            truth = np.divide(truth, np.max(truth))
+                            truth = np.multiply(truth, 0.8)
+                            sound_name = 'orig_' + str(i) + '.wav'
+                            sound_path = os.path.join(curr_orig_path_training, sound_name)
+                            uf.wavwrite(sound, SR, sound_path)
+                        else:
+                            break
+
+                    #test originals
+                    for i, (sounds, truth) in enumerate(test_data):
+                        if i <= save_sounds_n-1:
+                            truth = truth.cpu().numpy()
+                            truth = truth.flatten()
+                            truth = np.divide(truth, np.max(truth))
+                            truth = np.multiply(truth, 0.8)
+                            sound_name = 'orig_' + str(i) + '.wav'
+                            sound_path = os.path.join(curr_orig_path_test, sound_name)
+                            uf.wavwrite(sound, SR, sound_path)
+                        else:
+                            break
 
                     #train sounds
                     for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
@@ -533,7 +566,6 @@ def main():
                         outputs = outputs.cpu().numpy()
                         for single_sound in outputs:
                             tr_preds.append(single_sound)
-
 
                     tr_preds = np.array(tr_preds)
 
