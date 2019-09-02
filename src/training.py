@@ -40,7 +40,7 @@ except IndexError:
     encoder_architecture = 'simple_encoder'
     decoder_architecture = 'simple_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64']
+    parameters = ['verbose=False', 'model_size=64', 'variational=False']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -202,9 +202,9 @@ def loss_function_decoder(recon_x, x):
     print (recon_x.shape)
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
 
-    recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
+    #recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
 
-    return recon_loss + recon_mean_distance
+    return recon_loss
 
 def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5):
 
