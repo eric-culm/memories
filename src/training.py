@@ -150,7 +150,7 @@ training_parameters = {'train_split': train_split,
 
 CCC_loss =  metrics.ConcordanceCC()
 
-def loss_function_joint_old(recon_x, x, mu, logvar):
+def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
     # how well do input x and output recon_x agree?
     #BCE = F.binary_cross_entropy(recon_x, x.view(-1, 784))  #original from paper
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
@@ -189,9 +189,13 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
 
 mean_target = torch.zeros(16384)
 
-def loss_function_encoder(mu, logvar,kld_weight=-0.5):
+def loss_function_encoder(mu, logvar,kld_weight=-0.5, epoch):
 
-    KLD = kld_weight * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    if epoch < 200:
+        kld_weight_epoch = 0
+    else:
+        kld_weight_epoch = kld_weight
+    KLD = kld_weight_epoch * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
 
     return KLD
@@ -455,12 +459,12 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
-            loss_encoder = loss_function_encoder(mu, logvar)
+            loss_encoder = loss_function_encoder(mu, logvar, epoch)
             #loss_encoder.backward(retain_graph=True)
             loss_decoder = loss_function_decoder(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_joint = loss_function_joint(outputs, truth, mu, logvar)
+            loss_joint = loss_function_joint(outputs, truth, mu, logvar, epoch)
             loss_joint.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
