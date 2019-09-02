@@ -218,11 +218,11 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                         print(x.shape)
 
                     output = torch.tanh(self.tconv5(x))
-                output = torch.tanh(self.fc2(x))
+                #output = torch.tanh(self.fc2(x))
 
                 if self.verbose:
                     print(output.shape)
-                '''
+
                 if self.post_proc_filt_len:
                     # Pad for "same" filtering
                     if (self.post_proc_filt_len % 2) == 0:
@@ -234,7 +234,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
                     if self.verbose:
                         print(output.shape)
-                '''
+                
 
                 return output
 
