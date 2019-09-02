@@ -396,8 +396,7 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc6_2 = nn.Linear(1000, latent_dim)
 
         def forward(self, x):
-            print ('culo')
-            print (self.fc1(x).shape)
+
             x = F.relu(self.bn1(self.fc1(x)))
             x = F.relu(self.bn2(self.fc2(x)))
             x = F.relu(self.bn3(self.fc3(x)))
