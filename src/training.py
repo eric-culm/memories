@@ -316,7 +316,7 @@ def main():
     num_predictors = len(training_predictors)
     for i in range(num_predictors):
         mean_target = np.add(mean_target, training_predictors[i])
-    mean_target = np.divide(mean,target, float(num_predictors))
+    mean_target = np.divide(mean_target, float(num_predictors))
     mean_target = torch.array(mean_target)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
