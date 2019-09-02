@@ -441,11 +441,11 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc5 = nn.Linear(8000, 10000)
             self.fc6 = nn.Linear(10000, 16384)
 
-            self.bn5 = nn.BatchNorm1d(10000)
-            self.bn4 = nn.BatchNorm1d(8000)
-            self.bn3 = nn.BatchNorm1d(5000)
-            self.bn2 = nn.BatchNorm1d(2000)
-            self.bn1 = nn.BatchNorm1d(1000)
+            self.bn5 = nn.BatchNorm1d(1)
+            self.bn4 = nn.BatchNorm1d(1)
+            self.bn3 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(1)
 
 
         def forward(self, x):
