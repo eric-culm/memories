@@ -39,7 +39,7 @@ except IndexError:
     architecture = 'WAVE_VAE'
     encoder_architecture = 'simple_encoder'
     decoder_architecture = 'simple_decoder'
-    reparametrize_architecture = 'dummy_reparametrize'
+    reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64']
 
     SAVE_MODEL = '../models/prova'

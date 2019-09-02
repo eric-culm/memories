@@ -395,7 +395,7 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc4 = nn.Linear(5000, 2000)
             self.fc5 = nn.Linear(2000, 1000)
             self.fc6_1 = nn.Linear(1000, latent_dim)
-            #self.fc6_2 = nn.Linear(1000, latent_dim)
+            self.fc6_2 = nn.Linear(1000, latent_dim)
 
         def forward(self, x):
             x = F.relu(self.fc1(x))
@@ -404,10 +404,9 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             x = F.relu(self.fc4(x))
             x = F.relu(self.fc5(x))
             x1 = F.sigmoid(self.fc6_1(x))
-            #x2 = F.sigmoid(self.fc6_2(x))
+            x2 = F.sigmoid(self.fc6_2(x))
 
-            #return x1, x2
-            return x1, x1
+            return x1, x2
 
     out = simple_encoder_class()
 
