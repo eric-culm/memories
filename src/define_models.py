@@ -386,11 +386,11 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc4 = nn.Linear(5000, 2000)
             self.fc5 = nn.Linear(2000, 1000)
 
-            self.bn1 = nn.BatchNorm2d(10000)
-            self.bn2 = nn.BatchNorm2d(8000)
-            self.bn3 = nn.BatchNorm2d(5000)
-            self.bn4 = nn.BatchNorm2d(2000)
-            self.bn5 = nn.BatchNorm2d(1000)
+            self.bn1 = nn.BatchNorm1d(10000)
+            self.bn2 = nn.BatchNorm1d(8000)
+            self.bn3 = nn.BatchNorm1d(5000)
+            self.bn4 = nn.BatchNorm1d(2000)
+            self.bn5 = nn.BatchNorm1d(1000)
 
             self.fc6_1 = nn.Linear(1000, latent_dim)
             self.fc6_2 = nn.Linear(1000, latent_dim)
