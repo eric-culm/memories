@@ -457,7 +457,7 @@ def main():
             inv_perc = int(20 - perc - 1)
 
             loss_e_print_t = str(np.round(loss_encoder.item(), decimals=5))
-            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=5)
+            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=5))
             loss_j_print_t = str(np.round(loss_joint.item(), decimals=5))
 
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' KLD: ' + loss_e_print_t + ' CCC: ' + loss_d_print_t

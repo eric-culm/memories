@@ -234,7 +234,7 @@ def WAVE_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
                     if self.verbose:
                         print(output.shape)
-                
+
 
                 return output
 
@@ -365,7 +365,7 @@ def dummy_reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
             super(reparametrize, self).__init__()
             #nothing
 
-        def forward(self, x):
+        def forward(self, x, x1):
             out = x
 
 
@@ -407,7 +407,7 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             #x2 = F.sigmoid(self.fc6_2(x))
 
             #return x1, x2
-            return x1
+            return x1, x1
 
     out = simple_encoder_class()
 
