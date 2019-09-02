@@ -189,7 +189,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def loss_function_encoder(mu, logvar, epoch, kld_weight=-0.5):
+def loss_function_encoder(mu, logvar, epoch=0, kld_weight=-0.5):
 
     if epoch < 100:
         kld_weight_epoch = 0
