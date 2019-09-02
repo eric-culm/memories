@@ -302,12 +302,12 @@ def main():
 
 
     #select a subdataset for testing (to be commented when normally trained)
-    '''
-    bound = 3
+
+    bound = 1
     training_predictors = training_predictors[:bound]
     validation_predictors = validation_predictors[:bound]
     test_predictors = test_predictors[:bound]
-    '''
+
     print (training_predictors.shape)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
