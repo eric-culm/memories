@@ -189,7 +189,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def loss_function_encoder(mu, logvar,kld_weight=-0.5, epoch):
+def loss_function_encoder(mu, logvar,kld_weight=-0.5, epoch=0):
 
     if epoch < 200:
         kld_weight_epoch = 0
@@ -208,7 +208,7 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5):
+def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5, epoch=0):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
