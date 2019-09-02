@@ -254,16 +254,19 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     #default parameters
     p = {
     'verbose':True,
-    'model_size':64
+    'model_size':64,
+    'variational':True,
+    'latent_dim':100
     }
     p = parse_parameters(p, user_parameters)
 
     class WAVE_encoder_class(nn.Module):
-        def __init__(self, model_size=p['model_size'], num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=100):
+        def __init__(self, model_size=p['model_size'], num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=p['latent_dim'], variational=p['variational']):
             super(WAVE_encoder_class, self).__init__()
             self.model_size = model_size # d
             self.num_channels = num_channels # c
             self.shift_factor = shift_factor # n
+            self.variational = variational
             self.alpha = alpha
             self.verbose = verbose
             self.latent_size = latent_size
@@ -306,9 +309,12 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                 print(x.shape)
 
             mu = torch.sigmoid(self.fc1_1(x))
-            logvar = torch.sigmoid(self.fc1_2(x))
+            if self.variational:
+                logvar = torch.sigmoid(self.fc1_2(x))
 
-            return mu, logvar
+                return mu, logvar
+            else:
+                return mu, mu
 
     out = WAVE_encoder_class()
 
