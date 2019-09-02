@@ -536,7 +536,7 @@ def main():
                             truth = np.multiply(truth, 0.8)
                             sound_name = 'orig_' + str(i) + '.wav'
                             sound_path = os.path.join(curr_orig_path_training, sound_name)
-                            uf.wavwrite(sound, SR, sound_path)
+                            uf.wavwrite(truth, SR, sound_path)
                         else:
                             break
 
@@ -549,7 +549,7 @@ def main():
                             truth = np.multiply(truth, 0.8)
                             sound_name = 'orig_' + str(i) + '.wav'
                             sound_path = os.path.join(curr_orig_path_test, sound_name)
-                            uf.wavwrite(sound, SR, sound_path)
+                            uf.wavwrite(truth, SR, sound_path)
                         else:
                             break
 
