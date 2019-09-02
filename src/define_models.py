@@ -385,15 +385,23 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc3 = nn.Linear(8000, 5000)
             self.fc4 = nn.Linear(5000, 2000)
             self.fc5 = nn.Linear(2000, 1000)
+
+            self.bn1 = nn.BatchNorm1d(10000)
+            self.bn2 = nn.BatchNorm1d(8000)
+            self.bn3 = nn.BatchNorm1d(5000)
+            self.bn4 = nn.BatchNorm1d(2000)
+            self.bn5 = nn.BatchNorm1d(1000)
+
             self.fc6_1 = nn.Linear(1000, latent_dim)
             self.fc6_2 = nn.Linear(1000, latent_dim)
 
         def forward(self, x):
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-            x = F.relu(self.fc3(x))
-            x = F.relu(self.fc4(x))
-            x = F.relu(self.fc5(x))
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+            x = F.relu(self.bn4(self.fc4(x)))
+            x = F.relu(self.bn5(self.fc5(x)))
+
             x1 = F.sigmoid(self.fc6_1(x))
             if self.variational:
                 x2 = F.sigmoid(self.fc6_2(x))
@@ -502,13 +510,20 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc5 = nn.Linear(8000, 10000)
             self.fc6 = nn.Linear(10000, 16384)
 
+            self.bn5 = nn.BatchNorm1d(10000)
+            self.bn4 = nn.BatchNorm1d(8000)
+            self.bn3 = nn.BatchNorm1d(5000)
+            self.bn2 = nn.BatchNorm1d(2000)
+            self.bn1 = nn.BatchNorm1d(1000)
+
 
         def forward(self, x):
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-            x = F.relu(self.fc3(x))
-            x = F.relu(self.fc4(x))
-            x = F.relu(self.fc5(x))
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+            x = F.relu(self.bn4(self.fc4(x)))
+            x = F.relu(self.bn5(self.fc5(x)))
+
             x = F.tanh(self.fc6(x))
 
             return x
