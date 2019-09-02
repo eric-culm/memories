@@ -187,6 +187,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar):
     #return recon_loss + KLD
     return recon_loss
 
+mean_target = torch.zeros(16384)
 
 def loss_function_encoder(mu, logvar,kld_weight=-0.5):
 
@@ -198,8 +199,9 @@ def loss_function_encoder(mu, logvar,kld_weight=-0.5):
 def loss_function_decoder(recon_x, x):
 
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
+    recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
 
-    return recon_loss
+    return recon_loss + recon_mean_distance
 
 def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5):
 
@@ -309,6 +311,13 @@ def main():
     test_predictors = test_predictors[:bound]
 
     print (training_predictors.shape)
+
+    mean_target = np.zeros(training_predictors.shape[-1])
+    num_predictors = len(training_predictors)
+    for i in range(num_predictors):
+        mean_target = np.add(mean_target, training_predictors[i])
+    mean_target = np.divide(mean,target, float(num_predictors))
+    mean_target = torch.array(mean_target)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
     '''
