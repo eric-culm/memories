@@ -502,7 +502,7 @@ def main():
                 outputs = decoder(z)
 
                 loss_encoder = loss_function_encoder(mu, logvar, epoch)
-                loss_decoder = loss_function_encoder(outputs, truth)
+                loss_decoder = loss_function_decoder(outputs, truth)
 
                 train_batch_losses_e.append(loss_encoder.item())
                 train_batch_losses_d.append(loss_decoder.item())
@@ -515,7 +515,7 @@ def main():
                 outputs = decoder(z)
 
                 loss_encoder = loss_function_encoder(mu, logvar, epoch)
-                loss_decoder = loss_function_encoder(outputs, truth)
+                loss_decoder = loss_function_decoder(outputs, truth)
 
 
                 val_batch_losses_e.append(loss_encoder.item())
