@@ -189,9 +189,9 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def loss_function_encoder(mu, logvar,kld_weight=-0.5, epoch=0):
+def loss_function_encoder(mu, logvar, epoch, kld_weight=-0.5):
 
-    if epoch < 200:
+    if epoch < 100:
         kld_weight_epoch = 0
     else:
         kld_weight_epoch = kld_weight
@@ -208,7 +208,7 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5, epoch=0):
+def loss_function_joint(recon_x, x, mu, logvar, epoch, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
@@ -218,7 +218,7 @@ def loss_function_joint(recon_x, x, mu, logvar, kld_weight=-0.5, epoch=0):
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = loss_function_decoder(recon_x, x)
 
-    KLD = loss_function_encoder(mu, logvar, kld_weight)
+    KLD = loss_function_encoder(mu, logvar, epoch, kld_weight)
     #joint_loss = recon_loss
     joint_loss = recon_loss + KLD
 
