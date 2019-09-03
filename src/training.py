@@ -190,7 +190,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up(epochs, init_silence=100, perc=0.08):
+def warm_up(epochs, init_silence=100, perc=0.02):
     pad = np.zeros(epochs)
     ramp_time = int(epochs*perc) - init_silence
     start = init_silence
