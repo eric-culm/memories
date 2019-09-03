@@ -190,7 +190,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up(epochs, init_silence=100, perc=0.15):
+def warm_up(epochs, init_silence=100, perc=0.08):
     pad = np.zeros(epochs)
     ramp_time = int(epochs*perc) - init_silence
     start = init_silence
@@ -230,7 +230,7 @@ def loss_function_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.
     #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     #x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
-    recon_loss = loss_function_decoder(recon_x, x)
+    recon_loss = -torch.log(loss_function_decoder(recon_x, x))
 
     KLD = loss_function_encoder(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
@@ -490,7 +490,7 @@ def main():
             loss_d_print_t = str(np.round(loss_decoder.item(), decimals=5))
             loss_j_print_t = str(np.round(loss_joint.item(), decimals=5))
 
-            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' KLD: ' + loss_e_print_t + ' CCC: ' + loss_d_print_t
+            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_e_print_t + ' | CCC: ' + loss_d_print_t
             print ('\r', string_progress, end='')
 
             optimizer_joint.step()
