@@ -210,7 +210,8 @@ def loss_function_encoder(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
 
     KLD = kld_weight_epoch * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    KLD /= batch_size
+    #KLD /= batch_size
+    KLD = KLD.sum(1).mean(0, True)
 
     return KLD
 
