@@ -190,22 +190,25 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up(epochs, alpha, init_silence=100, perc=0.2):
+def warm_up(epochs, init_silence=100, perc=0.15):
     pad = np.zeros(epochs)
     ramp_time = int(epochs*perc) - init_silence
     start = init_silence
     end = init_silence + ramp_time
-    ramp = np.arange(ramp_time) / ramp_time * alpha
+    ramp = np.arange(ramp_time) / ramp_time
     pad[start:end] = ramp
-    pad [end:] = alpha
+    pad [end:] = 1.
 
     return pad
-def loss_function_encoder(mu, logvar, epoch, kld_weight=-0.5):
+    
+def loss_function_encoder(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
-    if epoch < 100:
-        kld_weight_epoch = 0
+    if warm_up:
+        kld_weight_epoch = kld_weight * warm_ramp[epoch]
     else:
         kld_weight_epoch = kld_weight
+
+
     KLD = kld_weight_epoch * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
 
@@ -219,17 +222,17 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, epoch, kld_weight=-0.5):
+def loss_function_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     #recon_loss /= recon_x.shape[-1]
-    recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
-    x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
+    #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
+    #x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     recon_loss = loss_function_decoder(recon_x, x)
 
-    KLD = loss_function_encoder(mu, logvar, epoch, kld_weight)
+    KLD = loss_function_encoder(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
     joint_loss = recon_loss + KLD
 
@@ -438,6 +441,7 @@ def main():
                            weight_decay=regularization_lambda)
 
 
+    warm_ramp = warm_up(num_epochs)
 
     encoder.train()
     decoder.train()
@@ -470,12 +474,12 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
-            loss_encoder = loss_function_encoder(mu, logvar, epoch)
+            loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
             loss_decoder = loss_function_decoder(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_joint = loss_function_joint(outputs, truth, mu, logvar, epoch)
+            loss_joint = loss_function_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
             loss_joint.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
@@ -512,7 +516,7 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar, epoch)
+                loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
                 loss_decoder = loss_function_decoder(outputs, truth)
 
                 train_batch_losses_e.append(loss_encoder.item())
@@ -525,7 +529,7 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar, epoch)
+                loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
                 loss_decoder = loss_function_decoder(outputs, truth)
 
 
