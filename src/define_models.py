@@ -395,6 +395,10 @@ def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc6_1 = nn.Linear(1000, latent_dim)
             self.fc6_2 = nn.Linear(1000, latent_dim)
 
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
         def forward(self, x):
 
             x = F.relu(self.bn1(self.fc1(x)))
@@ -445,6 +449,10 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.bn3 = nn.BatchNorm1d(1)
             self.bn2 = nn.BatchNorm1d(1)
             self.bn1 = nn.BatchNorm1d(1)
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
 
 
         def forward(self, x):
