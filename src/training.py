@@ -200,7 +200,7 @@ def warm_up(epochs, init_silence=100, perc=0.15):
     pad [end:] = 1.
 
     return pad
-    
+
 def loss_function_encoder(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
     if warm_up:
@@ -324,7 +324,7 @@ def main():
 
     #select a subdataset for testing (to be commented when normally trained)
 
-    bound = 1000
+    bound = 200
     training_predictors = training_predictors[:bound]
     validation_predictors = validation_predictors[:bound]
     test_predictors = test_predictors[:bound]
