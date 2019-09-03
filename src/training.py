@@ -40,7 +40,8 @@ except IndexError:
     encoder_architecture = 'simple_encoder'
     decoder_architecture = 'simple_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64', 'variational=True']
+    parameters = ['verbose=False', 'model_size=64', 'variational=True',
+                  'kld_weight=-0.5', 'warm_up=True']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -189,6 +190,16 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
+def warm_up(epochs, alpha, init_silence=100, perc=0.2):
+    pad = np.zeros(epochs)
+    ramp_time = int(epochs*perc) - init_silence
+    start = init_silence
+    end = init_silence + ramp_time
+    ramp = np.arange(ramp_time) / ramp_time * alpha
+    pad[start:end] = ramp
+    pad [end:] = alpha
+
+    return pad
 def loss_function_encoder(mu, logvar, epoch, kld_weight=-0.5):
 
     if epoch < 100:
