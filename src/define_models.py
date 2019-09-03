@@ -340,18 +340,18 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
 
         def forward(self, mu, logvar):
             if self.variational:
-                if self.training:
-                    std = logvar.mul(0.5).exp_()  # type: Variable
-                    eps = std.data.new(std.size()).normal_()
+                '''
+                std = logvar.mul(0.5).exp_()  # type: Variable
+                eps = std.data.new(std.size()).normal_()
 
-                    return eps.mul(std).add_(mu)
+                return eps.mul(std).add_(mu)
+                '''
+                std = logvar.div(2).exp()
+                eps = Variable(std.data.new(std.size()).normal_())
+                return mu + std*eps
 
-                else:
-                    # During inference, we simply spit out the mean of the
-                    # learned distribution for the current input.  We could
-                    # use a random sample from the distribution, but mu of
-                    # course has the highest probability.
-                    return mu
+
+
             else:
                 return mu
 
