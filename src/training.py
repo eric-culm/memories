@@ -40,7 +40,7 @@ except IndexError:
     encoder_architecture = 'CNN_encoder'
     decoder_architecture = 'CNN_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64', 'variational=True',
+    parameters = ['verbose=False', 'model_size=64', 'variational=False',
                   'kld_weight=-4.', 'warm_up=True', 'latent_dim=100']
 
     SAVE_MODEL = '../models/prova'
@@ -358,7 +358,7 @@ def main():
     mean_target = torch.tensor(batch_mean_target).to(device)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
-
+    '''
     tr_mean = np.mean(training_predictors)
     tr_std = np.std(training_predictors)
     training_predictors = np.subtract(training_predictors, tr_mean)
@@ -367,7 +367,7 @@ def main():
     validation_predictors = np.divide(validation_predictors, tr_std)
     test_predictors = np.subtract(test_predictors, tr_mean)
     test_predictors = np.divide(test_predictors, tr_std)
-    
+    '''
 
     #sys.exit(0)
     '''
