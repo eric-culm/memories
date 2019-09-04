@@ -573,9 +573,9 @@ def main():
             val_kld_hist.append(val_epoch_kld)
             val_recon_hist.append(val_epoch_recon)
 
-            print ('\n', 'train_joint: ' + str(train_epoch_joint) + ' | val_joint: ' + str(val_epoch_joint))
-            print ('\n', 'train_KLD: ' + str(train_epoch_kld) + ' | val_KLD: ' + str(val_epoch_kld))
-            print ('\n', 'train_recon: ' + str(train_epoch_recon) + ' | val_recon: ' + str(val_epoch_recon))
+            print ('\n', 'train_joint: ' + str(np.round(train_epoch_joint.item(), decimals=5)) + ' | val_joint: ' + str(np.round(val_epoch_joint.item(), decimals=5)))
+            print ('train_KLD: ' + str(np.round(train_epoch_kld.item(), decimals=5)) + ' | val_KLD: ' + str(np.round(val_epoch_kld.item(), decimals=5))
+            print ('train_recon :' + str(np.round(train_epoch_recon.item(), decimals=5)) + ' | val_recon: ' + str(np.round(val_epoch_recon.item(), decimals=5)))
 
 
             #save sounds if specified
