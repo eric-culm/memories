@@ -224,12 +224,11 @@ def loss_recon(recon_x, x):
 
     return recon_loss
 
-mean_target = 0  #dummy
 def distance_from_mean(recon_x, mean_distribution):
         mean_distance = 1 -  torch.abs(CCC_loss(recon_x, mean_distribution))
         return mean_distance
 
-def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target=mean_target, kld_weight=-0.5):
+def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
@@ -499,7 +498,7 @@ def main():
             loss_r = loss_recon(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
             loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
@@ -542,7 +541,7 @@ def main():
 
                 loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
                 loss_r = loss_recon(outputs, truth)
-                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -558,7 +557,7 @@ def main():
 
                 loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
                 loss_r = loss_recon(outputs, truth)
-                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())
