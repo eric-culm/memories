@@ -562,9 +562,9 @@ def main():
             train_epoch_kld = np.mean(train_batch_losses_k)
             train_epoch_recon = np.mean(train_batch_losses_r)
             train_epoch_joint = np.mean(train_batch_losses_j)
-            val_epoch_kld = np.mean(train_batch_losses_k)
-            val_epoch_recon = np.mean(train_batch_losses_r)
-            val_epoch_joint = np.mean(train_batch_losses_j)
+            val_epoch_kld = np.mean(val_batch_losses_k)
+            val_epoch_recon = np.mean(val_batch_losses_r)
+            val_epoch_joint = np.mean(val_batch_losses_j)
 
             train_joint_hist.append(train_epoch_joint)
             train_kld_hist.append(train_epoch_kld)
