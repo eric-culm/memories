@@ -430,7 +430,7 @@ def main():
     print ('Total paramters: ' + str(encoder_params+decoder_params))
 
     #define optimizers
-    joint_parameters = list(encoder.parameters()) + list(decoder.parameters())
+    joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
     '''
     optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)

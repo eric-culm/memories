@@ -361,6 +361,63 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
     return out
 
 
+def cnn_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'variational':True,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class cnn_encoder_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
+            super(cnn_encoder_class, self).__init__()
+            self.variational = variational
+            self.fc1 = nn.Linear(16384, 10000)
+            self.fc2 = nn.Linear(10000, 8000)
+            self.fc3 = nn.Linear(8000, 5000)
+            self.fc4 = nn.Linear(5000, 2000)
+            self.fc5 = nn.Linear(2000, 1000)
+
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn3 = nn.BatchNorm1d(1)
+            self.bn4 = nn.BatchNorm1d(1)
+            self.bn5 = nn.BatchNorm1d(1)
+
+            self.fc6_1 = nn.Linear(1000, latent_dim)
+            self.fc6_2 = nn.Linear(1000, latent_dim)
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def forward(self, x):
+
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+            x = F.relu(self.bn4(self.fc4(x)))
+            x = F.relu(self.bn5(self.fc5(x)))
+
+            x1 = F.sigmoid(self.fc6_1(x))
+            if self.variational:
+                x2 = F.sigmoid(self.fc6_2(x))
+                return x1, x2
+            else:
+                return x1, x1
+
+    out = cnn_encoder_class()
+
+    return out, p
+
 def simple_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
