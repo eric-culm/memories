@@ -240,10 +240,10 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
 
     #recon_loss = torch.log(loss_function_decoder(recon_x, x))
-    recon_loss = loss_function_decoder(recon_x, x)
+    recon_loss = loss_recon(recon_x, x)
     #recon_loss = F.mse_loss(recon_x, x, size_average=False).div(batch_size)
 
-    KLD = loss_function_encoder(mu, logvar, epoch, warm_ramp)
+    KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
     joint_loss = recon_loss + KLD
 
@@ -435,7 +435,7 @@ def main():
     encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
     decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
     reparametrize_params = sum([np.prod(p.size()) for p in reparametrize.parameters()])
-    
+
     print ('')
     print ('Encoder paramters: ' + str(encoder_params))
     print ('Decoder paramters: ' + str(decoder_params))
