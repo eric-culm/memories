@@ -354,11 +354,11 @@ def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc1_1 = nn.Linear(256 * model_size, latent_size)
             self.fc1_2 = nn.Linear(256 * model_size, latent_size)
 
-            self.bn1 = nn.BatchNorm1d(1)
-            self.bn2 = nn.BatchNorm1d(1)
-            self.bn3 = nn.BatchNorm1d(1)
-            self.bn4 = nn.BatchNorm1d(1)
-            self.bn5 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(model_size)
+            self.bn2 = nn.BatchNorm1d(2 * model_size)
+            self.bn3 = nn.BatchNorm1d(4 * model_size)
+            self.bn4 = nn.BatchNorm1d(8 * model_size)
+            self.bn5 = nn.BatchNorm1d(16 * model_size)
 
             for m in self.modules():
                 if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
@@ -459,11 +459,11 @@ def CNN_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.upSampConv5 = None
             self.upsample = upsample
             self.fc2 = nn.Linear(16384, 16384)
-            self.bn1 = nn.BatchNorm1d(1)
-            self.bn2 = nn.BatchNorm1d(1)
-            self.bn3 = nn.BatchNorm1d(1)
-            self.bn4 = nn.BatchNorm1d(1)
-            self.bn5 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(16 * model_size)
+            self.bn2 = nn.BatchNorm1d(8 * model_size)
+            self.bn3 = nn.BatchNorm1d(4 * model_size)
+            self.bn4 = nn.BatchNorm1d(2 * model_size)
+            self.bn5 = nn.BatchNorm1d(model_size)
 
 
             if self.upsample:
