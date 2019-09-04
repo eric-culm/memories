@@ -365,23 +365,23 @@ def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     nn.init.kaiming_normal_(m.weight.data)
 
         def forward(self, x):
-            x = F.leaky_relu(self.bn1(self.conv1(x), negative_slope=self.alpha))
+            x = F.leaky_relu(self.bn1(self.conv1(x)), negative_slope=self.alpha)
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.bn2(self.conv2(x), negative_slope=self.alpha))
+            x = F.leaky_relu(self.bn2(self.conv2(x)), negative_slope=self.alpha)
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.bn3(self.conv3(x), negative_slope=self.alpha))
+            x = F.leaky_relu(self.bn3(self.conv3(x)), negative_slope=self.alpha)
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.bn4(self.conv4(x), negative_slope=self.alpha))
+            x = F.leaky_relu(self.bn4(self.conv4(x)), negative_slope=self.alpha)
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.bn5(self.conv5(x), negative_slope=self.alpha))
+            x = F.leaky_relu(self.bn5(self.conv5(x)), negative_slope=self.alpha)
             if self.verbose:
                 print(x.shape)
 
