@@ -40,8 +40,8 @@ except IndexError:
     encoder_architecture = 'CNN_encoder'
     decoder_architecture = 'CNN_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=128', 'variational=False',
-                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=1000']
+    parameters = ['verbose=False', 'model_size=64', 'variational=True',
+                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -335,7 +335,7 @@ def main():
 
     #select a subdataset for testing (to be commented when normally trained)
 
-    bound = 50
+    bound = 5
     training_predictors = training_predictors[:bound]
     validation_predictors = validation_predictors[:bound]
     test_predictors = test_predictors[:bound]
