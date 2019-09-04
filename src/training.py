@@ -444,12 +444,12 @@ def main():
 
     #define optimizers
     joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
-    '''
+
     optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
     optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
-    '''
+
 
     optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
                            weight_decay=regularization_lambda)
@@ -482,9 +482,9 @@ def main():
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
-            #optimizer_encoder.zero_grad()
-            #optimizer_decoder.zero_grad()
-            optimizer_joint.zero_grad()
+            optimizer_encoder.zero_grad()
+            optimizer_decoder.zero_grad()
+            #optimizer_joint.zero_grad()
 
             mu, logvar = encoder(sounds)
             z = reparametrize(mu, logvar)
@@ -509,7 +509,9 @@ def main():
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_k_print_t + ' | CCC: ' + loss_r_print_t
             print ('\r', string_progress, end='')
 
-            optimizer_joint.step()
+            #optimizer_joint.step()
+            optimizer_encoer.step()
+            optimizer_decoder.step()
             #end of batch loop
 
         #validation loss, training and val accuracy computation
