@@ -320,6 +320,87 @@ def WAVE_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':True,
+    'model_size':64,
+    'variational':True,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+    class CNN_encoder_class(nn.Module):
+        def __init__(self, model_size=p['model_size'], num_channels=1, shift_factor=2, alpha=0.2, verbose=p['verbose'], latent_size=p['latent_dim'], variational=p['variational']):
+            super(CNN_encoder_class, self).__init__()
+            self.model_size = model_size # d
+            self.num_channels = num_channels # c
+            self.shift_factor = shift_factor # n
+            self.variational = variational
+            self.alpha = alpha
+            self.verbose = verbose
+            self.latent_size = latent_size
+            # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
+            self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
+            self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
+            self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
+            self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
+            self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
+            self.fc1_1 = nn.Linear(256 * model_size, latent_size)
+            self.fc1_2 = nn.Linear(256 * model_size, latent_size)
+
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn3 = nn.BatchNorm1d(1)
+            self.bn4 = nn.BatchNorm1d(1)
+            self.bn5 = nn.BatchNorm1d(1)
+
+            for m in self.modules():
+                if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def forward(self, x):
+            x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv2(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv3(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv4(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.conv5(x), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = x.view(-1, 256 * self.model_size)
+            if self.verbose:
+                print(x.shape)
+
+            mu = torch.sigmoid(self.fc1_1(x))
+            if self.variational:
+                logvar = torch.sigmoid(self.fc1_2(x))
+
+                return mu, logvar
+            else:
+                return mu, mu
+
+    out = CNN_encoder_class()
+
+    return out, p
+
 def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     RICORDARE!!!! CHE IN INFERENCE BUTTA FUORI LA MEDIA
