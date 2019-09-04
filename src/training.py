@@ -463,10 +463,12 @@ def main():
 
     total_step = len(tr_data)
     loss_list = []
-    train_loss_hist = []
-    val_loss_hist = []
-    train_acc_hist = []
-    val_acc_hist = []
+    train_joint_hist = []
+    train_kld_hist = []
+    train_recon_hist = []
+    val_joint_hist = []
+    val_kld_hist = []
+    val_recon_hist = []
     patience_vec = []
 
     #TRAINING LOOP
@@ -488,21 +490,21 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
-            loss_KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
+            loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_recon = loss_recon(outputs, truth)
+            loss_r = loss_recon(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_joint = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
-            loss_joint.backward(retain_graph=True)
+            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+            loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
             perc = int(i / len(tr_data) * 20)
             inv_perc = int(20 - perc - 1)
 
-            loss_e_print_t = str(np.round(loss_encoder.item(), decimals=5))
-            loss_d_print_t = str(np.round(loss_decoder.item(), decimals=5))
-            loss_j_print_t = str(np.round(loss_joint.item(), decimals=5))
+            loss_k_print_t = str(np.round(loss_k.item(), decimals=5))
+            loss_r_print_t = str(np.round(loss_r.item(), decimals=5))
+            loss_j_print_t = str(np.round(loss_j.item(), decimals=5))
 
             string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_e_print_t + ' | CCC: ' + loss_d_print_t
             print ('\r', string_progress, end='')
@@ -516,10 +518,12 @@ def main():
         decoder.eval()
         reparametrize.eval()
 
-        train_batch_losses_e = []
-        val_batch_losses_e = []
-        train_batch_losses_d = []
-        val_batch_losses_d = []
+        train_batch_losses_k = []
+        val_batch_losses_k = []
+        train_batch_losses_r = []
+        val_batch_losses_r = []
+        train_batch_losses_j = []
+        val_batch_losses_j = []
 
         with torch.no_grad():
             #compute training accuracy and loss
@@ -530,11 +534,13 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
-                loss_decoder = loss_function_decoder(outputs, truth)
+                loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_r = loss_recon(outputs, truth)
+                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
 
-                train_batch_losses_e.append(loss_encoder.item())
-                train_batch_losses_d.append(loss_decoder.item())
+                train_batch_losses_k.append(loss_k.item())
+                train_batch_losses_r.append(loss_r.item())
+                train_batch_losses_j.append(loss_j.item())
 
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
@@ -544,12 +550,33 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
-                loss_decoder = loss_function_decoder(outputs, truth)
+                loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_r = loss_recon(outputs, truth)
+                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+
+                val_batch_losses_k.append(loss_k.item())
+                val_batch_losses_r.append(loss_r.item())
+                val_batch_losses_j.append(loss_j.item())
 
 
-                val_batch_losses_e.append(loss_encoder.item())
-                val_batch_losses_d.append(loss_decoder.item())
+            train_epoch_kld = np.mean(train_batch_losses_k)
+            train_epoch_recon = np.mean(train_batch_losses_r)
+            train_epoch_joint = np.mean(train_batch_losses_j)
+            val_epoch_kld = np.mean(train_batch_losses_k)
+            val_epoch_recon = np.mean(train_batch_losses_r)
+            val_epoch_joint = np.mean(train_batch_losses_j)
+
+            train_joint_hist.append(train_epoch_joint)
+            train_kld_hist.append(train_epoch_kld)
+            train_recon_hist.append(train_epoch_recon)
+            val_joint_hist.append(val_epoch_joint)
+            val_kld_hist.append(val_epoch_kld)
+            val_recon_hist.append(val_epoch_recon)
+
+            print ('\n', 'train_joint: ' + str(train_epoch_joint) + ' | val_joint: ' + str(val_epoch_joint))
+            print ('\n', 'train_KLD: ' + str(train_epoch_kld) + ' | val_KLD: ' + str(val_epoch_kld))
+            print ('\n', 'train_recon: ' + str(train_epoch_recon) + ' | val_recon: ' + str(val_epoch_recon))
+
 
             #save sounds if specified
             ts_preds = []
