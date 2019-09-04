@@ -41,7 +41,7 @@ except IndexError:
     decoder_architecture = 'CNN_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100']
+                  'kld_weight=-4.', 'warm_up=True', 'latent_dim=100']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
