@@ -37,8 +37,8 @@ except IndexError:
     generator = True
     dataset = 'digits'
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'WAVE_encoder'
-    decoder_architecture = 'WAVE_decoder'
+    encoder_architecture = 'CNN_encoder'
+    decoder_architecture = 'CNN_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-0.5', 'warm_up=True']
@@ -51,7 +51,7 @@ except IndexError:
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 0
+    gpu_ID = 1
 
     print ('test mode: I/O from config.ini file')
     print ('')

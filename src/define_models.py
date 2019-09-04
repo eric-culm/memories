@@ -365,23 +365,23 @@ def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     nn.init.kaiming_normal_(m.weight.data)
 
         def forward(self, x):
-            x = F.leaky_relu(self.conv1(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.bn1(self.conv1(x), negative_slope=self.alpha))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv2(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.bn2(self.conv2(x), negative_slope=self.alpha))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv3(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.bn3(self.conv3(x), negative_slope=self.alpha))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv4(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.bn4(self.conv4(x), negative_slope=self.alpha))
             if self.verbose:
                 print(x.shape)
 
-            x = F.leaky_relu(self.conv5(x), negative_slope=self.alpha)
+            x = F.leaky_relu(self.bn5(self.conv5(x), negative_slope=self.alpha))
             if self.verbose:
                 print(x.shape)
 
@@ -398,6 +398,164 @@ def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                 return mu, mu
 
     out = CNN_encoder_class()
+
+    return out, p
+
+def CNN_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    GENERATOR: from latent dim to 1-sec sound
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':True,
+    'model_size': 64,
+    'upsample': True
+    }
+
+    p = parse_parameters(p, user_parameters)
+
+    class UpsampleConvLayer(torch.nn.Module):
+        def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
+            super(UpsampleConvLayer, self).__init__()
+            self.upsample = upsample
+            if upsample:
+                self.upsample_layer = torch.nn.Upsample(scale_factor=upsample)
+                reflection_padding = kernel_size // 2
+                self.reflection_pad = torch.nn.ConstantPad1d(reflection_padding, value = 0)
+    #             self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
+                self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
+
+        def forward(self, x):
+            x_in = x
+            if self.upsample:
+                x_in = self.upsample_layer(x_in)
+            out = self.reflection_pad(x_in)
+            out = self.conv1d(out)
+            return out
+
+            #always return model AND p!!!
+    class CNN_decoder_class(nn.Module):
+        def __init__(self, model_size=p['model_size'], ngpus=1, num_channels=1, latent_dim=100,
+                    post_proc_filt_len=512, verbose=p['verbose'], upsample=p['upsample']):
+            super(CNN_decoder_class, self).__init__()
+            self.ngpus = ngpus
+            self.model_size = model_size # d
+            self.num_channels = num_channels # c
+            self.latent_dim = latent_dim
+            self.post_proc_filt_len = post_proc_filt_len
+            self.verbose = verbose
+            self.fc1 = nn.Linear(latent_dim, 256 * model_size)
+            self.fc2 = nn.Linear(16384)
+            self.tconv1 = None
+            self.tconv2 = None
+            self.tconv3 = None
+            self.tconv4 = None
+            self.tconv5 = None
+            self.upSampConv1 = None
+            self.upSampConv2 = None
+            self.upSampConv3 = None
+            self.upSampConv4 = None
+            self.upSampConv5 = None
+            self.upsample = upsample
+            self.fc2 = nn.Linear(16384, 16384)
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn3 = nn.BatchNorm1d(1)
+            self.bn4 = nn.BatchNorm1d(1)
+            self.bn5 = nn.BatchNorm1d(1)
+
+
+            if self.upsample:
+                self.upSampConv1 = UpsampleConvLayer(16 * model_size, 8 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv2 = UpsampleConvLayer(8 * model_size, 4 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv3 = UpsampleConvLayer(4 * model_size, 2 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv4 = UpsampleConvLayer(2 * model_size, model_size, 25, stride=1, upsample=4)
+                self.upSampConv5 = UpsampleConvLayer(model_size, num_channels, 25, stride=1, upsample=4)
+
+            else:
+                self.tconv1 = nn.ConvTranspose1d(16 * model_size, 8 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv2 = nn.ConvTranspose1d(8 * model_size, 4 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv3 = nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv4 = nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv5 = nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11, output_padding=1)
+
+            if post_proc_filt_len:
+                self.ppfilter1 = nn.Conv1d(num_channels, num_channels, post_proc_filt_len)
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def forward(self, x):
+
+                x = self.fc1(x).view(-1, 16 * self.model_size, 16)
+                x = F.relu(x)
+                output = None
+                if self.verbose:
+                    print(x.shape)
+
+                if self.upsample:
+                    x = F.relu(self.bn1(self.upSampConv1(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn2(self.upSampConv2(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn3(self.upSampConv3(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn4(self.upSampConv4(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = torch.tanh(self.bn5(self.upSampConv5(x)))
+                else:
+                    x = F.relu(self.bn1(self.tconv1(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn2(self.tconv2(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn3(self.tconv3(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn4(self.tconv4(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = torch.tanh(self.bn5(self.tconv5(x)))
+
+                output = torch.tanh(self.fc2(output))
+
+
+                if self.verbose:
+                    print(output.shape)
+
+                if self.post_proc_filt_len:
+                    # Pad for "same" filtering
+                    if (self.post_proc_filt_len % 2) == 0:
+                        pad_left = self.post_proc_filt_len // 2
+                        pad_right = pad_left - 1
+                    else:
+                        pad_left = (self.post_proc_filt_len - 1) // 2
+                        pad_right = pad_left
+                    output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
+                    if self.verbose:
+                        print(output.shape)
+
+
+                return output
+
+
+
+    out = CNN_decoder_class()
 
     return out, p
 
