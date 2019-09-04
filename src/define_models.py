@@ -586,7 +586,7 @@ def reparametrize(time_dim, features_dim, user_parameters=['niente = 0']):
                 return eps.mul(std).add_(mu)
                 '''
                 std = logvar.div(2).exp()
-                eps = Variable(std.data.new(std.size()).normal_())
+                eps = Variable(std.data.new(std.size()).normal_(), requires_grad=True)
                 return mu + std*eps
 
 

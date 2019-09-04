@@ -488,12 +488,12 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
-            loss_encoder = loss_function_encoder(mu, logvar, epoch, warm_ramp)
+            loss_KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_decoder = loss_function_decoder(outputs, truth)
+            loss_recon = loss_recon(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_joint = loss_function_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+            loss_joint = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
             loss_joint.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
