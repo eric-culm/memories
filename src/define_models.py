@@ -446,7 +446,7 @@ def CNN_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.post_proc_filt_len = post_proc_filt_len
             self.verbose = verbose
             self.fc1 = nn.Linear(latent_dim, 256 * model_size)
-            self.fc2 = nn.Linear(16384)
+            self.fc2 = nn.Linear(16384,16384)
             self.tconv1 = None
             self.tconv2 = None
             self.tconv3 = None
