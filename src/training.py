@@ -350,8 +350,11 @@ def main():
     num_predictors = len(training_predictors)
     for i in range(num_predictors):
         mean_target = np.add(mean_target, training_predictors[i])
-    mean_target = mean_target.reshape(1, 1, len(mean_target))
+    mean_target = mean_target.reshape(1, len(mean_target))
     mean_target = np.divide(mean_target, float(num_predictors))
+    batch_mean_target = []
+    for i in range(batch_size):
+        batch_mean_target.append(mean_target)
     mean_target = torch.tensor(mean_target)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
