@@ -574,7 +574,7 @@ def main():
             val_recon_hist.append(val_epoch_recon)
 
             print ('\n', 'train_joint: ' + str(np.round(train_epoch_joint.item(), decimals=5)) + ' | val_joint: ' + str(np.round(val_epoch_joint.item(), decimals=5)))
-            print ('train_KLD: ' + str(np.round(train_epoch_kld.item(), decimals=5)) + ' | val_KLD: ' + str(np.round(val_epoch_kld.item(), decimals=5))
+            print ('train_KLD: ' + str(np.round(train_epoch_kld.item(), decimals=5)) + ' | val_KLD: ' + str(np.round(val_epoch_kld.item(), decimals=5)))
             print ('train_recon :' + str(np.round(train_epoch_recon.item(), decimals=5)) + ' | val_recon: ' + str(np.round(val_epoch_recon.item(), decimals=5)))
 
 
