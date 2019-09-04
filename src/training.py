@@ -510,7 +510,7 @@ def main():
             print ('\r', string_progress, end='')
 
             #optimizer_joint.step()
-            optimizer_encoer.step()
+            optimizer_encoder.step()
             optimizer_decoder.step()
             #end of batch loop
 
