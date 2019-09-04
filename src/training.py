@@ -231,8 +231,9 @@ def loss_function_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.
     #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
     #x_0to1 = torch.add(torch.mul(x, 0.5), 0.5)
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
-    #recon_loss = torch.log(loss_function_decoder(recon_x, x))
-    recon_loss = F.mse_loss(recon_x, x, size_average=False).div(batch_size)
+
+    recon_loss = torch.log(loss_function_decoder(recon_x, x))
+    #recon_loss = F.mse_loss(recon_x, x, size_average=False).div(batch_size)
 
     KLD = loss_function_encoder(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
