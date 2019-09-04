@@ -201,7 +201,7 @@ def warm_up(epochs, init_silence=0, perc=0.0001):
 
     return pad
 
-def loss_function_encoder(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
+def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
     if warm_up:
         kld_weight_epoch = kld_weight * warm_ramp[epoch]
@@ -215,7 +215,9 @@ def loss_function_encoder(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
     return KLD
 
-def loss_function_decoder(recon_x, x):
+
+
+def loss_recon(recon_x, x):
 
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
 
@@ -223,7 +225,12 @@ def loss_function_decoder(recon_x, x):
 
     return recon_loss
 
-def loss_function_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
+
+def distance_from_mean(recon_x, mean_distribution):
+        mean_distance = 1 -  torch.abs(CCC_loss(recon_x, mean_distribution))
+        return mean_distance
+
+def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
@@ -427,10 +434,13 @@ def main():
     #compute number of parameters
     encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
     decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
+    reparametrize_params = sum([np.prod(p.size()) for p in reparametrize.parameters()])
+    
     print ('')
     print ('Encoder paramters: ' + str(encoder_params))
     print ('Decoder paramters: ' + str(decoder_params))
-    print ('Total paramters: ' + str(encoder_params+decoder_params))
+    print ('Reparametrize paramters: ' + str(reparametrize_params))
+    print ('Total paramters: ' + str(encoder_params+decoder_params+reparametrize_params))
 
     #define optimizers
     joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
@@ -525,6 +535,7 @@ def main():
 
                 train_batch_losses_e.append(loss_encoder.item())
                 train_batch_losses_d.append(loss_decoder.item())
+
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
                 optimizer_joint.zero_grad()
