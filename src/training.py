@@ -225,8 +225,8 @@ def loss_recon(recon_x, x):
     return recon_loss
 
 def distance_from_mean(recon_x, mean_distribution):
-        recon_x = recon_x.double()
-        mean_distribution = mean_distribution.double()
+        #recon_x = recon_x.double()
+        #mean_distribution = mean_distribution.double()
         mean_distance = 1 -  torch.abs(CCC_loss(recon_x, mean_distribution))
         return mean_distance
 
@@ -355,7 +355,7 @@ def main():
     batch_mean_target = []
     for i in range(batch_size):
         batch_mean_target.append(mean_target)
-    mean_target = torch.tensor(batch_mean_target)
+    mean_target = torch.tensor(batch_mean_target).to(device)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
     '''
