@@ -249,7 +249,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight
     mean_target_distance = distance_from_mean(recon_x, mean_target)
 
     #joint_loss = recon_loss + KLD
-    joint_loss = recon_loss + KLD - mean_target_distance
+    joint_loss = recon_loss + KLD + mean_target_distance
 
     return joint_loss
 
