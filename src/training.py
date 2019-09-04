@@ -228,7 +228,7 @@ def distance_from_mean(recon_x, mean_distribution):
         recon_x = recon_x.double()
         mean_distribution = mean_distribution.double()
         mean_distance = 1 -  torch.abs(CCC_loss(recon_x, mean_distribution))
-        return 4* mean_distance.float()
+        return mean_distance.float()
 
 def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight=-0.5):
 
@@ -248,8 +248,8 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight
 
     mean_target_distance = distance_from_mean(recon_x, mean_target)
 
-    #joint_loss = recon_loss + KLD
-    joint_loss = recon_loss + KLD + mean_target_distance
+    joint_loss = recon_loss + KLD
+    #joint_loss = recon_loss + KLD - mean_target_distance
 
     return joint_loss
 
