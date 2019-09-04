@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'digits'
+    dataset = 'sc09_reduced'
     architecture = 'WAVE_VAE'
     encoder_architecture = 'CNN_encoder'
     decoder_architecture = 'CNN_decoder'
