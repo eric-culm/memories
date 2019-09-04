@@ -225,6 +225,8 @@ def loss_recon(recon_x, x):
     return recon_loss
 
 def distance_from_mean(recon_x, mean_distribution):
+        print ('culo')
+        print (recon_x.shape, mean_distribution.shape)
         mean_distance = 1 -  torch.abs(CCC_loss(recon_x, mean_distribution))
         return mean_distance
 
