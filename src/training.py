@@ -355,7 +355,7 @@ def main():
     batch_mean_target = []
     for i in range(batch_size):
         batch_mean_target.append(mean_target)
-    mean_target = torch.tensor(batch_mean_target)
+    mean_target = torch.tensor(batch_mean_target).double()
 
     #normalize to 0 mean and unity std (according to training set mean and std)
     '''
