@@ -389,11 +389,11 @@ def CNN_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             if self.verbose:
                 print(x.shape)
 
-            #mu = torch.sigmoid(self.fc1_1(x))
-            mu = self.fc1_1(x)
+            mu = torch.sigmoid(self.fc1_1(x))
+            #mu = self.fc1_1(x)
             if self.variational:
-                #logvar = torch.sigmoid(self.fc1_2(x))
-                logvar = self.fc1_2(x)
+                logvar = torch.sigmoid(self.fc1_2(x))
+                #logvar = self.fc1_2(x)
 
                 return mu, logvar
             else:
