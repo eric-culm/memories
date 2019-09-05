@@ -233,7 +233,8 @@ def distance_from_mean(recon_x, mean_distribution):
 
 def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight=-0.5):
 
-
+    print ('culo')
+    print (recon_x.shape, x.shape)
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     #recon_loss /= recon_x.shape[-1]
     recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
