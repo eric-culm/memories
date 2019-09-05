@@ -509,8 +509,8 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
-            sum_mu = torch.sum(mu)
-            sum_logvar = torch.sum(logvar)
+            sum_mu = torch.sum(torch.sum(mu))
+            sum_logvar = torch.sum(torch.sum(logvar))
             print ('')
             print (sum_mu, sum, logvar)
 
