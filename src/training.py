@@ -509,6 +509,11 @@ def main():
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
 
+            sum_mu = torch.sum(mu)
+            sum_logvar = torch.sum(logvar)
+            print ('')
+            print (sum_mu, sum, logvar)
+
             loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
             loss_r = loss_recon(outputs, truth)
