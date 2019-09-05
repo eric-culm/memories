@@ -409,6 +409,16 @@ def main():
     features_dim = training_predictors.shape[2]
 
 
+    #load MNIST
+    tr_data = utils.DataLoader(
+        datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
+        batch_size=args.batch_size, shuffle=True, **kwargs)
+    val_data = utils.DataLoader(
+        datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
+        batch_size=args.batch_size, shuffle=True, **kwargs)
+    test_data = val_data.copy()
+
+
     #load model (model is in locals()['model'])
     print('\n loading models...')
     encoder_string = 'encoder_class, encoder_parameters = choose_model.' + encoder_architecture + '(time_dim, features_dim, parameters)'
