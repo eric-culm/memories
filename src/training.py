@@ -413,10 +413,10 @@ def main():
     #load MNIST
     tr_data = utils.DataLoader(
         datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+        batch_size=batch_size, shuffle=True)
     val_data = utils.DataLoader(
         datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+        batch_size=batch_size, shuffle=True)
     test_data = val_data.copy()
 
 
