@@ -511,8 +511,8 @@ def main():
 
             sum_mu = torch.sum(torch.sum(mu))
             sum_logvar = torch.sum(torch.sum(logvar))
-            print ('')
-            print (sum_mu, sum, logvar)
+            print ('culo')
+            print (sum_mu, sum_logvar)
 
             loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
