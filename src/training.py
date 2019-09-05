@@ -40,7 +40,7 @@ except IndexError:
     encoder_architecture = 'CNN_encoder'
     decoder_architecture = 'CNN_decoder'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64', 'variational=False',
+    parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-4.', 'warm_up=True', 'latent_dim=100']
 
     SAVE_MODEL = '../models/prova'
@@ -409,7 +409,7 @@ def main():
     time_dim = training_predictors.shape[1]
     features_dim = training_predictors.shape[2]
 
-
+    '''
     #load MNIST
     tr_data = utils.DataLoader(
         datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
@@ -418,6 +418,7 @@ def main():
         datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
         batch_size=batch_size, shuffle=True)
     test_data = val_data.copy()
+    '''
 
 
     #load model (model is in locals()['model'])
