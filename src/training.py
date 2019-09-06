@@ -124,6 +124,13 @@ except IndexError:
 for param in parameters:
     exec(param)
 
+predictors_name = dataset + '_predictors.npy'
+PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
+if hybrid_dataset:
+    target_name = dataset + '_target.npy'
+    TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
+
+
 
 
 device = torch.device('cuda:' + str(gpu_ID))
