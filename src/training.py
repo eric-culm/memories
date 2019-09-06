@@ -522,10 +522,10 @@ def main():
 
             loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_r = loss_recon(outputs, truth)
+            loss_r = loss_recon(outputs, sounds)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
+            loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
             loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
@@ -569,8 +569,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = loss_recon(outputs, truth)
-                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
+                loss_r = loss_recon(outputs, sounds)
+                loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -586,8 +586,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = loss_recon(outputs, truth)
-                loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, mean_target)
+                loss_r = loss_recon(outputs, sounds)
+                loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())
