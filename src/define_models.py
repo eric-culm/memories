@@ -733,7 +733,7 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             super(spectrum_encoder_class, self).__init__()
             self.variational = variational
             self.features = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.Conv2d(1, 64, kernel_size=11, stride=4, padding=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 192, kernel_size=5, padding=2),
@@ -765,7 +765,7 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.logvar = nn.Linear(500, latent_dim)
 
             for m in self.modules():
-                if isinstance(m, nn.Conv2D) or isinstance(m, nn.Linear):
+                if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
                     nn.init.kaiming_normal_(m.weight.data)
 
 
