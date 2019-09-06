@@ -38,7 +38,7 @@ except IndexError:
     dataset = 'sc09_stft_hybrid'
     mnist_test = True
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'MNIST_encoder'
+    encoder_architecture = 'spectrum_encoder'
     decoder_architecture = 'WAVE_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
