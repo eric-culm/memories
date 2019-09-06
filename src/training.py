@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'sc09_reduced'
+    dataset = 'mnist'
     architecture = 'WAVE_VAE'
     encoder_architecture = 'MNIST_encoder'
     decoder_architecture = 'MNIST_decoder'
