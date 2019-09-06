@@ -256,7 +256,7 @@ def main():
     training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1])
     validation_predictors = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1])
     test_predictors = test_target.reshape(test_target.shape[0], 1, test_target.shape[1])
-    
+
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float().to(device)
     val_predictors = torch.tensor(validation_predictors).float().to(device)
@@ -395,7 +395,7 @@ def main():
             loss_r = losses.loss_recon(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+            loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
             loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
