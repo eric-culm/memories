@@ -221,7 +221,7 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 def loss_recon(recon_x, x):
 
     #recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
-    recon_loss = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    recon_loss = F.binary_cross_entropy(recon_x, x.view(x.shape[0],1, 784), reduction='sum')
 
     #recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
 
@@ -244,7 +244,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight
     #recon_loss /= batch_size
     #recon_loss = torch.log(loss_function_decoder(recon_x, x))
     #recon_loss = loss_recon(recon_x, x)
-    recon_loss = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
+    recon_loss = F.binary_cross_entropy(recon_x, x.view(x.shape[0],1, 784), reduction='sum')
 
     KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
