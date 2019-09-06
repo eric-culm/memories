@@ -758,11 +758,8 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
 
 
-    def forward(self, x):
-
-        return x
-
         def forward(self, x):
+
             #features extraction
             x = F.relu(self.conv1(x))
             x = self.pool1(x)
