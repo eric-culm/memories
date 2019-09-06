@@ -748,6 +748,11 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc3 = nn.Linear(4096, 2000)
             self.fc4 = nn.Linear(2000, 500)
 
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn3 = nn.BatchNorm1d(1)
+            self.bn4 = nn.BatchNorm1d(1)
+
 
             self.mu = nn.Linear(500, latent_dim)
             self.logvar = nn.Linear(500, latent_dim)
@@ -775,10 +780,10 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #classification
             x = torch.flatten(x, 1)
-            x = F.relu(self.fc1(x))
-            x = F.relu(self.fc2(x))
-            x = F.relu(self.fc3(x))
-            x = F.relu(self.fc4(x))
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+            x = F.relu(self.bn4(self.fc4(x)))
 
             x1 = F.sigmoid(self.mu(x))
             if self.variational:
