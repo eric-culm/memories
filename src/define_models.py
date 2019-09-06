@@ -748,10 +748,10 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc3 = nn.Linear(4096, 2000)
             self.fc4 = nn.Linear(2000, 500)
 
-            self.bn1 = nn.BatchNorm1d(1)
-            self.bn2 = nn.BatchNorm1d(1)
-            self.bn3 = nn.BatchNorm1d(1)
-            self.bn4 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(4096)
+            self.bn2 = nn.BatchNorm1d(4096)
+            self.bn3 = nn.BatchNorm1d(2000)
+            self.bn4 = nn.BatchNorm1d(500)
 
 
             self.mu = nn.Linear(500, latent_dim)
