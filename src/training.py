@@ -39,7 +39,7 @@ except IndexError:
     mnist_test = True
     architecture = 'WAVE_VAE'
     encoder_architecture = 'MNIST_encoder'
-    decoder_architecture = 'MNIST_decoder'
+    decoder_architecture = 'WAVE_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
