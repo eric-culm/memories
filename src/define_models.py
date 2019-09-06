@@ -735,8 +735,8 @@ def MNIST_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc1 = nn.Linear(784, 500)
             self.fc2 = nn.Linear(500, 200)
 
-            self.bn1 = nn.BatchNorm1d(500)
-            self.bn2 = nn.BatchNorm1d(200)
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
 
 
             self.fc3_1 = nn.Linear(200, latent_dim)
@@ -786,8 +786,8 @@ def MNIST_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc2 = nn.Linear(200, 500)
             self.fc3 = nn.Linear(500, 784)
 
-            self.bn2 = nn.BatchNorm1d(500)
-            self.bn1 = nn.BatchNorm1d(200)
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(1)
 
             for m in self.modules():
                 if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
