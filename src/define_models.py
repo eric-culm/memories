@@ -796,7 +796,7 @@ def MNIST_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
         def forward(self, x):
             x = F.relu(self.bn1(self.fc1(x)))
             x = F.relu(self.bn2(self.fc2(x)))
-            x = F.sigmoid(self.bn3(self.fc3(x)))
+            x = F.sigmoid(self.fc3(x))
 
 
             return x
