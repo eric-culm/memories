@@ -116,14 +116,10 @@ BVL_model_path = SAVE_MODEL
 recompute_matrices = False
 
 #OVERWRITE DEFAULT PARAMETERS IF IN XVAL MODE
-try:
-    a = sys.argv[5]
-    parameters = parameters.split('/')
-    for param in parameters:
-        exec(param)
+parameters = parameters.split('/')
+for param in parameters:
+    exec(param)
 
-except IndexError:
-    pass
 
 #load parameters from config file only test mode
 DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
