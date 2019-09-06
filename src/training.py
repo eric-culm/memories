@@ -414,10 +414,10 @@ def main():
         #load MNIST
         tr_data = utils.DataLoader(
             datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True).to(device)
+            batch_size=batch_size, shuffle=True)
         val_data = utils.DataLoader(
             datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True).to(device)
+            batch_size=batch_size, shuffle=True)
         test_data = val_data
 
 
@@ -503,6 +503,8 @@ def main():
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
         for i, (sounds, truth) in enumerate(tr_data):
+            sounds = sounds.to(device)
+            truth = truth.to(device)
             #optimizer_encoder.zero_grad()
             #optimizer_decoder.zero_grad()
             optimizer_joint.zero_grad()
@@ -558,6 +560,8 @@ def main():
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
                 optimizer_joint.zero_grad()
+                sounds = sounds.to(device)
+                truth = truth.to(device)
 
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
@@ -574,7 +578,8 @@ def main():
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
                 optimizer_joint.zero_grad()
-
+                sounds = sounds.to(device)
+                truth = truth.to(device)
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
