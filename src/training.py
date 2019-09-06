@@ -409,7 +409,7 @@ def main():
     time_dim = training_predictors.shape[1]
     features_dim = training_predictors.shape[2]
 
-    if dataset == 'mnist'
+    if dataset == 'mnist':
         #load MNIST
         tr_data = utils.DataLoader(
             datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
