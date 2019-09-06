@@ -86,6 +86,8 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
 
 def loss_recon(recon_x, x):
 
+    print ('culo0')
+    print (recon_x.shape, x.shape)
     #x = x.view(x.shape[0], 1, 784)
     recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
     #recon_loss = F.binary_cross_entropy(recon_x, x.view(x.shape[0],1, 784), reduction='sum')
