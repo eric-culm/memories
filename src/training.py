@@ -37,11 +37,11 @@ except IndexError:
     generator = True
     dataset = 'sc09_reduced'
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'CNN_encoder'
-    decoder_architecture = 'CNN_decoder'
+    encoder_architecture = 'MNIST_encoder'
+    decoder_architecture = 'MNIST_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=-4.', 'warm_up=True', 'latent_dim=100']
+                  'kld_weight=-0.5.', 'warm_up=True', 'latent_dim=100']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -409,16 +409,16 @@ def main():
     time_dim = training_predictors.shape[1]
     features_dim = training_predictors.shape[2]
 
-    '''
-    #load MNIST
-    tr_data = utils.DataLoader(
-        datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
-        batch_size=batch_size, shuffle=True)
-    val_data = utils.DataLoader(
-        datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-        batch_size=batch_size, shuffle=True)
-    test_data = val_data.copy()
-    '''
+    if dataset == 'mnist'
+        #load MNIST
+        tr_data = utils.DataLoader(
+            datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
+            batch_size=batch_size, shuffle=True)
+        val_data = utils.DataLoader(
+            datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
+            batch_size=batch_size, shuffle=True)
+        test_data = val_data.copy()
+
 
 
     #load model (model is in locals()['model'])
