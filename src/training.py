@@ -274,7 +274,7 @@ def main():
     #DNN input shape
     time_dim = training_predictors.shape[1]
     features_dim = training_predictors.shape[2]
-
+    '''
     if mnist_test:
         #load MNIST
         tr_data = utils.DataLoader(
@@ -284,6 +284,7 @@ def main():
             datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
             batch_size=batch_size, shuffle=True)
         test_data = val_data
+    '''
 
 
 
@@ -341,7 +342,7 @@ def main():
                            weight_decay=regularization_lambda)
 
 
-    warm_ramp = warm_up(num_epochs)
+    warm_ramp = losses.warm_up(num_epochs)
 
     encoder.train()
     decoder.train()
