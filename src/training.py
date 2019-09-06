@@ -261,12 +261,16 @@ def main():
     train_predictors = torch.tensor(training_predictors).float().to(device)
     val_predictors = torch.tensor(validation_predictors).float().to(device)
     test_predictors = torch.tensor(test_predictors).float().to(device)
+    if hybrid_dataset:
+        train_target = torch.tensor(training_target).float().to(device)
+        val_target = torch.tensor(validation_target).float().to(device)
+        test_target = torch.tensor(test_target).float().to(device)
 
     #build dataset from tensors
     #target i == predictors because autoencoding
-    tr_dataset = utils.TensorDataset(train_predictors,train_predictors)
-    val_dataset = utils.TensorDataset(val_predictors, val_predictors)
-    test_dataset = utils.TensorDataset(test_predictors, test_predictors)
+    tr_dataset = utils.TensorDataset(train_predictors,train_target)
+    val_dataset = utils.TensorDataset(val_predictors, val_target)
+    test_dataset = utils.TensorDataset(test_predictors, test_target)
 
     #build data loader from dataset
     tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=True)
@@ -388,10 +392,10 @@ def main():
 
             loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_r = losses.loss_recon(outputs, sounds)
+            loss_r = losses.loss_recon(outputs, truth)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp)
+            loss_j = loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
             loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
@@ -435,8 +439,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = losses.loss_recon(outputs, sounds)
-                loss_j = losses.loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, truth)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -452,8 +456,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = losses.loss_recon(outputs, sounds)
-                loss_j = losses.loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, truth)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())
