@@ -747,6 +747,8 @@ def MNIST_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
                     nn.init.kaiming_normal_(m.weight.data)
 
         def forward(self, x):
+            print ('cul')
+            print (x.shape)
             x = x.view(-1, 784)
             x = F.relu(self.bn1(self.fc1(x)))
             x = F.relu(self.bn2(self.fc2(x)))
