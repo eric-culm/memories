@@ -124,6 +124,9 @@ except IndexError:
 for param in parameters:
     exec(param)
 
+#load folder parameters from config.ini
+DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
+SR = cfg.getint('sampling', 'sr_target')
 predictors_name = dataset + '_predictors.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
 if hybrid_dataset:
