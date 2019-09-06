@@ -183,18 +183,18 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
         #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
         #TRAIN/VAL/TEST IN A BALANCED WAY
         foldable_list = list(data_merged.keys())
-        fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+        fold_actors_list = folds_generator(num_folds, foldable_list, percs)
         train_list = fold_actors_list[int(num_fold)]['train']
         val_list = fold_actors_list[int(num_fold)]['val']
         test_list = fold_actors_list[int(num_fold)]['test']
         #del dummy
         print ('\n building dataset for current fold')
         print ('\n training:')
-        training_data = uf.build_matrix_dataset(data_merged, train_list)
+        training_data = build_matrix_dataset(data_merged, train_list)
         print ('\n validation:')
-        validation_data = uf.build_matrix_dataset(data_merged, val_list)
+        validation_data = build_matrix_dataset(data_merged, val_list)
         print ('\n test:')
-        test_data = uf.build_matrix_dataset(data_merged, test_list)
+        test_data = build_matrix_dataset(data_merged, test_list)
 
         np.save(train_path, training_data)
         np.save(val_path, validation_data)
@@ -211,7 +211,7 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
             #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
             #TRAIN/VAL/TEST IN A BALANCED WAY
             foldable_list = list(data_merged.keys())
-            fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+            fold_actors_list = folds_generator(num_folds, foldable_list, percs)
             train_list = fold_actors_list[int(num_fold)]['train']
             val_list = fold_actors_list[int(num_fold)]['val']
             test_list = fold_actors_list[int(num_fold)]['test']
@@ -219,11 +219,11 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
             print ('\n building dataset for current fold')
             print ('\n training:')
-            training_data = uf.build_matrix_dataset(data_merged, train_list)
+            training_data = build_matrix_dataset(data_merged, train_list)
             print ('\n validation:')
-            validation_data = uf.build_matrix_dataset(data_merged, val_list)
+            validation_data = build_matrix_dataset(data_merged, val_list)
             print ('\n test:')
-            test_data = uf.build_matrix_dataset(data_merged, test_list)
+            test_data = build_matrix_dataset(data_merged, test_list)
 
             np.save(train_path, training_data)
             np.save(val_path, validation_data)
