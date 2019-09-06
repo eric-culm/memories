@@ -2,12 +2,10 @@ from __future__ import print_function
 import loadconfig
 import configparser
 import utility_functions as uf
-from librosa.feature import mfcc
+import preprocessing_utils as pre
 import numpy as np
 import librosa
-import utility_functions as uf
 import os, sys
-import matplotlib.pyplot as plt
 import math
 
 config = loadconfig.load()
@@ -24,13 +22,15 @@ SEQUENCE_OVERLAP = cfg.getfloat('preprocessing', 'sequence_overlap')
 #INPUT_RAVDESS_FOLDER =  cfg.get('preprocessing', 'input_audio_folder_ravdess')
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
+FEATURES_TYPE = sys.argv[3]
+
 #out
 OUTPUT_FOLDER = cfg.get('preprocessing', 'output_folder')
 
 SEGMENTATION = False
 print ('Segmentation: ' + str(SEGMENTATION))
 
-def prepare_sound(input_sound):
+def prepare_sound(input_sound, features_type):
     '''
     generate predictors (stft) and target (valence sequence)
     of one sound file from the OMG dataset
@@ -46,10 +46,9 @@ def prepare_sound(input_sound):
         samples = np.zeros(dur_samps)
         samples[:len(raw_samples)] = raw_samples[:dur_samps]  #zero padding
     #normalize
-    samples = np.divide(samples, np.max(samples))
-    samples = np.multiply(samples, 0.9)
+    features = pre.extract_features(samples, features_type)
 
-    return samples
+    return features
 
 def segment_datapoint(vector_input):
     '''
@@ -80,10 +79,10 @@ def segment_datapoint(vector_input):
 
     return predictors
 
-def preprocess_datapoint(input_sound):
+def preprocess_datapoint(input_sound, features_type):
 
     sound_file = os.path.join(INPUT_FOLDER , input_sound)  #get correspective sound
-    predictors = prepare_sound(sound_file)  #compute features
+    predictors = prepare_sound(sound_file, features_type)  #compute features
     if SEGMENTATION:
         predictors = segment_datapoint(long_predictors)   #slice feature maps
     predictors = np.array(predictors)
@@ -100,7 +99,7 @@ def main(input_folder):
     predictors_save_path = os.path.join(OUTPUT_FOLDER, DATASET_NAME + '_predictors.npy')
     index = 1
     for i in contents:
-        curr_predictors = preprocess_datapoint(i)
+        curr_predictors = preprocess_datapoint(i, FEATURES_TYPE)
         if not np.isnan(np.std(curr_predictors)):
             print (curr_predictors.shape)
             predictors[i] = curr_predictors
