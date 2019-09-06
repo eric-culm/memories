@@ -172,3 +172,67 @@ def onehot(value, range):
     one_hot[value] = 1
 
     return one_hot
+
+def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_path, test_path,
+                        recompute_matrices = False):
+    if recompute_matrices:
+        #compute which actors put in train, val, test for current fold
+        data_merged = np.load(data_path, allow_pickle=True)
+        data_merged = data_merged.item()
+        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
+        #TRAIN/VAL/TEST IN A BALANCED WAY
+        foldable_list = list(data_merged.keys())
+        fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+        train_list = fold_actors_list[int(num_fold)]['train']
+        val_list = fold_actors_list[int(num_fold)]['val']
+        test_list = fold_actors_list[int(num_fold)]['test']
+        #del dummy
+        print ('\n building dataset for current fold')
+        print ('\n training:')
+        training_data = uf.build_matrix_dataset(data_merged, train_list)
+        print ('\n validation:')
+        validation_data = uf.build_matrix_dataset(data_merged, val_list)
+        print ('\n test:')
+        test_data = uf.build_matrix_dataset(data_merged, test_list)
+
+        np.save(train_path, training_data)
+        np.save(val_path, validation_data)
+        np.save(test_path, test_data)
+
+    else:
+        if not os.path.exists(pred_path):
+            #load merged dataset, compute and save current tensors
+
+            #compute which actors put in train, val, test for current fold
+            data_merged = np.load(data_path, allow_pickle=True)
+            data_merged = data_merged.item()
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
+            #TRAIN/VAL/TEST IN A BALANCED WAY
+            foldable_list = list(data_merged.keys())
+            fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+            train_list = fold_actors_list[int(num_fold)]['train']
+            val_list = fold_actors_list[int(num_fold)]['val']
+            test_list = fold_actors_list[int(num_fold)]['test']
+            #del dummy
+
+            print ('\n building dataset for current fold')
+            print ('\n training:')
+            training_data = uf.build_matrix_dataset(data_merged, train_list)
+            print ('\n validation:')
+            validation_data = uf.build_matrix_dataset(data_merged, val_list)
+            print ('\n test:')
+            test_data = uf.build_matrix_dataset(data_merged, test_list)
+
+            np.save(train_path, training_data)
+            np.save(val_path, validation_data)
+            np.save(test_path, test_data)
+
+        else:
+            #load pre-computed tensors
+            training_data = np.load(train_path)
+            validation_data = np.load(val_path)
+            test_data = np.load(test_path)
+
+    return training_data, validation_data, test_data

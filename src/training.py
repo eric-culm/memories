@@ -35,14 +35,15 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'sc09_reduced'
+    dataset = 'sc09_stft_hybrid'
     mnist_test = True
     architecture = 'WAVE_VAE'
     encoder_architecture = 'MNIST_encoder'
     decoder_architecture = 'MNIST_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100']
+                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
+                  'hybrid_dataset=True', 'subdataset_bound=5']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -95,6 +96,11 @@ SR = cfg.getint('sampling', 'sr_target')
 
 predictors_name = dataset + '_predictors.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
+
+if hybrid_dataset:
+    target_name = dataset + '_target.npy'
+    TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
+
 
 #default training parameters
 train_split = cfg.getfloat('training_defaults', 'train_split')
@@ -167,97 +173,48 @@ def main():
 
     train_pred_path = dataset + '_training_predictors_fold_' + str(num_fold) + '.npy'
     train_pred_path = os.path.join(folds_dataset_path, train_pred_path)
-
     val_pred_path = dataset + '_validation_predictors_fold_' + str(num_fold) + '.npy'
     val_pred_path = os.path.join(folds_dataset_path, val_pred_path)
-
     test_pred_path = dataset + '_test_predictors_fold_' + str(num_fold) + '.npy'
     test_pred_path = os.path.join(folds_dataset_path, test_pred_path)
 
+    training_predictors, validation_predictors, test_predictors = get_dataset_matrices(
+                data_path=PREDICTORS_LOAD, num_folds=num_folds, num_fold=num_fold,
+                percs=percs, train_path=train_pred_path, val_path=val_pred_path,
+                test_path=test_pred_path, recompute_matrices=recompute_matrices)
 
+    if hybrid_dataset:
+        #load features as predictors and waveform as target
+        train_target_path = dataset + '_training_target_fold_' + str(num_fold) + '.npy'
+        train_target_path = os.path.join(folds_dataset_path, train_target_path)
+        val_target_path = dataset + '_validation_target_fold_' + str(num_fold) + '.npy'
+        val_target_path = os.path.join(folds_dataset_path, val_target_path)
+        test_target_path = dataset + '_test_target_fold_' + str(num_fold) + '.npy'
+        test_target_path = os.path.join(folds_dataset_path, test_target_path)
 
-    recompute_matrices = False
-    #if tensors of current fold has not been computed:
-    if recompute_matrices:
-        #compute which actors put in train, val, test for current fold
-        predictors_merged = np.load(PREDICTORS_LOAD, allow_pickle=True)
-        predictors_merged = predictors_merged.item()
-        #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
-        #TRAIN/VAL/TEST IN A BALANCED WAY
-        foldable_list = list(predictors_merged.keys())
-        fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
-        train_list = fold_actors_list[int(num_fold)]['train']
-        val_list = fold_actors_list[int(num_fold)]['val']
-        test_list = fold_actors_list[int(num_fold)]['test']
-        #del dummy
-        print ('\n building dataset for current fold')
-        print ('\n training:')
-        training_predictors = uf.build_matrix_dataset(predictors_merged, train_list)
-        print ('\n validation:')
-        validation_predictors = uf.build_matrix_dataset(predictors_merged, val_list)
-        print ('\n test:')
-        test_predictors = uf.build_matrix_dataset(predictors_merged, test_list)
-
-        np.save(train_pred_path, training_predictors)
-        np.save(val_pred_path, validation_predictors)
-        np.save(test_pred_path, test_predictors)
-
+        training_target, validation_target, test_target = get_dataset_matrices(
+                    data_path=TARGET_LOAD, num_folds=num_folds, num_fold=num_fold,
+                    percs=percs, train_path=train_target_path, val_path=val_target_path,
+                    test_path=test_target_path, recompute_matrices=recompute_matrices)
     else:
-        if not os.path.exists(test_pred_path):
-            #load merged dataset, compute and save current tensors
-
-            #compute which actors put in train, val, test for current fold
-            predictors_merged = np.load(PREDICTORS_LOAD, allow_pickle=True)
-            predictors_merged = predictors_merged.item()
-            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
-            #TRAIN/VAL/TEST IN A BALANCED WAY
-            foldable_list = list(predictors_merged.keys())
-            fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
-            train_list = fold_actors_list[int(num_fold)]['train']
-            val_list = fold_actors_list[int(num_fold)]['val']
-            test_list = fold_actors_list[int(num_fold)]['test']
-            #del dummy
-
-            print ('\n building dataset for current fold')
-            print ('\n training:')
-            training_predictors = uf.build_matrix_dataset(predictors_merged, train_list)
-            print ('\n validation:')
-            validation_predictors = uf.build_matrix_dataset(predictors_merged, val_list)
-            print ('\n test:')
-            test_predictors = uf.build_matrix_dataset(predictors_merged, test_list)
-
-            np.save(train_pred_path, training_predictors)
-            np.save(val_pred_path, validation_predictors)
-            np.save(test_pred_path, test_predictors)
-
-        else:
-            #load pre-computed tensors
-            training_predictors = np.load(train_pred_path)
-            validation_predictors = np.load(val_pred_path)
-            test_predictors = np.load(test_pred_path)
+        #load waveform for both
+        training_target = training_predictors
+        validation_target = validation_predictors
+        test_target = test_predictors
 
 
     #select a subdataset for testing (to be commented when normally trained)
+    if subdataset_bound != 'all':
+        training_predictors = training_predictors[:subdataset_bound]
+        validation_predictors = validation_predictors[:subdataset_bound]
+        test_predictors = test_predictors[:subdataset_bound]
+        training_target = training_target[:subdataset_bound]
+        validation_target = validation_target[:subdataset_bound]
+        test_target = test_target[:subdataset_bound]
 
-    bound = 5
-    training_predictors = training_predictors[:bound]
-    validation_predictors = validation_predictors[:bound]
-    test_predictors = test_predictors[:bound]
+    print ('Training predictors shape: ' + str(training_predictors.shape))
+    print ('Training target shape: ' + str(training_target.shape))
 
-    print (training_predictors.shape)
-
-    mean_target = np.zeros(training_predictors.shape[-1])
-    num_predictors = len(training_predictors)
-    for i in range(num_predictors):
-        mean_target = np.add(mean_target, training_predictors[i])
-    mean_target = mean_target.reshape(1, len(mean_target))
-    mean_target = np.divide(mean_target, float(num_predictors))
-    batch_mean_target = []
-    for i in range(batch_size):
-        batch_mean_target.append(mean_target)
-    mean_target = torch.tensor(batch_mean_target).to(device)
 
     #normalize to 0 mean and unity std (according to training set mean and std)
     '''
@@ -467,9 +424,9 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = loss_recon(outputs, sounds)
-                loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, sounds)
+                loss_j = losses.loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -484,9 +441,9 @@ def main():
                 z = reparametrize(mu, logvar)
                 outputs = decoder(z)
 
-                loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = loss_recon(outputs, sounds)
-                loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, sounds)
+                loss_j = losses.loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp, mean_target)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())

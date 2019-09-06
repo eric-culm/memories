@@ -111,10 +111,10 @@ def main(input_folder):
             if HYBRID:
                 predictors[i] = curr_predictors
                 target[i] = curr_target
-                print ('P_shape: ' + str(curr_predictors.shape) + 'T_shape: ' + str(curr_target.shape))
+                print (' P_shape: ' + str(curr_predictors.shape) + '| T_shape: ' + str(curr_target.shape))
             else:
                 predictors[i] = curr_predictors
-                print ('P_shape: ' + str(curr_predictors.shape))
+                print (' P_shape: ' + str(curr_predictors.shape))
         uf.print_bar(index, num_sounds)
         index += 1
     np.save(predictors_save_path, predictors)
