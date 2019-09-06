@@ -734,7 +734,7 @@ def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
             self.variational = variational
             self.conv1 = nn.Conv2d(1, 64, kernel_size=11, stride=4, padding=2)
             self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2)
-            self.conv2 = nn.Conv2d(1, 64, kernel_size=11, stride=4, padding=2)
+            self.conv2 = nn.Conv2d(64, 192, kernel_size=5, padding=2)
             self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2)
             self.conv3 = nn.Conv2d(192, 384, kernel_size=3, padding=1)
             self.conv4 = nn.Conv2d(384, 256, kernel_size=3, padding=1)
