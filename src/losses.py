@@ -6,6 +6,15 @@ import torch.utils.data as utils
 from torchvision import datasets, transforms
 from audtorch import metrics
 import numpy as np
+import configparser
+import loadconfig
+
+config = loadconfig.load()
+cfg = configparser.ConfigParser()
+cfg.read(config)
+
+batch_size = cfg.getint('training_defaults', 'batch_size')
+
 
 CCC_loss =  metrics.ConcordanceCC()
 
