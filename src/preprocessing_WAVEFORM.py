@@ -119,7 +119,7 @@ def main(input_folder):
         index += 1
     np.save(predictors_save_path, predictors)
     if HYBRID:
-        np.save(target_save_path, predictors)
+        np.save(target_save_path, target)
 
 if __name__ == '__main__':
     main(INPUT_FOLDER)
