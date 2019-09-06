@@ -43,8 +43,7 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=True', 'subdataset_bound=5',
-                  'hybrid_dataset=True']
+                  'hybrid_dataset=True', 'subdataset_bound=5']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -90,18 +89,6 @@ config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
-#load parameters from config file only test mode
-DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
-SR = cfg.getint('sampling', 'sr_target')
-
-
-predictors_name = dataset + '_predictors.npy'
-PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
-
-if hybrid_dataset:
-    target_name = dataset + '_target.npy'
-    TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
-
 
 #default training parameters
 train_split = cfg.getfloat('training_defaults', 'train_split')
@@ -137,6 +124,17 @@ try:
 
 except IndexError:
     pass
+
+#load parameters from config file only test mode
+DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
+SR = cfg.getint('sampling', 'sr_target')
+
+predictors_name = dataset + '_predictors.npy'
+PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
+
+if hybrid_dataset:
+    target_name = dataset + '_target.npy'
+    TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
 
 device = torch.device('cuda:' + str(gpu_ID))
 #device = torch.device('cuda:0')
