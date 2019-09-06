@@ -418,7 +418,7 @@ def main():
         val_data = utils.DataLoader(
             datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
             batch_size=batch_size, shuffle=True)
-        test_data = val_data.copy()
+        test_data = val_data
 
 
 
