@@ -241,7 +241,8 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, mean_target, kld_weight
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     #recon_loss /= batch_size
     #recon_loss = torch.log(loss_function_decoder(recon_x, x))
-    recon_loss = loss_recon(recon_x, x)
+    #recon_loss = loss_recon(recon_x, x)
+    recon_loss = F.binary_cross_entropy(recon_x, x.view(-1, 784), reduction='sum')
 
     KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
@@ -508,11 +509,12 @@ def main():
             mu, logvar = encoder(sounds)
             z = reparametrize(mu, logvar)
             outputs = decoder(z)
-
+            '''
             sum_mu = torch.sum(torch.sum(mu))
             sum_logvar = torch.sum(torch.sum(logvar))
             print ('culo')
             print (sum_mu, sum_logvar)
+            '''
 
             loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)

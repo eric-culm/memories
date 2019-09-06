@@ -713,6 +713,96 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def MNIST_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'variational':True,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class MNIST_encoder_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
+            super(MNIST_encoder_class, self).__init__()
+            self.variational = variational
+            self.fc1 = nn.Linear(784, 500)
+            self.fc2 = nn.Linear(500, 200)
+
+            self.bn1 = nn.BatchNorm1d(1)
+            self.bn2 = nn.BatchNorm1d(1)
+
+
+            self.fc3_1 = nn.Linear(200, latent_dim)
+            self.fc3_2 = nn.Linear(200, latent_dim)
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def forward(self, x):
+            x = x.view(-1, 784)
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+
+            x1 = F.sigmoid(self.fc3_1(x))
+            if self.variational:
+                x2 = F.sigmoid(self.fc3_2(x))
+                return x1, x2
+            else:
+                return x1, x1
+
+    out = MNIST_encoder_class()
+
+    return out, p
+
+def MNIST_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+
+
+    class MNIST_decoder_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim']):
+            super(MNIST_decoder_class, self).__init__()
+            self.fc1 = nn.Linear(latent_dim, 200)
+            self.fc2 = nn.Linear(200, 500)
+            self.fc3 = nn.Linear(500, 784)
+
+            self.bn2 = nn.BatchNorm1d(1)
+            self.bn1 = nn.BatchNorm1d(1)
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+
+        def forward(self, x):
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.sigmoid(self.bn3(self.fc3(x)))
+
+
+            return x
+
+    out = MNIST_decoder_class()
+
+    return out, p
+
 def WAVE_VAE(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
