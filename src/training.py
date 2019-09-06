@@ -414,10 +414,10 @@ def main():
         #load MNIST
         tr_data = utils.DataLoader(
             datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True)
+            batch_size=batch_size, shuffle=True).to(device)
         val_data = utils.DataLoader(
             datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True)
+            batch_size=batch_size, shuffle=True).to(device)
         test_data = val_data
 
 
