@@ -248,6 +248,7 @@ def main():
         training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
         validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
         test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
+    '''
     else:
         training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
         validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
@@ -255,7 +256,7 @@ def main():
     training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1])
     validation_predictors = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1])
     test_predictors = test_target.reshape(test_target.shape[0], 1, test_target.shape[1])
-
+    '''
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float().to(device)
     val_predictors = torch.tensor(validation_predictors).float().to(device)
