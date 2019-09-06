@@ -35,7 +35,8 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'mnist'
+    dataset = 'sc09_reduced'
+    mnist_test = True
     architecture = 'WAVE_VAE'
     encoder_architecture = 'MNIST_encoder'
     decoder_architecture = 'MNIST_decoder'
@@ -409,7 +410,7 @@ def main():
     time_dim = training_predictors.shape[1]
     features_dim = training_predictors.shape[2]
 
-    if dataset == 'mnist':
+    if mnist_test:
         #load MNIST
         tr_data = utils.DataLoader(
             datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
