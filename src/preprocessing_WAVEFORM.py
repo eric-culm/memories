@@ -20,9 +20,11 @@ SEQUENCE_LENGTH = cfg.getfloat('preprocessing', 'sequence_length')
 SEQUENCE_OVERLAP = cfg.getfloat('preprocessing', 'sequence_overlap')
 #in
 #INPUT_RAVDESS_FOLDER =  cfg.get('preprocessing', 'input_audio_folder_ravdess')
+
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
 FEATURES_TYPE = sys.argv[3]
+HYBRID = sys.argv[4]
 
 #out
 OUTPUT_FOLDER = cfg.get('preprocessing', 'output_folder')
@@ -97,14 +99,27 @@ def main(input_folder):
     num_sounds = len(contents)
     predictors = {}
     predictors_save_path = os.path.join(OUTPUT_FOLDER, DATASET_NAME + '_predictors.npy')
+    if HYBRID:
+        target = {}
+        target_save_path = os.path.join(OUTPUT_FOLDER, DATASET_NAME + '_target.npy')
     index = 1
     for i in contents:
         curr_predictors = preprocess_datapoint(i, FEATURES_TYPE)
+        if HYBRID:
+            curr_target = preprocess_datapoint(i, 'waveform')
         if not np.isnan(np.std(curr_predictors)):
-            print (curr_predictors.shape)
-            predictors[i] = curr_predictors
+            if HYBRID:
+                predictors[i] = curr_predictors
+                target[i] = curr_target
+                print ('P_shape: ' + str(curr_predictors.shape) + 'T_shape: ' + str(curr_target.shape))
+            else:
+                predictors[i] = curr_predictors
+                print ('P_shape: ' + str(curr_predictors.shape))
         uf.print_bar(index, num_sounds)
         index += 1
     np.save(predictors_save_path, predictors)
+    if HYBRID:
+        np.save(target_save_path, predictors)
+
 if __name__ == '__main__':
     main(INPUT_FOLDER)
