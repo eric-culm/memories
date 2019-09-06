@@ -101,8 +101,8 @@ def build_matrix_dataset(merged_predictors, actors_list):
             #print (i, predictors.shape)
         else:
             if np.array(merged_predictors[i]).shape != (0,):  #if it not void due to preprocessing errors
-                predictors
-                predictors = np.stack((predictors, np.array(merged_predictors[i])))
+                predictors = np.expand_dims(predictors, axis=0)
+                predictors = np.concatenate((predictors, np.array(merged_predictors[i])), axis=0)
                 #target = np.concatenate((target, np.array(merged_target[i],dtype='float32')), axis=0)
         index += 1
         perc = int(index / total * 20)
