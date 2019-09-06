@@ -664,6 +664,8 @@ def main():
                     for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
                         #optimizer_encoder.zero_grad()
                         optimizer_joint.zero_grad()
+                        sounds = sounds.to(device)
+                        truth = truth.to(device)
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
@@ -693,6 +695,8 @@ def main():
                     for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
                         #optimizer_encoder.zero_grad()
                         optimizer_joint.zero_grad()
+                        sounds = sounds.to(device)
+                        truth = truth.to(device)
 
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
