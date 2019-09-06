@@ -385,9 +385,9 @@ def main():
             print (sum_mu, sum_logvar)
             '''
 
-            loss_k = loss_KLD(mu, logvar, epoch, warm_ramp)
+            loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_r = loss_recon(outputs, sounds)
+            loss_r = losses.loss_recon(outputs, sounds)
             #loss_decoder.backward(retain_graph=True)
 
             loss_j = loss_joint(outputs, sounds, mu, logvar, epoch, warm_ramp)
