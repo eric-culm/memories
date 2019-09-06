@@ -43,7 +43,8 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=True', 'subdataset_bound=5']
+                  'hybrid_dataset=True', 'subdataset_bound=5',
+                  hybrid_dataset=True]
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
