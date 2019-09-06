@@ -201,7 +201,7 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
         np.save(test_path, test_data)
 
     else:
-        if not os.path.exists(pred_path):
+        if not os.path.exists(test_path):
             #load merged dataset, compute and save current tensors
 
             #compute which actors put in train, val, test for current fold
