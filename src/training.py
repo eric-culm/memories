@@ -535,9 +535,11 @@ def main():
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
 
                     plt.subplot(211)
-                    plt.pcolormesh(outputs)
+                    plt.pcolormesh(figs_gen[i])
+                    plt.title('gen')
                     plt.subplot(212)
-                    plt.pcolormesh(truth)
+                    plt.pcolormesh(figs_truth[i])
+                    plt.title('original')
                     plt.savefig(fig_path)
                     plt.close()
 
