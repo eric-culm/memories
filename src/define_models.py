@@ -724,7 +724,6 @@ def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0
     'verbose':False,
     'variational':True,
     'latent_dim':100
-    ''
     }
     p = parse_parameters(p, user_parameters)
     flattened_dim = time_dim * features_dim
