@@ -35,15 +35,15 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'sc09_stft_hybrid'
+    dataset = 'sc09'
     mnist_test = True
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'spectrum_encoder'
+    encoder_architecture = 'WAVE_encoder'
     decoder_architecture = 'WAVE_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
                   'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=True', 'subdataset_bound=5']
+                  'hybrid_dataset=False', 'subdataset_bound="all"']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
