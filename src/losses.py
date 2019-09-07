@@ -92,7 +92,8 @@ def loss_recon(recon_x, x, features_type):
     if features_type == 'waveform':
         recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
     elif features_type == 'spectrum':
-        recon_loss = F.binary_cross_entropy(recon_x, x, reduction='sum')
+        recon_loss = F.binary_cross_entropy(recon_x, x))
+        recon_loss /= batch_size
 
     #recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
 
@@ -108,8 +109,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     #recon_loss /= batch_size
     #recon_loss = torch.log(loss_function_decoder(recon_x, x))
-    #recon_loss = loss_recon(recon_x, x)
-    recon_loss = F.binary_cross_entropy(recon_x, x, reduction='sum')
+    recon_loss = loss_recon(recon_x, x, features_type)
 
     KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
