@@ -76,6 +76,7 @@ from torch import optim
 import torch.nn.functional as F
 import torch.utils.data as utils
 from torchvision import datasets, transforms
+import matplotlib.pyplot as plt
 from audtorch import metrics
 import numpy as np
 import define_models as choose_model
