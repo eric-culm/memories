@@ -533,12 +533,13 @@ def main():
                 for i in range(save_figs_n):
                     fig_name = 'gen_' + str(i) + '.wav'
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
-
+                    gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
+                    truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
                     plt.subplot(211)
-                    plt.pcolormesh(figs_gen[i])
+                    plt.pcolormesh(gen)
                     plt.title('gen')
                     plt.subplot(212)
-                    plt.pcolormesh(figs_truth[i])
+                    plt.pcolormesh(truth)
                     plt.title('original')
                     plt.savefig(fig_path)
                     plt.close()
