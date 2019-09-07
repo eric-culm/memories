@@ -288,8 +288,8 @@ def main():
     val_data = utils.DataLoader(val_dataset, batch_size, shuffle=False, pin_memory=True)
     test_data = utils.DataLoader(test_dataset, batch_size, shuffle=False, pin_memory=True)  #no batch here!!
     #DNN input shape
-    time_dim = training_predictors.shape[1]
-    features_dim = training_predictors.shape[2]
+    time_dim = training_predictors.shape[-2]
+    features_dim = training_predictors.shape[-1]
     '''
     if mnist_test:
         #load MNIST
