@@ -791,8 +791,8 @@ def simple_decoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0
 
 
 
-            self.bn5 = nn.BatchNorm1d(2000)
-            self.bn4 = nn.BatchNorm1d(2000)
+            self.bn1 = nn.BatchNorm1d(2000)
+            self.bn2 = nn.BatchNorm1d(2000)
             self.bn3 = nn.BatchNorm1d(2000)
 
 
