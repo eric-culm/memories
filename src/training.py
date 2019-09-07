@@ -106,9 +106,14 @@ learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
 regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
 optimizer = cfg.get('training_defaults', 'optimizer')
 save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
+
 save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
 save_sounds_epochs = cfg.getint('training_defaults', 'save_sounds_epochs')
 save_sounds_n = cfg.getint('training_defaults', 'save_sounds_n')
+
+save_figs = eval(cfg.get('training_defaults', 'save_figs'))
+save_figs_epochs = cfg.getint('training_defaults', 'save_figs_epochs')
+save_figs_n = cfg.getint('training_defaults', 'save_figs_n')
 
 percs = [train_split, validation_split, test_split]
 
@@ -497,8 +502,42 @@ def main():
             #save sounds if specified
             ts_preds = []
             tr_preds = []
-            if save_sounds:
+            if save_figs:
+                if epoch%save_sounds_epochs == 0: #save only every n epochs
+                    curr_figs_path_train = os.path.join(gen_figs_path, 'training' , 'epoch_'+str(epoch))
+                    curr_figs_path_test = os.path.join(gen_figs_path, 'test' , 'epoch_'+str(epoch))
 
+                    if not os.path.exists(curr_figs_path_train):
+                        os.makedirs(curr_figs_path_train)
+                    if not os.path.exists(curr_figs_path_test):
+                        os.makedirs(curr_figs_path_test)
+
+                for i, (sounds, truth) in enumerate(tr_data):
+                    if i <= save_sounds_n-1:
+                        sounds = sounds.to(device)
+                        truth = truth.numpy()
+
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = decoder(z)
+                        outputs = outputs.cpu().numpy()
+
+                        fig_name = 'gen_' + str(i) + '.wav'
+                        fig_path = os.path.join(curr_fig_path_training, fig_name)
+
+                        plt.subplot(211)
+                        plt.pcolormesh(outputs)
+                        plt.subplot(212)
+                        plt.pcolormesh(truth)
+                        plt.savefig(fig_path)
+                        plt.close()
+
+
+
+                    else:
+                        break
+
+            if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
 
                     curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
