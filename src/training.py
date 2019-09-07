@@ -516,30 +516,30 @@ def main():
                     if not os.path.exists(curr_figs_path_test):
                         os.makedirs(curr_figs_path_test)
 
+                figs_gen = []
+                figs_truth = []
                 for i, (sounds, truth) in enumerate(tr_data):
-                    if i <= save_sounds_n-1:
+                    if len(figs_truth) <= save_figs_n:
                         sounds = sounds.to(device)
                         truth = truth.numpy()
-
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
                         outputs = outputs.cpu().numpy()
-
-                        fig_name = 'gen_' + str(i) + '.wav'
-                        fig_path = os.path.join(curr_figs_path_train, fig_name)
-
-                        plt.subplot(211)
-                        plt.pcolormesh(outputs)
-                        plt.subplot(212)
-                        plt.pcolormesh(truth)
-                        plt.savefig(fig_path)
-                        plt.close()
-
-
-
+                        figs_gen.append(outputs)
+                        figs_truth.append(truth)
                     else:
                         break
+                for i in range(save_figs_n):
+                    fig_name = 'gen_' + str(i) + '.wav'
+                    fig_path = os.path.join(curr_figs_path_train, fig_name)
+
+                    plt.subplot(211)
+                    plt.pcolormesh(outputs)
+                    plt.subplot(212)
+                    plt.pcolormesh(truth)
+                    plt.savefig(fig_path)
+                    plt.close()
 
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
