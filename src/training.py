@@ -403,10 +403,10 @@ def main():
 
             loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
-            loss_r = losses.loss_recon(outputs, truth)
+            loss_r = losses.loss_recon(outputs, truth, features_type)
             #loss_decoder.backward(retain_graph=True)
 
-            loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+            loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
             loss_j.backward(retain_graph=True)
 
             #print progress and update history, optimizer step
@@ -450,8 +450,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = losses.loss_recon(outputs, truth)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, truth, features_type)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -467,8 +467,8 @@ def main():
                 outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
-                loss_r = losses.loss_recon(outputs, truth)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp)
+                loss_r = losses.loss_recon(outputs, truth, features_type)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())

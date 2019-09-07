@@ -98,7 +98,7 @@ def loss_recon(recon_x, x, features_type):
 
     return recon_loss
 
-def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
+def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weight=-0.5):
 
 
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
