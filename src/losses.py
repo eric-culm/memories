@@ -108,8 +108,8 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
     #recon_loss = F.binary_cross_entropy(recon_x_0to1, x_0to1)
     #recon_loss /= batch_size
     #recon_loss = torch.log(loss_function_decoder(recon_x, x))
-    recon_loss = loss_recon(recon_x, x)
-    #recon_loss = F.binary_cross_entropy(recon_x, x.view(x.shape[0],1, 784), reduction='sum')
+    #recon_loss = loss_recon(recon_x, x)
+    recon_loss = F.binary_cross_entropy(recon_x, x, reduction='sum')
 
     KLD = loss_KLD(mu, logvar, epoch, warm_ramp)
     #joint_loss = recon_loss
