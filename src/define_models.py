@@ -755,9 +755,9 @@ def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0
             x = F.relu(self.bn3(self.fc3(x)))
 
 
-            x1 = F.sigmoid(self.fc6_1(x))
+            x1 = F.sigmoid(self.mu(x))
             if self.variational:
-                x2 = F.sigmoid(self.fc6_2(x))
+                x2 = F.sigmoid(self.logvar(x))
                 return x1, x2
             else:
                 return x1, x1
