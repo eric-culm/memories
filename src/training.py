@@ -38,11 +38,11 @@ except IndexError:
     dataset = 'sc09_stft'
     mnist_test = True
     architecture = 'WAVE_VAE'
-    encoder_architecture = 'WAVE_encoder'
-    decoder_architecture = 'WAVE_decoder'
+    encoder_architecture = 'simple_spectrum_encoder'
+    decoder_architecture = 'simple_spectrum_decoder'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
-                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
+                  'kld_weight=-2.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=5',
                   'features_type="spectrum"']
 
@@ -268,6 +268,7 @@ def main():
         training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1],training_target.shape[2])
         validation_target = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1], validation_target.shape[2])
         test_target = test_target.reshape(test_target.shape[0], 1, test_target.shape[1], test_target.shape[2])
+
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float()
     val_predictors = torch.tensor(validation_predictors).float()

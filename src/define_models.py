@@ -713,6 +713,109 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'variational':True,
+    'latent_dim':100
+    ''
+    }
+    p = parse_parameters(p, user_parameters)
+    flattened_dim = time_dim * features_dim
+
+    class simple_encoder_spectrum_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
+            super(simple_encoder_spectrum_class, self).__init__()
+            self.variational = variational
+            self.fc1 = nn.Linear(flattened_dim, 2000)
+            self.fc2 = nn.Linear(2000, 2000)
+            self.fc3 = nn.Linear(2000, 2000)
+
+            self.bn1 = nn.BatchNorm1d(2000)
+            self.bn2 = nn.BatchNorm1d(2000)
+            self.bn3 = nn.BatchNorm1d(2000)
+
+            self.mu = nn.Linear(2000, latent_dim)
+            self.logvar = nn.Linear(2000, latent_dim)
+
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def forward(self, x):
+
+            x = torch.flatten(x, 1)
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+
+
+            x1 = F.sigmoid(self.fc6_1(x))
+            if self.variational:
+                x2 = F.sigmoid(self.fc6_2(x))
+                return x1, x2
+            else:
+                return x1, x1
+
+    out = simple_encoder_spectrumclass()
+
+    return out, p
+
+def simple_decoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+    flattened_dim = time_dim * features_dim
+
+    class simple_decoder_spectrum_class(nn.Module):
+        def __init__(self, latent_dim=p['latent_dim']):
+            super(simple_decoder_spectrum_class, self).__init__()
+            self.fc1 = nn.Linear(latent_dim, 2000)
+            self.fc2 = nn.Linear(2000, 2000)
+            self.fc3 = nn.Linear(2000, 2000)
+
+            self.out =  nn.Linear(2000, flattened_dim)
+
+
+
+            self.bn5 = nn.BatchNorm1d(2000)
+            self.bn4 = nn.BatchNorm1d(2000)
+            self.bn3 = nn.BatchNorm1d(2000)
+
+
+            for m in self.modules():
+                if isinstance(m, nn.ConvTranspose1d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+
+        def forward(self, x):
+            x = F.relu(self.bn1(self.fc1(x)))
+            x = F.relu(self.bn2(self.fc2(x)))
+            x = F.relu(self.bn3(self.fc3(x)))
+
+            x = F.sigmoid(self.out(x))
+            x = x.view(x.shape[0], time_dim, features_dim)
+
+            return x
+
+    out = simple_decoder_spectrum_class()
+
+    return out, p
+
 def spectrum_encoder(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
