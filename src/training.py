@@ -531,18 +531,20 @@ def main():
                     else:
                         break
 
-                figs_gen = np.array(figs_gen).reshape(figs_gen.shape[0]*figs_gen.shape[1],figs_gen.shape[2], figs_gen.shape[3])
-                figs_truth = np.array(figs_truth).reshape(figs_truth.shape[0]*figs_truth.shape[1],figs_truth.shape[2], figs_truth.shape[3])
+                figs_gen = np.array(figs_gen)
+                figs_gen = figs_gen.reshape(figs_gen.shape[0]*figs_gen.shape[1],figs_gen.shape[2], figs_gen.shape[3])
+                figs_truth = np.array(figs_truth)
+                figs_truth = figs_truth.reshape(figs_truth.shape[0]*figs_truth.shape[1],figs_truth.shape[2], figs_truth.shape[3])
                 for i in range(save_figs_n):
                     fig_name = 'gen_' + str(i) + '.wav'
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
-                    gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
-                    truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
+                    #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
+                    #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
                     plt.subplot(211)
-                    plt.pcolormesh(gen)
+                    plt.pcolormesh(figs_gen[i])
                     plt.title('gen')
                     plt.subplot(212)
-                    plt.pcolormesh(truth)
+                    plt.pcolormesh(figs_truth[i])
                     plt.title('original')
                     plt.savefig(fig_path)
                     plt.close()
