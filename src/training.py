@@ -334,6 +334,9 @@ def main():
     gen_sounds_path = os.path.join(results_path, 'gen_sounds')
     if not os.path.exists(gen_sounds_path):
         os.makedirs(gen_sounds_path)
+    gen_figs_path = os.path.join(results_path, 'gen_figs')
+    if not os.path.exists(gen_figs_path):
+        os.makedirs(gen_figs_path)
 
 
 
