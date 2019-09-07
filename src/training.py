@@ -526,7 +526,7 @@ def main():
                         outputs = outputs.cpu().numpy()
 
                         fig_name = 'gen_' + str(i) + '.wav'
-                        fig_path = os.path.join(curr_fig_path_training, fig_name)
+                        fig_path = os.path.join(curr_figs_path_training, fig_name)
 
                         plt.subplot(211)
                         plt.pcolormesh(outputs)
