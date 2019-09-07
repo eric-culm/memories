@@ -43,7 +43,8 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
                   'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound="all"']
+                  'hybrid_dataset=False', 'subdataset_bound=5',
+                  'features_type="spectrum"']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
@@ -250,10 +251,14 @@ def main():
         test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
 
     else:
-        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
-        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
-        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
-
+        if features_type='waveform':
+            training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
+            validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
+            test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
+        elif features_type='spectrum':
+            training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
+            validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
+            test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
     training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1])
     validation_target = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1])
     test_target = test_target.reshape(test_target.shape[0], 1, test_target.shape[1])
