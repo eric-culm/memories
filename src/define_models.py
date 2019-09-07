@@ -762,7 +762,7 @@ def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0
             else:
                 return x1, x1
 
-    out = simple_encoder_spectrumclass()
+    out = simple_encoder_spectrum_class()
 
     return out, p
 
