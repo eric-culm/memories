@@ -749,7 +749,7 @@ def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0
 
         def forward(self, x):
 
-            x = torch.flatten(x, 1)
+            x = x.view(x.shape[0], time_dim * features_dim)
             x = F.relu(self.bn1(self.fc1(x)))
             x = F.relu(self.bn2(self.fc2(x)))
             x = F.relu(self.bn3(self.fc3(x)))
