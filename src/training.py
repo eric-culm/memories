@@ -530,6 +530,9 @@ def main():
                         figs_truth.append(truth)
                     else:
                         break
+
+                figs_gen = np.array(figs_gen).reshape(figs_gen.shape[0]*figs_gen.shape[1],figs_gen.shape[2], figs_gen.shape[3])
+                figs_truth = np.array(figs_truth).reshape(figs_truth.shape[0]*figs_truth.shape[1],figs_truth.shape[2], figs_truth.shape[3])
                 for i in range(save_figs_n):
                     fig_name = 'gen_' + str(i) + '.wav'
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
