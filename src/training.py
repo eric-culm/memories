@@ -530,7 +530,7 @@ def main():
                         for single_sound in outputs:
                             figs_gen.append(single_sound)
                         for single_sound in truth:
-                            figs_truth.append(single_sound)
+                            figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
                     else:
                         break
 
