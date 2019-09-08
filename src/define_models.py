@@ -760,8 +760,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
             x = self.encoder(x)
-            print ('culo')
-            print (x.shape)
+
             x = x.view([-1, 6553600])
             x = F.dropout2d(self.fc1(x), 0.5)
             x = self.fc2(x)
@@ -775,7 +774,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             z = self.expand(z)
             z = F.dropout2d(self.fc3(z), 0.5)
             z = self.fc4(z)
-            z = z.view([-1, 16, 7, 7])
+            z = z.view([-1, 16, 32, 64])
 
             out = self.decoder(z)
             out = F.sigmoid(out)
