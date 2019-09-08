@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'sc09_stft'
+    dataset = 'sc09_reduced'
     mnist_test = True
     architecture = 'complete_net'
     encoder_architecture = 'simple_encoder_spectrum'
