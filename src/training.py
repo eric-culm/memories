@@ -503,7 +503,7 @@ def main():
             print ('  train_recon :' + str(np.round(train_epoch_recon.item(), decimals=5)) + ' | val_recon: ' + str(np.round(val_epoch_recon.item(), decimals=5)))
 
 
-            #save sounds if specified
+            #save figures if specified
             ts_preds = []
             tr_preds = []
             if save_figs:
@@ -528,13 +528,15 @@ def main():
                         outputs = outputs.cpu().numpy()
                         figs_gen.append(outputs)
                         figs_truth.append(truth)
+
+                        for single_sound in outputs:
+                            figs_gen.append(single_sound)
+                        for single_sound in truth:
+                            figs_truth.append(single_sound)
                     else:
                         break
 
-                figs_gen = np.array(figs_gen)
-                figs_gen = figs_gen.reshape(figs_gen.shape[0]*figs_gen.shape[1],figs_gen.shape[2], figs_gen.shape[3])
-                figs_truth = np.array(figs_truth)
-                figs_truth = figs_truth.reshape(figs_truth.shape[0]*figs_truth.shape[1],figs_truth.shape[2], figs_truth.shape[3])
+
                 for i in range(save_figs_n):
                     fig_name = 'gen_' + str(i) + '.wav'
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
