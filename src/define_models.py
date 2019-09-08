@@ -741,7 +741,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          nn.Conv2d(16, 16, 3, padding=1))
 
             #These two layers are for getting logvar and mean
-            self.fc1 = nn.Linear(flattened_dim, 256)
+            self.fc1 = nn.Linear(6553600, 256)
             self.fc2 = nn.Linear(256, 128)
             self.mean = nn.Linear(128, num_latent)
             self.var = nn.Linear(128, num_latent)
