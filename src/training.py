@@ -422,7 +422,7 @@ def main():
             optimizer_joint.zero_grad()
 
             if use_complete_net:
-                outputs, mu, logvar = model(images)
+                outputs, mu, logvar = model(sounds)
             else:
                 mu, logvar = encoder(sounds)
                 z = reparametrize(mu, logvar)
@@ -474,7 +474,7 @@ def main():
                 truth = truth.to(device)
 
                 if use_complete_net:
-                    outputs, mu, logvar = model(images)
+                    outputs, mu, logvar = model(sounds)
                 else:
                     mu, logvar = encoder(sounds)
                     z = reparametrize(mu, logvar)
@@ -495,7 +495,7 @@ def main():
                 truth = truth.to(device)
 
                 if use_complete_net:
-                    outputs, mu, logvar = model(images)
+                    outputs, mu, logvar = model(sounds)
                 else:
                     mu, logvar = encoder(sounds)
                     z = reparametrize(mu, logvar)
@@ -550,7 +550,7 @@ def main():
                             truth = truth.numpy()
 
                             if use_complete_net:
-                                outputs, mu, logvar = model(images)
+                                outputs, mu, logvar = model(sounds)
                             else:
                                 mu, logvar = encoder(sounds)
                                 z = reparametrize(mu, logvar)
@@ -588,7 +588,7 @@ def main():
                             truth = truth.numpy()
 
                             if use_complete_net:
-                                outputs, mu, logvar = model(images)
+                                outputs, mu, logvar = model(sounds)
                             else:
                                 mu, logvar = encoder(sounds)
                                 z = reparametrize(mu, logvar)
@@ -673,7 +673,7 @@ def main():
                         truth = truth.to(device)
 
                         if use_complete_net:
-                            outputs, mu, logvar = model(images)
+                            outputs, mu, logvar = model(sounds)
                         else:
                             mu, logvar = encoder(sounds)
                             z = reparametrize(mu, logvar)
@@ -707,7 +707,7 @@ def main():
                         truth = truth.to(device)
 
                         if use_complete_net:
-                            outputs, mu, logvar = model(images)
+                            outputs, mu, logvar = model(sounds)
                         else:
                             mu, logvar = encoder(sounds)
                             z = reparametrize(mu, logvar)
