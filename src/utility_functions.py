@@ -243,7 +243,7 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
 
 def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
-                save_items_epochs, save_items_n):
+                save_items_epochs, save_items_n, features_type):
     data_gen = []
     data_truth = []
     if save_figs or save_sounds:
