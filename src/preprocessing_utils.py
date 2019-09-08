@@ -69,6 +69,15 @@ def spectrum(x, M=WINDOW_SIZE, N=FFT_SIZE, H=HOP_SIZE_STFT, fs=SR, window_type=W
 
     return SP
 
+def mags2audio(x,n_iter=32, hop_length=HOP_SIZE_STFT, win_length=FFT_SIZE):
+    '''
+    griffin lim algorithm for phase estimation
+    '''
+    x = np.rot90(stft, k=3)
+    recon = librosa.griffinlim(x,n_iter=n_iter, hop_length=hop_length, win_length=win_length)
+
+    return recon
+
 
 def spectrum_CQ(x, H=HOP_SIZE_CQT, fs=SR, bins_per_octave=BINS_PER_OCTAVE, n_bins=N_BINS, fmin=FMIN, compression=COMPRESSION):
     '''
