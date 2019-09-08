@@ -234,6 +234,14 @@ def main():
     test_predictors = np.divide(test_predictors, tr_std)
     '''
 
+    #normalize to 0-1
+
+    tr_max = np.max(training_predictors)
+    training_predictors = np.divide(training_predictors, tr_max)
+    validation_predictors = np.divide(validation_predictors, tr_max)
+    test_predictors = np.divide(test_predictors, tr_max)
+
+
     #sys.exit(0)
     '''
     tr_pred = []
@@ -542,10 +550,10 @@ def main():
                         #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
 
                         plt.subplot(211)
-                        plt.pcolormesh(figs_gen[i])
+                        plt.pcolormesh(figs_gen[i].T)
                         plt.title('gen')
                         plt.subplot(212)
-                        plt.pcolormesh(figs_truth[i])
+                        plt.pcolormesh(figs_truth[i].T)
                         plt.title('original')
                         plt.savefig(fig_path)
                         plt.close()
