@@ -363,7 +363,7 @@ def main():
     if use_complete_net:
         model_params = sum([np.prod(p.size()) for p in model.parameters()])
         print ('Total paramters: ' + str(model_params))
-        optimizer_joint = optim.Adam(model_parameters, lr=learning_rate,
+        optimizer_joint = optim.Adam(model_params, lr=learning_rate,
                                weight_decay=regularization_lambda)
     else:
         encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
