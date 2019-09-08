@@ -526,8 +526,6 @@ def main():
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
                         outputs = outputs.cpu().numpy()
-                        figs_gen.append(outputs)
-                        figs_truth.append(truth)
 
                         for single_sound in outputs:
                             figs_gen.append(single_sound)
