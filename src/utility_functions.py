@@ -238,3 +238,96 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
             test_data = np.load(test_path)
 
     return training_data, validation_data, test_data
+
+def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds):
+    data_gen = []
+    data_truth = []
+    if save_figs or save_sounds:
+        if epoch % save_items_epochs == 0: #save only every n epochs
+            #create folders
+            if save_figs:
+                curr_figs_path_train = os.path.join(gen_figs_path, 'training' , 'epoch_'+str(epoch))
+                curr_figs_path_test = os.path.join(gen_figs_path, 'test' , 'epoch_'+str(epoch))
+                if not os.path.exists(curr_figs_path_train):
+                    os.makedirs(curr_figs_path_train)
+                if not os.path.exists(curr_figs_path_test):
+                    os.makedirs(curr_figs_path_test)
+            if save_sounds:
+                curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
+                curr_sounds_path_test = os.path.join(gen_sounds_path, 'test' , 'epoch_'+str(epoch))
+                curr_orig_path_training = os.path.join(gen_sounds_path, 'training', 'originals')
+                curr_orig_path_test = os.path.join(gen_sounds_path, 'test', 'originals')
+                if not os.path.exists(curr_sounds_path_train):
+                    os.makedirs(curr_sounds_path_train)
+                if not os.path.exists(curr_sounds_path_test):
+                    os.makedirs(curr_sounds_path_test)
+                if not os.path.exists(curr_orig_path_training):
+                    os.makedirs(curr_orig_path_training)
+                if not os.path.exists(curr_orig_path_test):
+                    os.makedirs(curr_orig_path_test)
+
+
+            for i, (sounds, truth) in enumerate(dataloader):
+                if len(figs_truth) <= save_figs_n:
+                    sounds = sounds.to(device)
+                    truth = truth.numpy()
+                    #compute predictions
+                    if use_complete_net:
+                        outputs, mu, logvar = model(sounds)
+                    else:
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = decoder(z)
+                    outputs = outputs.cpu().numpy()
+                    #concatenate predictions
+                    for single_sound in outputs:
+                        if features_type == 'waveform':
+                            data_gen.append(single_sound)
+                        elif features_type == 'spectrum':
+                            data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                    for single_sound in truth:
+                        if features_type == 'waveform':
+                            data_gen.append(single_sound)
+                        elif features_type == 'spectrum':
+                            data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                    if save_sounds:
+                        for single_sound in outputs:
+                            tr_preds.append(single_sound)
+                else:
+                    break
+            #save items
+            for i in range(save_items_n):
+                if save_figs:
+                    fig_name = 'gen_' + str(i) + '.png'
+                    fig_path = os.path.join(curr_figs_path_train, fig_name)
+                    plt.subplot(211)
+                    plt.pcolormesh(data_gen[i].T)
+                    plt.title('gen')
+                    plt.subplot(212)
+                    plt.pcolormesh(data_truth[i].T)
+                    plt.title('original')
+                    plt.savefig(fig_path)
+                    plt.close()
+                if save_sounds:
+                    #generated
+                    sound_name = 'gen_' + str(i) + '.wav'
+                    sound_path = os.path.join(curr_sounds_path_train, sound_name)
+                    sound = data_gen[i]
+                    sound = sound.flatten()
+                    sound = np.divide(sound, np.max(sound))
+                    sound = np.multiply(sound, 0.8)
+                    uf.wavwrite(sound, SR, sound_path)
+                    #originals only for epoch 0
+                    if epoch = 0:
+                        orig_name = 'orig_' + str(i) + '.wav'
+                        orig_path = os.path.join(curr_orig_path_training, sound_name)
+                        orig = data_truth[i]
+                        orig = orig.flatten()
+                        orig = np.divide(orig, np.max(orig))
+                        orig = np.multiply(orig, 0.8)
+                        uf.wavwrite(orig, SR, orig_path)
+            print ('')
+            if save_figs:
+                print ('Generated figures saved')
+            if save_sounds:
+                print ('Generated sounds saved')
