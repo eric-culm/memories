@@ -42,10 +42,10 @@ except IndexError:
     decoder_architecture = 'simple_decoder_spectrum'
     use_complete_net = True
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64', 'variational=False',
+    parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=10',
-                  'features_type="spectrum"']
+                  'features_type="waveform"']
 
     SAVE_MODEL = '../models/prova'
     results_path = '../results/provisional'
