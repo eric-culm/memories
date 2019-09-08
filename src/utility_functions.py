@@ -6,6 +6,7 @@ from scipy.io.wavfile import read, write
 from scipy.fftpack import fft
 from scipy.signal import iirfilter, butter, filtfilt, lfilter
 from shutil import copyfile
+import torch
 import librosa
 import configparser
 import loadconfig
@@ -239,7 +240,9 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
     return training_data, validation_data, test_data
 
-def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
+
+
+def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
                 save_items_epochs, save_items_n):
     data_gen = []
     data_truth = []
