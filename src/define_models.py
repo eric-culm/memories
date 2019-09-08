@@ -929,7 +929,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
             x = self.encode(x)
             x = F.relu(self.fc1_e(x))
-            x = F.dropout2d(x), 0.5)
+            x = F.dropout2d(x, 0.5)
 
             mu = F.sigmoid(self.mu(x))
             logvar = F.sigmoid(self.logvar(x))
