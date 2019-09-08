@@ -269,7 +269,7 @@ def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save
 
 
             for i, (sounds, truth) in enumerate(dataloader):
-                if len(figs_truth) <= save_figs_n:
+                if len(data_truth) <= save_figs_n:
                     sounds = sounds.to(device)
                     truth = truth.numpy()
                     #compute predictions
