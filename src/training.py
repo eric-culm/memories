@@ -558,6 +558,38 @@ def main():
                         plt.savefig(fig_path)
                         plt.close()
 
+                    for i, (sounds, truth) in enumerate(test_data):
+                        if len(figs_truth) <= save_figs_n:
+                            sounds = sounds.to(device)
+                            truth = truth.numpy()
+                            mu, logvar = encoder(sounds)
+                            z = reparametrize(mu, logvar)
+                            outputs = decoder(z)
+                            outputs = outputs.cpu().numpy()
+
+                            for single_sound in outputs:
+                                figs_gen.append(single_sound)
+                            for single_sound in truth:
+                                figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                        else:
+                            break
+
+
+                    for i in range(save_figs_n):
+                        fig_name = 'gen_' + str(i) + '.png'
+                        fig_path = os.path.join(curr_figs_path_test, fig_name)
+                        #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
+                        #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
+
+                        plt.subplot(211)
+                        plt.pcolormesh(figs_gen[i].T)
+                        plt.title('gen')
+                        plt.subplot(212)
+                        plt.pcolormesh(figs_truth[i].T)
+                        plt.title('original')
+                        plt.savefig(fig_path)
+                        plt.close()
+
                     print ('')
                     print ('generated figures saved')
 
