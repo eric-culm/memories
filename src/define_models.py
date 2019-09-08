@@ -951,7 +951,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
         def forward(self, x):
             mu, logvar = self.enc_func(x)
-            z = self.reparametrize(mean, logvar)
+            z = self.reparametrize(mu, logvar)
             out = self.dec_func(z)
             return out, mu, logvar
 
