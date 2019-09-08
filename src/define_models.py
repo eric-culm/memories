@@ -766,7 +766,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             self.variational = variational
             self.alpha = alpha
             self.verbose = verbose
-            self.latent_size = latent_dim
+            self.latent_dim = latent_dim
             # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
             self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
             self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
@@ -774,8 +774,8 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
             self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
             self.fc1_e = nn.Linear(256 * model_size, 1000)
-            self.mu = nn.Linear(1000, latent_size)
-            self.logvar = nn.Linear(1000, latent_size)
+            self.mu = nn.Linear(1000, latent_dim)
+            self.logvar = nn.Linear(1000, latent_dim)
 
 
             self.bn1_e = nn.BatchNorm1d(model_size)
