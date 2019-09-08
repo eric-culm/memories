@@ -506,6 +506,8 @@ def main():
             #save figures if specified
             ts_preds = []
             tr_preds = []
+            figs_gen = []
+            figs_truth = []
             if save_figs:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
                     curr_figs_path_train = os.path.join(gen_figs_path, 'training' , 'epoch_'+str(epoch))
@@ -516,39 +518,40 @@ def main():
                     if not os.path.exists(curr_figs_path_test):
                         os.makedirs(curr_figs_path_test)
 
-                figs_gen = []
-                figs_truth = []
-                for i, (sounds, truth) in enumerate(tr_data):
-                    if len(figs_truth) <= save_figs_n:
-                        sounds = sounds.to(device)
-                        truth = truth.numpy()
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
-                        outputs = outputs.cpu().numpy()
+                    for i, (sounds, truth) in enumerate(tr_data):
+                        if len(figs_truth) <= save_figs_n:
+                            sounds = sounds.to(device)
+                            truth = truth.numpy()
+                            mu, logvar = encoder(sounds)
+                            z = reparametrize(mu, logvar)
+                            outputs = decoder(z)
+                            outputs = outputs.cpu().numpy()
 
-                        for single_sound in outputs:
-                            figs_gen.append(single_sound)
-                        for single_sound in truth:
-                            figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                    else:
-                        break
+                            for single_sound in outputs:
+                                figs_gen.append(single_sound)
+                            for single_sound in truth:
+                                figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                        else:
+                            break
 
 
-                for i in range(save_figs_n):
-                    fig_name = 'gen_' + str(i) + '.png'
-                    fig_path = os.path.join(curr_figs_path_train, fig_name)
-                    #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
-                    #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
+                    for i in range(save_figs_n):
+                        fig_name = 'gen_' + str(i) + '.png'
+                        fig_path = os.path.join(curr_figs_path_train, fig_name)
+                        #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
+                        #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
 
-                    plt.subplot(211)
-                    plt.pcolormesh(figs_gen[i])
-                    plt.title('gen')
-                    plt.subplot(212)
-                    plt.pcolormesh(figs_truth[i])
-                    plt.title('original')
-                    plt.savefig(fig_path)
-                    plt.close()
+                        plt.subplot(211)
+                        plt.pcolormesh(figs_gen[i])
+                        plt.title('gen')
+                        plt.subplot(212)
+                        plt.pcolormesh(figs_truth[i])
+                        plt.title('original')
+                        plt.savefig(fig_path)
+                        plt.close()
+
+                        print ('')
+                        print ('generated figures saved')
 
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
