@@ -312,7 +312,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     sound = sound.flatten()
                     sound = np.divide(sound, np.max(sound))
                     sound = np.multiply(sound, 0.8)
-                    uf.wavwrite(sound, SR, sound_path)
+                    wavwrite(sound, SR, sound_path)
                     #originals only for epoch 0
                     if epoch == 0:
                         orig_name = 'orig_' + str(i) + '.wav'
@@ -321,7 +321,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                         orig = orig.flatten()
                         orig = np.divide(orig, np.max(orig))
                         orig = np.multiply(orig, 0.8)
-                        uf.wavwrite(orig, SR, orig_path)
+                        wavwrite(orig, SR, orig_path)
             print ('')
             if save_figs:
                 print ('Generated figures saved')
