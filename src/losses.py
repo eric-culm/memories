@@ -104,8 +104,11 @@ def loss_recon(recon_x, x, features_type):
 
     #recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
     '''
-    category1 = nn.BCELoss()
-    recon_loss = category1(recon_x, x)
+    if features_type == 'waveform':
+        recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
+    elif features_type == 'spectrum':
+        category1 = nn.BCELoss()
+        recon_loss = category1(recon_x, x)
 
     return recon_loss
 
