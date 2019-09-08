@@ -542,6 +542,7 @@ def main():
                     #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
                     print ('culo')
                     print (figs_gen[i].shape)
+                    print (figs_truth[i].shape)
                     plt.subplot(211)
                     plt.pcolormesh(figs_gen[i])
                     plt.title('gen')
