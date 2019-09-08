@@ -42,7 +42,7 @@ except IndexError:
     decoder_architecture = 'simple_decoder_spectrum'
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=-2.', 'warm_up=True', 'latent_dim=100',
+                  'kld_weight=-0.5.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=500',
                   'features_type="spectrum"']
 
