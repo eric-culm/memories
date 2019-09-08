@@ -535,9 +535,9 @@ def main():
 
             #save figures if specified
             #train_data
-            uf.save_data(tr_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds)
+            uf.save_data(tr_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds, save_items_epochs, save_items_n)
             #test_data
-            uf.save_data(test_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds)
+            uf.save_data(test_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds, save_items_epochs, save_items_n)
 
 
 

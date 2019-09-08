@@ -239,7 +239,8 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
     return training_data, validation_data, test_data
 
-def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds):
+def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
+                save_items_epochs, save_items_n):
     data_gen = []
     data_truth = []
     if save_figs or save_sounds:
