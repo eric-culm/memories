@@ -318,7 +318,7 @@ def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save
                     sound = np.multiply(sound, 0.8)
                     uf.wavwrite(sound, SR, sound_path)
                     #originals only for epoch 0
-                    if epoch = 0:
+                    if epoch == 0:
                         orig_name = 'orig_' + str(i) + '.wav'
                         orig_path = os.path.join(curr_orig_path_training, sound_name)
                         orig = data_truth[i]
