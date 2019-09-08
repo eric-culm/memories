@@ -728,7 +728,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
     flattened_dim = time_dim * features_dim
 
     class Net(nn.Module):
-        def __init__(self, num_latent):
+        def __init__(self, num_latent=p['latent_dim']):
             super().__init__()
 
             #So here we will first define layers for encoder network
