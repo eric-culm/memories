@@ -760,7 +760,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
             x = self.encoder(x)
-            x = x.view([-1, flattened_dim])
+            x = x.view([-1, 6553600])
             x = F.dropout2d(self.fc1(x), 0.5)
             x = self.fc2(x)
 
