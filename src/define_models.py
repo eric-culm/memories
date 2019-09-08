@@ -767,9 +767,9 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             z = self.expand(z)
             z = F.dropout2d(self.fc3(z), 0.5)
             z = self.fc4(z)
-            z = z.view([-1, time_dim, features_dim])
 
             out = self.decoder(z)
+            z = z.view([-1, time_dim, features_dim])
             out = F.sigmoid(out)
             return out
 
