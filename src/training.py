@@ -585,8 +585,10 @@ def main():
                         plt.title('original')
                         plt.savefig(fig_path)
                         plt.close()
-                        figs_gen = []
-                        figs_truth = []
+
+                    figs_gen = []
+                    figs_truth = []
+                    
                     for i, (sounds, truth) in enumerate(test_data):
                         if len(figs_truth) <= save_figs_n:
                             sounds = sounds.to(device)
