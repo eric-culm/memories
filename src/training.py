@@ -110,12 +110,11 @@ optimizer = cfg.get('training_defaults', 'optimizer')
 save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
 
 save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
-save_sounds_epochs = cfg.getint('training_defaults', 'save_sounds_epochs')
-save_sounds_n = cfg.getint('training_defaults', 'save_sounds_n')
-
 save_figs = eval(cfg.get('training_defaults', 'save_figs'))
-save_figs_epochs = cfg.getint('training_defaults', 'save_figs_epochs')
-save_figs_n = cfg.getint('training_defaults', 'save_figs_n')
+save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
+save_items_n = cfg.getint('training_defaults', 'save_items_n')
+
+
 
 percs = [train_split, validation_split, test_split]
 
@@ -535,210 +534,12 @@ def main():
 
 
             #save figures if specified
-            ts_preds = []
-            tr_preds = []
-            figs_gen = []
-            figs_truth = []
-            if save_figs:
-                if epoch%save_sounds_epochs == 0: #save only every n epochs
-                    curr_figs_path_train = os.path.join(gen_figs_path, 'training' , 'epoch_'+str(epoch))
-                    curr_figs_path_test = os.path.join(gen_figs_path, 'test' , 'epoch_'+str(epoch))
-
-                    if not os.path.exists(curr_figs_path_train):
-                        os.makedirs(curr_figs_path_train)
-                    if not os.path.exists(curr_figs_path_test):
-                        os.makedirs(curr_figs_path_test)
-
-                    for i, (sounds, truth) in enumerate(tr_data):
-                        if len(figs_truth) <= save_figs_n:
-                            sounds = sounds.to(device)
-                            truth = truth.numpy()
-
-                            if use_complete_net:
-                                outputs, mu, logvar = model(sounds)
-                            else:
-                                mu, logvar = encoder(sounds)
-                                z = reparametrize(mu, logvar)
-                                outputs = decoder(z)
-
-                            outputs = outputs.cpu().numpy()
-
-                            for single_sound in outputs:
-                                figs_gen.append(single_sound)
-                            for single_sound in truth:
-                                figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                        else:
-                            break
+            #train_data
+            uf.save_data(tr_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds)
+            #test_data
+            uf.save_data(test_data, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds)
 
 
-                    for i in range(save_figs_n):
-                        fig_name = 'gen_' + str(i) + '.png'
-                        fig_path = os.path.join(curr_figs_path_train, fig_name)
-                        #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
-                        #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
-
-                        plt.subplot(211)
-                        plt.pcolormesh(figs_gen[i].T)
-                        plt.title('gen')
-                        plt.subplot(212)
-                        plt.pcolormesh(figs_truth[i].T)
-                        plt.title('original')
-                        plt.savefig(fig_path)
-                        plt.close()
-
-                    figs_gen = []
-                    figs_truth = []
-
-                    for i, (sounds, truth) in enumerate(test_data):
-                        if len(figs_truth) <= save_figs_n:
-                            sounds = sounds.to(device)
-                            truth = truth.numpy()
-
-                            if use_complete_net:
-                                outputs, mu, logvar = model(sounds)
-                            else:
-                                mu, logvar = encoder(sounds)
-                                z = reparametrize(mu, logvar)
-                                outputs = decoder(z)
-
-                            outputs = outputs.cpu().numpy()
-
-                            for single_sound in outputs:
-                                figs_gen.append(single_sound)
-                            for single_sound in truth:
-                                figs_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                        else:
-                            break
-
-
-                    for i in range(save_figs_n):
-                        fig_name = 'gen_' + str(i) + '.png'
-                        fig_path = os.path.join(curr_figs_path_test, fig_name)
-                        #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
-                        #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
-
-                        plt.subplot(211)
-                        plt.pcolormesh(figs_gen[i].T)
-                        plt.title('gen')
-                        plt.subplot(212)
-                        plt.pcolormesh(figs_truth[i].T)
-                        plt.title('original')
-                        plt.savefig(fig_path)
-                        plt.close()
-
-                    print ('')
-                    print ('generated figures saved')
-
-            if save_sounds:
-                if epoch%save_sounds_epochs == 0: #save only every n epochs
-
-                    curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
-                    curr_sounds_path_test = os.path.join(gen_sounds_path, 'test' , 'epoch_'+str(epoch))
-                    curr_orig_path_training = os.path.join(gen_sounds_path, 'training', 'originals')
-                    curr_orig_path_test = os.path.join(gen_sounds_path, 'test', 'originals')
-
-                    if not os.path.exists(curr_sounds_path_train):
-                        os.makedirs(curr_sounds_path_train)
-                    if not os.path.exists(curr_sounds_path_test):
-                        os.makedirs(curr_sounds_path_test)
-                    if not os.path.exists(curr_orig_path_training):
-                        os.makedirs(curr_orig_path_training)
-                    if not os.path.exists(curr_orig_path_test):
-                        os.makedirs(curr_orig_path_test)
-
-                    #train originals
-                    for i, (sounds, truth) in enumerate(tr_data):
-                        if i <= save_sounds_n-1:
-                            truth = truth.cpu().numpy()
-                            truth = truth.flatten()
-                            truth = np.divide(truth, np.max(truth))
-                            truth = np.multiply(truth, 0.8)
-                            sound_name = 'orig_' + str(i) + '.wav'
-                            sound_path = os.path.join(curr_orig_path_training, sound_name)
-                            uf.wavwrite(truth, SR, sound_path)
-                        else:
-                            break
-
-                    #test originals
-                    for i, (sounds, truth) in enumerate(test_data):
-                        if i <= save_sounds_n-1:
-                            truth = truth.cpu().numpy()
-                            truth = truth.flatten()
-                            truth = np.divide(truth, np.max(truth))
-                            truth = np.multiply(truth, 0.8)
-                            sound_name = 'orig_' + str(i) + '.wav'
-                            sound_path = os.path.join(curr_orig_path_test, sound_name)
-                            uf.wavwrite(truth, SR, sound_path)
-                        else:
-                            break
-
-                    #train sounds
-                    for i, (sounds, truth) in enumerate(tr_data):  #save n predictions from test set
-                        #optimizer_encoder.zero_grad()
-                        optimizer_joint.zero_grad()
-                        sounds = sounds.to(device)
-                        truth = truth.to(device)
-
-                        if use_complete_net:
-                            outputs, mu, logvar = model(sounds)
-                        else:
-                            mu, logvar = encoder(sounds)
-                            z = reparametrize(mu, logvar)
-                            outputs = decoder(z)
-
-
-                        outputs = outputs.cpu().numpy()
-                        for single_sound in outputs:
-                            tr_preds.append(single_sound)
-
-                    tr_preds = np.array(tr_preds)
-
-
-                    #tr_preds = tr_preds.reshape(tr_preds.shape[0]*tr_preds.shape[1], tr_preds.shape[2], tr_preds.shape[3])
-                    for i in range(save_sounds_n):
-                        sound = tr_preds[i]
-                        sound = sound.flatten()
-                        #print (sound[:10])
-                        #normalize
-                        sound = np.divide(sound, np.max(sound))
-                        sound = np.multiply(sound, 0.8)
-                        sound_name = 'gen_' + str(i) + '.wav'
-                        sound_path = os.path.join(curr_sounds_path_train, sound_name)
-                        uf.wavwrite(sound, SR, sound_path)
-
-                    #test sounds
-                    for i, (sounds, truth) in enumerate(test_data):  #save n predictions from test set
-                        #optimizer_encoder.zero_grad()
-                        optimizer_joint.zero_grad()
-                        sounds = sounds.to(device)
-                        truth = truth.to(device)
-
-                        if use_complete_net:
-                            outputs, mu, logvar = model(sounds)
-                        else:
-                            mu, logvar = encoder(sounds)
-                            z = reparametrize(mu, logvar)
-                            outputs = decoder(z)
-
-                        outputs = outputs.cpu().numpy()
-                        for single_sound in outputs:
-                            ts_preds.append(single_sound)
-
-                    ts_preds = np.array(ts_preds)
-                    #ts_preds = ts_preds.reshape(ts_preds.shape[0]*ts_preds.shape[1], ts_preds.shape[2], ts_preds.shape[3])
-                    for i in range(save_sounds_n):
-                        sound = ts_preds[i]
-                        sound = sound.flatten()
-                        #normalize
-                        sound = np.divide(sound, np.max(sound))
-                        sound = np.multiply(sound, 0.8)
-                        sound_name = 'gen_' + str(i) + '.wav'
-                        sound_path = os.path.join(curr_sounds_path_test, sound_name)
-                        uf.wavwrite(sound, SR, sound_path)
-
-
-                    print ('')
-                    print ('generated sounds saved')
 
             #end of epoch loop
         '''
