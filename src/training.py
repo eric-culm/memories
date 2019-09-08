@@ -429,7 +429,7 @@ def main():
                 outputs = decoder(z)
 
 
-            loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
+            loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
             #loss_encoder.backward(retain_graph=True)
             loss_r = losses.loss_recon(outputs, truth, features_type)
             #loss_decoder.backward(retain_graph=True)
@@ -455,9 +455,7 @@ def main():
 
         #validation loss, training and val accuracy computation
         #after current epoch training
-        encoder.eval()
-        decoder.eval()
-        reparametrize.eval()
+
 
         train_batch_losses_k = []
         val_batch_losses_k = []
@@ -467,6 +465,13 @@ def main():
         val_batch_losses_j = []
 
         with torch.no_grad():
+            if use_complete_net:
+                model.train()
+            else:
+                encoder.train()
+                decoder.train()
+                reparametrize.train()
+
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
                 optimizer_joint.zero_grad()
@@ -480,7 +485,7 @@ def main():
                     z = reparametrize(mu, logvar)
                     outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
                 loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
 
@@ -501,7 +506,7 @@ def main():
                     z = reparametrize(mu, logvar)
                     outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
                 loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
 

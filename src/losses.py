@@ -70,7 +70,7 @@ def warm_up(epochs, init_silence=0, perc=0.0001, tot_epochs=100):
 
     return pad
 
-def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=1.):
+def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
 
     if warm_up:
         kld_weight_epoch = kld_weight * warm_ramp[epoch]
@@ -132,7 +132,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     '''
 
     recon_loss = loss_recon(recon_x, x, features_type)
-    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp)
+    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp, recon_x)
 
     joint_loss = recon_loss + kl_loss
 
