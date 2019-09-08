@@ -738,7 +738,12 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          nn.Conv2d(3, 16, 3, padding=1),
                                          nn.MaxPool2d(2, 2),
                                          nn.BatchNorm2d(16),
-                                         nn.Conv2d(16, 16, 3, padding=1))
+                                         nn.Conv2d(16, 16, 3, padding=1),
+                                         nn.MaxPool2d(2, 2),
+                                         nn.BatchNorm2d(16),
+                                         nn.Conv2d(16, 16, 3, padding=1),
+                                         nn.MaxPool2d(2, 2),
+                                         nn.BatchNorm2d(16))
 
             #These two layers are for getting logvar and mean
             self.fc1 = nn.Linear(6553600, 256)
@@ -752,6 +757,8 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             self.fc3 = nn.Linear(128, 256)
             self.fc4 = nn.Linear(256, 6553600)
             self.decoder = nn.Sequential(nn.ConvTranspose2d(16, 16, 3, padding=1),
+                                         nn.BatchNorm2d(16),
+                                         nn.ConvTranspose2d(16, 16, 3, padding=1),
                                          nn.BatchNorm2d(16),
                                          nn.ConvTranspose2d(16, 3, 8),
                                          nn.BatchNorm2d(3),
