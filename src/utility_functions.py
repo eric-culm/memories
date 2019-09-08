@@ -286,9 +286,9 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                             data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
                     for single_sound in truth:
                         if features_type == 'waveform':
-                            data_gen.append(single_sound)
+                            data_truth.append(single_sound)
                         elif features_type == 'spectrum':
-                            data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                            data_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
                 else:
                     break
             #save items
