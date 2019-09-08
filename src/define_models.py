@@ -750,7 +750,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #This is the first layer for the decoder part
             self.expand = nn.Linear(num_latent, 128)
             self.fc3 = nn.Linear(128, 256)
-            self.fc4 = nn.Linear(256, flattened_dim)
+            self.fc4 = nn.Linear(256, 6553600)
             self.decoder = nn.Sequential(nn.ConvTranspose2d(16, 16, 3, padding=1),
                                          nn.BatchNorm2d(16),
                                          nn.ConvTranspose2d(16, 3, 8),
