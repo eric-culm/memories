@@ -294,7 +294,7 @@ def split_folder(input, out1, out2, perc):
             out_file = out2 + '/' + contents[i]
         copyfile(in_file, out_file)
 
-def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds)
+def save_data(dataloader, epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds):
     data_gen = []
     data_truth = []
     if save_figs or save_sounds:
