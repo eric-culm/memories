@@ -243,32 +243,23 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
 
 def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
-                save_items_epochs, save_items_n, features_type):
+                save_items_epochs, save_items_n, features_type, dataset='training'):
     data_gen = []
     data_truth = []
     if save_figs or save_sounds:
         if epoch % save_items_epochs == 0: #save only every n epochs
             #create folders
             if save_figs:
-                curr_figs_path_train = os.path.join(gen_figs_path, 'training' , 'epoch_'+str(epoch))
-                curr_figs_path_test = os.path.join(gen_figs_path, 'test' , 'epoch_'+str(epoch))
-                if not os.path.exists(curr_figs_path_train):
-                    os.makedirs(curr_figs_path_train)
-                if not os.path.exists(curr_figs_path_test):
-                    os.makedirs(curr_figs_path_test)
+                curr_figs_path = os.path.join(gen_figs_path, dataset , 'epoch_'+str(epoch))
+                if not os.path.exists(curr_figs_path):
+                    os.makedirs(curr_figs_path)
             if save_sounds:
-                curr_sounds_path_train = os.path.join(gen_sounds_path, 'training' , 'epoch_'+str(epoch))
-                curr_sounds_path_test = os.path.join(gen_sounds_path, 'test' , 'epoch_'+str(epoch))
-                curr_orig_path_training = os.path.join(gen_sounds_path, 'training', 'originals')
-                curr_orig_path_test = os.path.join(gen_sounds_path, 'test', 'originals')
-                if not os.path.exists(curr_sounds_path_train):
-                    os.makedirs(curr_sounds_path_train)
-                if not os.path.exists(curr_sounds_path_test):
-                    os.makedirs(curr_sounds_path_test)
-                if not os.path.exists(curr_orig_path_training):
-                    os.makedirs(curr_orig_path_training)
-                if not os.path.exists(curr_orig_path_test):
-                    os.makedirs(curr_orig_path_test)
+                curr_sounds_path = os.path.join(gen_sounds_path, dataset , 'epoch_'+str(epoch))
+                curr_orig_path= os.path.join(gen_sounds_path, dataset, 'originals')
+                if not os.path.exists(curr_sounds_path):
+                    os.makedirs(curr_sounds_path)
+                if not os.path.exists(curr_orig_path):
+                    os.makedirs(curr_orig_path)
 
 
             for i, (sounds, truth) in enumerate(dataloader):
@@ -295,7 +286,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
             for i in range(save_items_n):
                 if save_figs:
                     fig_name = 'gen_' + str(i) + '.png'
-                    fig_path = os.path.join(curr_figs_path_train, fig_name)
+                    fig_path = os.path.join(curr_figs_path, fig_name)
                     plt.subplot(211)
                     plt.pcolormesh(data_gen[i].T)
                     plt.title('gen')
@@ -307,7 +298,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 if save_sounds:
                     #generated
                     sound_name = 'gen_' + str(i) + '.wav'
-                    sound_path = os.path.join(curr_sounds_path_train, sound_name)
+                    sound_path = os.path.join(curr_sounds_path, sound_name)
                     sound = data_gen[i]
                     sound = sound.flatten()
                     sound = np.divide(sound, np.max(sound))
@@ -316,7 +307,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     #originals only for epoch 0
                     if epoch == 0:
                         orig_name = 'orig_' + str(i) + '.wav'
-                        orig_path = os.path.join(curr_orig_path_training, sound_name)
+                        orig_path = os.path.join(curr_orig_path, sound_name)
                         orig = data_truth[i]
                         orig = orig.flatten()
                         orig = np.divide(orig, np.max(orig))
