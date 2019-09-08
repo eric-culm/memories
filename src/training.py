@@ -41,7 +41,7 @@ except IndexError:
     encoder_architecture = 'simple_encoder_spectrum'
     decoder_architecture = 'simple_decoder_spectrum'
     reparametrize_architecture = 'reparametrize'
-    parameters = ['verbose=False', 'model_size=64', 'variational=False',
+    parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=-2.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=5',
                   'features_type="spectrum"']
@@ -550,8 +550,8 @@ def main():
                         plt.savefig(fig_path)
                         plt.close()
 
-                        print ('')
-                        print ('generated figures saved')
+                    print ('')
+                    print ('generated figures saved')
 
             if save_sounds:
                 if epoch%save_sounds_epochs == 0: #save only every n epochs
