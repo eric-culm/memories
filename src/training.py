@@ -37,11 +37,11 @@ except IndexError:
     generator = True
     dataset = 'sc09_reduced'
     mnist_test = True
-    architecture = 'complete_net'
+    architecture = 'WAVE_CNN_complete_net'
     encoder_architecture = 'simple_encoder_spectrum'
     decoder_architecture = 'simple_decoder_spectrum'
-    use_complete_net = True
     reparametrize_architecture = 'reparametrize'
+    use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=10',

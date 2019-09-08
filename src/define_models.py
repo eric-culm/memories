@@ -713,6 +713,253 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'model_size': 64,
+    'latent_dim': 100,
+    'verbose': False,
+    'num_channels': 1,
+    'alpha': 0.2,
+    'variational': True,
+    'upsample': True,
+    'post_proc_filt_len': 512
+    }
+    p = parse_parameters(p, user_parameters)
+    flattened_dim = time_dim * features_dim
+
+    class UpsampleConvLayer(torch.nn.Module):
+        def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
+            super(UpsampleConvLayer, self).__init__()
+            self.upsample = upsample
+            if upsample:
+                self.upsample_layer = torch.nn.Upsample(scale_factor=upsample)
+                reflection_padding = kernel_size // 2
+                self.reflection_pad = torch.nn.ConstantPad1d(reflection_padding, value = 0)
+    #             self.reflection_pad = torch.nn.ReflectionPad1d(reflection_padding)
+                self.conv1d = torch.nn.Conv1d(in_channels, out_channels, kernel_size, stride)
+
+        def forward(self, x):
+            x_in = x
+            if self.upsample:
+                x_in = self.upsample_layer(x_in)
+            out = self.reflection_pad(x_in)
+            out = self.conv1d(out)
+            return out
+
+    class Net(nn.Module):
+
+        def __init__(self, model_size=p['model_size'], latent_dim=p['latent_dim'],
+                        verbose=p['verbose'], num_channels=p['num_channels'], alpha=p['alpha'],
+                        variational=p['variational'],upsample=p['upsample'],
+                        post_proc_filt_len=p['post_proc_filt_len']):
+            super().__init__()
+
+            #ENCODER
+            self.model_size = model_size # d
+            self.num_channels = num_channels # c
+            self.shift_factor = shift_factor # n
+            self.variational = variational
+            self.alpha = alpha
+            self.verbose = verbose
+            self.latent_size = latent_dim
+            # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
+            self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
+            self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
+            self.conv3 = nn.Conv1d(2 * model_size, 4 * model_size, 25, stride=4, padding=11)
+            self.conv4 = nn.Conv1d(4 * model_size, 8 * model_size, 25, stride=4, padding=11)
+            self.conv5 = nn.Conv1d(8 * model_size, 16 * model_size, 25, stride=4, padding=11)
+            self.fc1_e = nn.Linear(256 * model_size, 1000)
+            self.mu = nn.Linear(1000, latent_size)
+            self.logvar = nn.Linear(1000, latent_size)
+
+
+            self.bn1_e = nn.BatchNorm1d(model_size)
+            self.bn2_e = nn.BatchNorm1d(2 * model_size)
+            self.bn3_e = nn.BatchNorm1d(4 * model_size)
+            self.bn4_e = nn.BatchNorm1d(8 * model_size)
+            self.bn5_e = nn.BatchNorm1d(16 * model_size)
+
+            #DECODER
+            self.post_proc_filt_len = post_proc_filt_len
+            self.verbose = verbose
+            self.fc1 = nn.Linear(latent_dim, 256 * model_size)
+            self.fc2 = nn.Linear(16384,16384)
+            self.tconv1 = None
+            self.tconv2 = None
+            self.tconv3 = None
+            self.tconv4 = None
+            self.tconv5 = None
+            self.upSampConv1 = None
+            self.upSampConv2 = None
+            self.upSampConv3 = None
+            self.upSampConv4 = None
+            self.upSampConv5 = None
+            self.upsample = upsample
+            self.fc2 = nn.Linear(16384, 16384)
+            self.bn1_d = nn.BatchNorm1d(8 * model_size)
+            self.bn2_d = nn.BatchNorm1d(4 * model_size)
+            self.bn3_d = nn.BatchNorm1d(2 * model_size)
+            self.bn4_d = nn.BatchNorm1d(model_size)
+            self.bn5_d = nn.BatchNorm1d(1)
+
+
+
+            if self.upsample:
+                self.upSampConv1 = UpsampleConvLayer(16 * model_size, 8 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv2 = UpsampleConvLayer(8 * model_size, 4 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv3 = UpsampleConvLayer(4 * model_size, 2 * model_size, 25, stride=1, upsample=4)
+                self.upSampConv4 = UpsampleConvLayer(2 * model_size, model_size, 25, stride=1, upsample=4)
+                self.upSampConv5 = UpsampleConvLayer(model_size, num_channels, 25, stride=1, upsample=4)
+
+            else:
+                self.tconv1 = nn.ConvTranspose1d(16 * model_size, 8 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv2 = nn.ConvTranspose1d(8 * model_size, 4 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv3 = nn.ConvTranspose1d(4 * model_size, 2 * model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv4 = nn.ConvTranspose1d(2 * model_size, model_size, 25, stride=4, padding=11, output_padding=1)
+                self.tconv5 = nn.ConvTranspose1d(model_size, num_channels, 25, stride=4, padding=11, output_padding=1)
+
+            if post_proc_filt_len:
+                self.ppfilter1 = nn.Conv1d(num_channels, num_channels, post_proc_filt_len)
+
+
+            #KAIMING INITIALIZATION
+            for m in self.modules():
+                if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear), or isinstance(m, nn.ConvTranspose1d):
+                    nn.init.kaiming_normal_(m.weight.data)
+
+        def encode(self, x):
+            x = F.leaky_relu(self.bn1_e(self.conv1(x)), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.bn2_e(self.conv2(x)), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.bn3_e(self.conv3(x)), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.bn4_e(self.conv4(x)), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            x = F.leaky_relu(self.bn5_e(self.conv5(x)), negative_slope=self.alpha)
+            if self.verbose:
+                print(x.shape)
+
+            output = x.view(-1, 256 * self.model_size)
+            if self.verbose:
+                print(output.shape)
+
+            return output
+
+        def decode(self, x):
+
+                x = self.fc1(x).view(-1, 16 * self.model_size, 16)
+                x = F.relu(x)
+                output = None
+                if self.verbose:
+                    print(x.shape)
+
+                if self.upsample:
+                    x = F.relu(self.bn1_d(self.upSampConv1(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn2_d(self.upSampConv2(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn3_d(self.upSampConv3(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn4_d(self.upSampConv4(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = torch.tanh(self.bn5_d(self.upSampConv5(x)))
+                else:
+                    x = F.relu(self.bn1_d(self.tconv1(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn2_d(self.tconv2(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn3_d(self.tconv3(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    x = F.relu(self.bn4_d(self.tconv4(x)))
+                    if self.verbose:
+                        print(x.shape)
+
+                    output = torch.tanh(self.bn5_d(self.tconv5(x)))
+
+                if self.verbose:
+                    print(output.shape)
+
+                if self.post_proc_filt_len:
+                    # Pad for "same" filtering
+                    if (self.post_proc_filt_len % 2) == 0:
+                        pad_left = self.post_proc_filt_len // 2
+                        pad_right = pad_left - 1
+                    else:
+                        pad_left = (self.post_proc_filt_len - 1) // 2
+                        pad_right = pad_left
+                    output = self.ppfilter1(F.pad(output, (pad_left, pad_right)))
+                    if self.verbose:
+                        print(output.shape)
+
+                return output
+
+
+        def enc_func(self, x):
+            #here we will be returning the logvar(log variance) and mean of our network
+            x = x.view([-1, 16384])
+
+            x = self.encode(x)
+            x = F.relu(self.fc1_e(x))
+            x = F.dropout2d(x), 0.5)
+
+            mu = F.sigmoid(self.mu(x))
+            logvar = F.sigmoid(self.logvar(x))
+
+            return mu, logvar
+
+        def dec_func(self, z):
+            #here z is the latent variable state
+            z = self.decode(z)
+
+            return z
+
+        def reparametrize(self, mu, logvar):
+            if self.training:
+                std = torch.exp(0.5*logvar)   #So as to get std
+                noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
+                return noise.mul(std).add_(mu)
+            else:
+                return mean
+
+        def forward(self, x):
+            mu, logvar = self.enc_func(x)
+            z = self.reparametrize(mean, logvar)
+            out = self.dec_func(z)
+            return out, mu, logvar
+
+    out = Net()
+
+    return out, p
+
 def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
