@@ -924,7 +924,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
-            x = x.view([-1, 16384])
+            #x = x.view([-1, 16384])
 
             x = self.encode(x)
             x = F.relu(self.fc1_e(x))
