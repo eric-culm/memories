@@ -542,6 +542,8 @@ def main():
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
                     #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
                     #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
+                    print ('culo')
+                    print (figs_gen[i].shape)
                     plt.subplot(211)
                     plt.pcolormesh(figs_gen[i])
                     plt.title('gen')
