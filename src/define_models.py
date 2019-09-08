@@ -769,7 +769,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             z = self.fc4(z)
 
             out = self.decoder(z)
-            z = z.view([-1, time_dim, features_dim])
+            out = out.view([-1, time_dim, features_dim])
             out = F.sigmoid(out)
             return out
 
