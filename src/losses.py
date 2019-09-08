@@ -70,24 +70,31 @@ def warm_up(epochs, init_silence=0, perc=0.0001, tot_epochs=100):
 
     return pad
 
-def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=-0.5):
+def loss_KLD(mu, logvar, epoch, warm_ramp, kld_weight=1.):
 
     if warm_up:
         kld_weight_epoch = kld_weight * warm_ramp[epoch]
     else:
         kld_weight_epoch = kld_weight
 
-
+    '''
     KLD = kld_weight_epoch * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     KLD /= batch_size
     #KLD = KLD.sum(1).mean(0, True)
+    '''
+    scaling_factor = recon_x.shape[0]*recon_x.shape[1]*recon_x.shape[2]*recon_x.shape[3]
 
-    return KLD
+    ####Now we are gonna define the KL divergence loss
+    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    kl_loss = -0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
+    kl_loss /= scaling_factor
+
+    return kl_loss
 
 
 def loss_recon(recon_x, x, features_type):
 
-
+    '''
     #x = x.view(x.shape[0], 1, 784)
     if features_type == 'waveform':
         recon_loss = 1 -  torch.abs(CCC_loss(recon_x, x))
@@ -96,12 +103,15 @@ def loss_recon(recon_x, x, features_type):
         recon_loss /= batch_size
 
     #recon_mean_distance = torch.abs(CCC_loss(recon_x, mean_target))
+    '''
+    category1 = nn.BCELoss()
+    recon_loss = category1(recon_x, x)
 
     return recon_loss
 
 def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weight=-0.5):
 
-
+    '''
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     #recon_loss /= recon_x.shape[-1]
     #recon_x_0to1 = torch.add(torch.mul(recon_x, 0.5), 0.5)
@@ -118,5 +128,12 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
 
     joint_loss = recon_loss + KLD
     #joint_loss = recon_loss + KLD - mean_target_distance
+    kl_loss /= scaling_factor
+    '''
+
+    recon_loss = loss_recon(recon_x, x, features_type)
+    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp)
+
+    joint_loss = recon_loss + kl_loss
 
     return joint_loss

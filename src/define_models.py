@@ -713,6 +713,90 @@ def simple_decoder(time_dim, features_dim, user_parameters=['niente = 0']):
 
     return out, p
 
+def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
+    '''
+    to use this model, simply call architecture=EXAMPLE_model as a parameter
+    in the UI script
+    '''
+    #FIRST, DECLARE DEFAULT PARAMETERS OF YOUR MODEL AS KEYS OF A DICT
+    #default parameters
+    p = {
+    'verbose':False,
+    'latent_dim':100
+    }
+    p = parse_parameters(p, user_parameters)
+    flattened_dim = time_dim * features_dim
+
+    class Net(nn.Module):
+    def __init__(self, num_latent):
+        super().__init__()
+
+        #So here we will first define layers for encoder network
+        self.encoder = nn.Sequential(nn.Conv2d(1, 3, 3, padding=1),
+                                     nn.MaxPool2d(2, 2),
+                                     nn.BatchNorm2d(3),
+                                     nn.Conv2d(3, 16, 3, padding=1),
+                                     nn.MaxPool2d(2, 2),
+                                     nn.BatchNorm2d(16),
+                                     nn.Conv2d(16, 16, 3, padding=1))
+
+        #These two layers are for getting logvar and mean
+        self.fc1 = nn.Linear(flattened_dim, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.mean = nn.Linear(128, num_latent)
+        self.var = nn.Linear(128, num_latent)
+
+        #######The decoder part
+        #This is the first layer for the decoder part
+        self.expand = nn.Linear(num_latent, 128)
+        self.fc3 = nn.Linear(128, 256)
+        self.fc4 = nn.Linear(256, flattened_dim)
+        self.decoder = nn.Sequential(nn.ConvTranspose2d(16, 16, 3, padding=1),
+                                     nn.BatchNorm2d(16),
+                                     nn.ConvTranspose2d(16, 3, 8),
+                                     nn.BatchNorm2d(3),
+                                     nn.ConvTranspose2d(3, 1, 15))
+
+    def enc_func(self, x):
+        #here we will be returning the logvar(log variance) and mean of our network
+        x = self.encoder(x)
+        x = x.view([-1, 784])
+        x = F.dropout2d(self.fc1(x), 0.5)
+        x = self.fc2(x)
+
+        mean = self.mean(x)
+        logvar = self.var(x)
+        return mean, logvar
+
+    def dec_func(self, z):
+        #here z is the latent variable state
+        z = self.expand(z)
+        z = F.dropout2d(self.fc3(z), 0.5)
+        z = self.fc4(z)
+        z = z.view([-1, 16, 7, 7])
+
+        out = self.decoder(z)
+        out = F.sigmoid(out)
+        return out
+
+    def get_hidden(self, mean, logvar):
+        if self.training:
+            std = torch.exp(0.5*logvar)   #So as to get std
+            noise = torch.randn_like(mean)   #So as to get the noise of standard distribution
+            return noise.mul(std).add_(mean)
+        else:
+            return mean
+
+    def forward(self, x):
+        mean, logvar = self.enc_func(x)
+        z = self.get_hidden(mean, logvar)
+        out = self.dec_func(z)
+        return out, mean, logvar
+
+    out = Net()
+
+    return out, p
+
 def simple_encoder_spectrum(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter

@@ -37,12 +37,13 @@ except IndexError:
     generator = True
     dataset = 'sc09_stft'
     mnist_test = True
-    architecture = 'WAVE_VAE'
+    architecture = 'complete_net'
     encoder_architecture = 'simple_encoder_spectrum'
     decoder_architecture = 'simple_decoder_spectrum'
+    use_complete_net = True
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
-                  'kld_weight=-0.5', 'warm_up=True', 'latent_dim=100',
+                  'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=500',
                   'features_type="spectrum"']
 
@@ -320,17 +321,23 @@ def main():
 
     #load model (model is in locals()['model'])
     print('\n loading models...')
-    encoder_string = 'encoder_class, encoder_parameters = choose_model.' + encoder_architecture + '(time_dim, features_dim, parameters)'
-    decoder_string = 'decoder_class, decoder_parameters = choose_model.' + decoder_architecture + '(time_dim, features_dim, parameters)'
-    reparametrize_string = 'reparametrize_class = choose_model.' + reparametrize_architecture + '(time_dim, features_dim, parameters)'
 
-    exec(encoder_string)
-    exec(decoder_string)
-    exec(reparametrize_string)
+    if use_complete_net:
+        model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
+        exec(model_string)
+        model = locals()['model_class'].to(device)
+    else:
+        encoder_string = 'encoder_class, encoder_parameters = choose_model.' + encoder_architecture + '(time_dim, features_dim, parameters)'
+        decoder_string = 'decoder_class, decoder_parameters = choose_model.' + decoder_architecture + '(time_dim, features_dim, parameters)'
+        reparametrize_string = 'reparametrize_class = choose_model.' + reparametrize_architecture + '(time_dim, features_dim, parameters)'
 
-    encoder = locals()['encoder_class'].to(device)
-    decoder = locals()['decoder_class'].to(device)
-    reparametrize = locals()['reparametrize_class'].to(device)
+        exec(encoder_string)
+        exec(decoder_string)
+        exec(reparametrize_string)
+
+        encoder = locals()['encoder_class'].to(device)
+        decoder = locals()['decoder_class'].to(device)
+        reparametrize = locals()['reparametrize_class'].to(device)
 
 
     #run training
@@ -351,35 +358,38 @@ def main():
 
 
     #compute number of parameters
-    encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
-    decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
-    reparametrize_params = sum([np.prod(p.size()) for p in reparametrize.parameters()])
 
     print ('')
-    print ('Encoder paramters: ' + str(encoder_params))
-    print ('Decoder paramters: ' + str(decoder_params))
-    print ('Reparametrize paramters: ' + str(reparametrize_params))
-    print ('Total paramters: ' + str(encoder_params+decoder_params+reparametrize_params))
+    if use_complete_net:
+        model_params = sum([np.prod(p.size()) for p in model.parameters()])
+        print ('Total paramters: ' + str(model_params))
+        optimizer_joint = optim.Adam(model_parameters, lr=learning_rate,
+                               weight_decay=regularization_lambda)
+    else:
+        encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
+        decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
+        reparametrize_params = sum([np.prod(p.size()) for p in reparametrize.parameters()])
+        print ('Encoder paramters: ' + str(encoder_params))
+        print ('Decoder paramters: ' + str(decoder_params))
+        print ('Reparametrize paramters: ' + str(reparametrize_params))
+        print ('Total paramters: ' + str(encoder_params+decoder_params+reparametrize_params))
 
-    #define optimizers
-    joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
-    '''
-    optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
-                           weight_decay=regularization_lambda)
-    optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
-                           weight_decay=regularization_lambda)
-    '''
+        #define optimizers
+        joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
+        '''
+        optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
+                               weight_decay=regularization_lambda)
+        optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
+                               weight_decay=regularization_lambda)
+        '''
 
 
-    optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
-                           weight_decay=regularization_lambda)
+        optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
+                               weight_decay=regularization_lambda)
 
 
     warm_ramp = losses.warm_up(num_epochs)
 
-    encoder.train()
-    decoder.train()
-    reparametrize.train()
 
     total_step = len(tr_data)
     loss_list = []
@@ -394,9 +404,12 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
-        encoder.train()
-        decoder.train()
-        reparametrize.train()
+        if use_complete_net:
+            model.train()
+        else:
+            encoder.train()
+            decoder.train()
+            reparametrize.train()
 
         print ('\n')
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
@@ -408,15 +421,13 @@ def main():
             #optimizer_decoder.zero_grad()
             optimizer_joint.zero_grad()
 
-            mu, logvar = encoder(sounds)
-            z = reparametrize(mu, logvar)
-            outputs = decoder(z)
-            '''
-            sum_mu = torch.sum(torch.sum(mu))
-            sum_logvar = torch.sum(torch.sum(logvar))
-            print ('culo')
-            print (sum_mu, sum_logvar)
-            '''
+            if use_complete_net:
+                outputs, mu, logvar = model(images)
+            else:
+                mu, logvar = encoder(sounds)
+                z = reparametrize(mu, logvar)
+                outputs = decoder(z)
+
 
             loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
             #loss_encoder.backward(retain_graph=True)
@@ -462,9 +473,12 @@ def main():
                 sounds = sounds.to(device)
                 truth = truth.to(device)
 
-                mu, logvar = encoder(sounds)
-                z = reparametrize(mu, logvar)
-                outputs = decoder(z)
+                if use_complete_net:
+                    outputs, mu, logvar = model(images)
+                else:
+                    mu, logvar = encoder(sounds)
+                    z = reparametrize(mu, logvar)
+                    outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
@@ -479,9 +493,13 @@ def main():
                 optimizer_joint.zero_grad()
                 sounds = sounds.to(device)
                 truth = truth.to(device)
-                mu, logvar = encoder(sounds)
-                z = reparametrize(mu, logvar)
-                outputs = decoder(z)
+
+                if use_complete_net:
+                    outputs, mu, logvar = model(images)
+                else:
+                    mu, logvar = encoder(sounds)
+                    z = reparametrize(mu, logvar)
+                    outputs = decoder(z)
 
                 loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
@@ -530,9 +548,14 @@ def main():
                         if len(figs_truth) <= save_figs_n:
                             sounds = sounds.to(device)
                             truth = truth.numpy()
-                            mu, logvar = encoder(sounds)
-                            z = reparametrize(mu, logvar)
-                            outputs = decoder(z)
+
+                            if use_complete_net:
+                                outputs, mu, logvar = model(images)
+                            else:
+                                mu, logvar = encoder(sounds)
+                                z = reparametrize(mu, logvar)
+                                outputs = decoder(z)
+
                             outputs = outputs.cpu().numpy()
 
                             for single_sound in outputs:
@@ -557,14 +580,20 @@ def main():
                         plt.title('original')
                         plt.savefig(fig_path)
                         plt.close()
-
+                        figs_gen = []
+                        figs_truth = []
                     for i, (sounds, truth) in enumerate(test_data):
                         if len(figs_truth) <= save_figs_n:
                             sounds = sounds.to(device)
                             truth = truth.numpy()
-                            mu, logvar = encoder(sounds)
-                            z = reparametrize(mu, logvar)
-                            outputs = decoder(z)
+
+                            if use_complete_net:
+                                outputs, mu, logvar = model(images)
+                            else:
+                                mu, logvar = encoder(sounds)
+                                z = reparametrize(mu, logvar)
+                                outputs = decoder(z)
+
                             outputs = outputs.cpu().numpy()
 
                             for single_sound in outputs:
@@ -643,9 +672,12 @@ def main():
                         sounds = sounds.to(device)
                         truth = truth.to(device)
 
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
+                        if use_complete_net:
+                            outputs, mu, logvar = model(images)
+                        else:
+                            mu, logvar = encoder(sounds)
+                            z = reparametrize(mu, logvar)
+                            outputs = decoder(z)
 
 
                         outputs = outputs.cpu().numpy()
@@ -674,9 +706,12 @@ def main():
                         sounds = sounds.to(device)
                         truth = truth.to(device)
 
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
+                        if use_complete_net:
+                            outputs, mu, logvar = model(images)
+                        else:
+                            mu, logvar = encoder(sounds)
+                            z = reparametrize(mu, logvar)
+                            outputs = decoder(z)
 
                         outputs = outputs.cpu().numpy()
                         for single_sound in outputs:
