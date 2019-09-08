@@ -763,7 +763,6 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             #ENCODER
             self.model_size = model_size # d
             self.num_channels = num_channels # c
-            self.shift_factor = shift_factor # n
             self.variational = variational
             self.alpha = alpha
             self.verbose = verbose
