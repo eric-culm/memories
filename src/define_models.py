@@ -830,7 +830,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
             #KAIMING INITIALIZATION
             for m in self.modules():
-                if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear), or isinstance(m, nn.ConvTranspose1d):
+                if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear) or isinstance(m, nn.ConvTranspose1d):
                     nn.init.kaiming_normal_(m.weight.data)
 
         def encode(self, x):
