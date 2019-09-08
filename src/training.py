@@ -44,7 +44,7 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound=500',
+                  'hybrid_dataset=False', 'subdataset_bound=10',
                   'features_type="spectrum"']
 
     SAVE_MODEL = '../models/prova'
@@ -588,7 +588,7 @@ def main():
 
                     figs_gen = []
                     figs_truth = []
-                    
+
                     for i, (sounds, truth) in enumerate(test_data):
                         if len(figs_truth) <= save_figs_n:
                             sounds = sounds.to(device)
