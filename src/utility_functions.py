@@ -276,12 +276,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     sounds = sounds.to(device)
                     truth = truth.numpy()
                     #compute predictions
-                    if use_complete_net:
-                        outputs, mu, logvar = model(sounds)
-                    else:
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
+                    outputs, mu, logvar = model(sounds)
                     outputs = outputs.cpu().numpy()
                     #concatenate predictions
                     for single_sound in outputs:
