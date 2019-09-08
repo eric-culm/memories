@@ -732,21 +732,12 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             super().__init__()
 
             #So here we will first define layers for encoder network
-            self.encoder = nn.Sequential(nn.Conv2d(1, 3, 3, padding=1),
-                                         nn.MaxPool2d(2, 2),
-                                         nn.BatchNorm2d(3),
-                                         nn.Conv2d(3, 16, 3, padding=1),
-                                         nn.MaxPool2d(2, 2),
-                                         nn.BatchNorm2d(16),
-                                         nn.Conv2d(16, 16, 3, padding=1),
-                                         nn.MaxPool2d(2, 2),
-                                         nn.BatchNorm2d(16),
-                                         nn.Conv2d(16, 16, 3, padding=1),
-                                         nn.MaxPool2d(2, 2),
-                                         nn.BatchNorm2d(16))
+            self.encoder = nn.Sequential(nn.Linear(flattened_dim,2000),
+                                         nn.Linear(2000,2000),
+                                         nn.Linear(2000,2000))
 
             #These two layers are for getting logvar and mean
-            self.fc1 = nn.Linear(6553600, 256)
+            self.fc1 = nn.Linear(2000, 256)
             self.fc2 = nn.Linear(256, 128)
             self.mean = nn.Linear(128, num_latent)
             self.var = nn.Linear(128, num_latent)
@@ -755,20 +746,15 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #This is the first layer for the decoder part
             self.expand = nn.Linear(num_latent, 128)
             self.fc3 = nn.Linear(128, 256)
-            self.fc4 = nn.Linear(256, 6553600)
-            self.decoder = nn.Sequential(nn.ConvTranspose2d(16, 16, 3, padding=1),
-                                         nn.BatchNorm2d(16),
-                                         nn.ConvTranspose2d(16, 16, 3, padding=1),
-                                         nn.BatchNorm2d(16),
-                                         nn.ConvTranspose2d(16, 3, 8),
-                                         nn.BatchNorm2d(3),
-                                         nn.ConvTranspose2d(3, 1, 15))
+            self.fc4 = nn.Linear(256, 2000)
+            self.decoder = nn.Sequential(nn.Linear(2000,2000),
+                                         nn.Linear(2000,2000),
+                                         nn.Linear(2000,flattened_dim))
 
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
+            x = x.view([-1, flattened_dim])
             x = self.encoder(x)
-
-            x = x.view([-1, 6553600])
             x = F.dropout2d(self.fc1(x), 0.5)
             x = self.fc2(x)
 
@@ -781,7 +767,7 @@ def complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             z = self.expand(z)
             z = F.dropout2d(self.fc3(z), 0.5)
             z = self.fc4(z)
-            z = z.view([-1, 16, 32, 64])
+            z = z.view([-1, time_dim, features_dim])
 
             out = self.decoder(z)
             out = F.sigmoid(out)
