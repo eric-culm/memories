@@ -536,13 +536,11 @@ def main():
 
 
                 for i in range(save_figs_n):
-                    fig_name = 'gen_' + str(i) + '.wav'
+                    fig_name = 'gen_' + str(i) + '.png'
                     fig_path = os.path.join(curr_figs_path_train, fig_name)
                     #gen = figs_gen[i].reshape(figs_gen[i].shape[-2],figs_gen[i].shape[-1])
                     #truth = figs_truth[i].reshape(figs_truth[i].shape[-2],figs_truth[i].shape[-1])
-                    print ('culo')
-                    print (figs_gen[i].shape)
-                    print (figs_truth[i].shape)
+
                     plt.subplot(211)
                     plt.pcolormesh(figs_gen[i])
                     plt.title('gen')
