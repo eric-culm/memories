@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     generator = True
-    dataset = 'sc09_reduced'
+    dataset = 'sc09_stft'
     mnist_test = True
     architecture = 'WAVE_CNN_complete_net'
     encoder_architecture = 'simple_encoder_spectrum'
@@ -45,7 +45,7 @@ except IndexError:
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=10',
-                  'features_type="waveform"']
+                  'features_type="spectrum"']
 
     SAVE_MODEL = '../models/parallel'
     results_path = '../results/parallel'
