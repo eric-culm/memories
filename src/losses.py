@@ -82,7 +82,8 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
     KLD /= batch_size
     #KLD = KLD.sum(1).mean(0, True)
     '''
-    scaling_factor = recon_x.shape[0]*recon_x.shape[1]*recon_x.shape[2]
+    #scaling_factor = recon_x.shape[0]*recon_x.shape[1]*recon_x.shape[2]
+    scaling_factor = recon_x.shape[0]
 
     ####Now we are gonna define the KL divergence loss
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
