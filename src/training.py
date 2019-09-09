@@ -47,15 +47,15 @@ except IndexError:
                   'hybrid_dataset=False', 'subdataset_bound=100',
                   'features_type="waveform"']
 
-    SAVE_MODEL = '../models/parallel'
-    results_path = '../results/parallel'
+    SAVE_MODEL = '../models/tre'
+    results_path = '../results/tre'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 1
+    gpu_ID = 0
 
 
     print ('test mode: I/O from config.ini file')
