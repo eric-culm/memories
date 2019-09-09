@@ -44,18 +44,18 @@ except IndexError:
     use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound="all"',
+                  'hybrid_dataset=False', 'subdataset_bound=10',
                   'features_type="waveform"']
 
-    SAVE_MODEL = '../models/prova'
-    results_path = '../results/provisional'
+    SAVE_MODEL = '../models/parallel'
+    results_path = '../results/parallel'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 0
+    gpu_ID = 1
 
 
     print ('test mode: I/O from config.ini file')
