@@ -136,7 +136,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     '''
 
     #recon_loss = loss_recon(recon_x, x, features_type)
-    recon_loss = nn.MSELoss(recon_x, x)
+    recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp, recon_x)
 
     joint_loss = recon_loss + kl_loss
