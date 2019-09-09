@@ -44,11 +44,11 @@ except IndexError:
     use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=0.5', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound=10',
+                  'hybrid_dataset=False', 'subdataset_bound=200',
                   'features_type="waveform"']
 
-    SAVE_MODEL = '../models/tre'
-    results_path = '../results/tre'
+    SAVE_MODEL = '../models/due'
+    results_path = '../results/due'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
