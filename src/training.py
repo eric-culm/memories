@@ -43,7 +43,7 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
+                  'kld_weight=0.5', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=10',
                   'features_type="waveform"']
 
