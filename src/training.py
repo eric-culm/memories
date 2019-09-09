@@ -44,7 +44,7 @@ except IndexError:
     use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'kld_weight=1.', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound=100',
+                  'hybrid_dataset=False', 'subdataset_bound=10',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/parallel'
