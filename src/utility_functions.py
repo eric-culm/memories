@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import math, copy
 import os
+import matplotlib.pyplot as plt
 from scipy.io.wavfile import read, write
 from scipy.fftpack import fft
 from scipy.signal import iirfilter, butter, filtfilt, lfilter
