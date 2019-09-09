@@ -37,7 +37,7 @@ except IndexError:
     generator = True
     dataset = 'sc09_stft'
     mnist_test = True
-    architecture = 'WAVE_CNN_complete_net'
+    architecture = 'complete_net'
     encoder_architecture = 'simple_encoder_spectrum'
     decoder_architecture = 'simple_decoder_spectrum'
     reparametrize_architecture = 'reparametrize'
