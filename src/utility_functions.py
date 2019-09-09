@@ -256,11 +256,9 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     os.makedirs(curr_figs_path)
             if save_sounds:
                 curr_sounds_path = os.path.join(gen_sounds_path, dataset , 'epoch_'+str(epoch))
-                curr_orig_path= os.path.join(gen_sounds_path, dataset, 'originals')
                 if not os.path.exists(curr_sounds_path):
                     os.makedirs(curr_sounds_path)
-                if not os.path.exists(curr_orig_path):
-                    os.makedirs(curr_orig_path)
+
 
 
             for i, (sounds, truth) in enumerate(dataloader):
