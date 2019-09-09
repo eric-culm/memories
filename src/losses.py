@@ -135,8 +135,9 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     kl_loss /= scaling_factor
     '''
 
-    recon_loss = loss_recon(recon_x, x, features_type)
-    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp, recon_x)
+    #recon_loss = loss_recon(recon_x, x, features_type)
+    recon_loss = loss_recon(recon_x, x)
+    kl_loss = nn.MSELoss(mu, logvar, epoch, warm_ramp, recon_x)
 
     joint_loss = recon_loss + kl_loss
 
