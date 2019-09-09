@@ -87,7 +87,7 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
 
     ####Now we are gonna define the KL divergence loss
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    kl_loss = -0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
+    kl_loss = 0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
     kl_loss /= scaling_factor
 
     return kl_loss
