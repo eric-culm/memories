@@ -87,7 +87,7 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
 
     ####Now we are gonna define the KL divergence loss
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    kl_loss = -0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
+    kl_loss = 0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
     kl_loss /= scaling_factor
 
     return kl_loss
@@ -136,8 +136,8 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     '''
 
     #recon_loss = loss_recon(recon_x, x, features_type)
-    recon_loss = loss_recon(recon_x, x)
-    kl_loss = nn.MSELoss(mu, logvar, epoch, warm_ramp, recon_x)
+    recon_loss = MSE_loss(recon_x, x)
+    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp, recon_x)
 
     joint_loss = recon_loss + kl_loss
 
