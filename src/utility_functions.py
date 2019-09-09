@@ -307,7 +307,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     wavwrite(sound, SR, sound_path)
                     #originals
                     orig_name = 'orig_' + str(i) + '.wav'
-                    orig_path = os.path.join(curr_sounds_path, sound_name)
+                    orig_path = os.path.join(curr_sounds_path, orig_name)
                     orig = data_truth[i]
                     orig = orig.flatten()
                     orig = np.divide(orig, np.max(orig))
