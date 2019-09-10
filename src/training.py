@@ -43,7 +43,7 @@ except IndexError:
     reparametrize_architecture = 'reparametrize'
     use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'kld_weight=0', 'warm_up=True', 'latent_dim=100',
+                  'beta=0', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=100',
                   'features_type="waveform"']
 
@@ -484,9 +484,9 @@ def main():
                     z = reparametrize(mu, logvar)
                     outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
 
                 train_batch_losses_k.append(loss_k.item())
                 train_batch_losses_r.append(loss_r.item())
@@ -505,9 +505,9 @@ def main():
                     z = reparametrize(mu, logvar)
                     outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
                 loss_r = losses.loss_recon(outputs, truth, features_type)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
 
                 val_batch_losses_k.append(loss_k.item())
                 val_batch_losses_r.append(loss_r.item())
