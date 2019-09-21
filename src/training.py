@@ -454,8 +454,6 @@ def main():
 
         #validation loss, training and val accuracy computation
         #after current epoch training
-
-
         train_batch_losses_k = []
         val_batch_losses_k = []
         train_batch_losses_r = []
@@ -465,11 +463,11 @@ def main():
 
         with torch.no_grad():
             if use_complete_net:
-                model.train()
+                model.eval()
             else:
-                encoder.train()
-                decoder.train()
-                reparametrize.train()
+                encoder.eval()
+                decoder.eval()
+                reparametrize.eval()
 
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
