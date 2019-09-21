@@ -18,19 +18,68 @@ import numpy as np
 import utility_functions as uf
 import losses
 import configparser
-import loadconfig_modules
+import loadconfig
 
-memory_bag = np.load('/home/eric/Desktop/memories/dataset/matrices/digits_validation_predictors_fold_0.npy')
-#memory_bag = torch.tensor(memory_bag).float()
-input_sound = memory_bag[29]
-#memory_bag = [input,input]
-config = loadconfig_modules.load()
+config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
 
+class InputChannel:
+    '''
+    record a sliding buffer from a desired input channel
+    '''
+    def __init__(self, dur, channel, total_channels):
+        self.dur = dur
+        self.channel = channel
+        self.total_channels = total_channels
+        self.buffer = np.zeros(dur)
+        self.stream =  sd.InputStream(channels=self.total_channels,
+                                    blocksize=512 , callback=self.rec_callback)
 
-class FilterStream:
+    def rec_callback(self, indata, frames, time, status):
+        '''
+        record sliding buffers of length DUR, updating every bloch size
+        '''
+        if status:
+            print(status)
+        self.buffer = np.roll(self.buffer, -frames , axis=0)  #shift vector
+        self.buffer[-frames:] = indata[:,self.channel] #add new data
+
+    def rec(self, flag):
+        if flag == 1:
+            print ("")
+            print ("Input stream started on channel: " + str(self.channel))
+            print ("")
+            self.stream.start()
+        if flag == 0:
+            print ("")
+            print ("Input stream closed on channel: " + str(self.channel))
+            print ("")
+            self.stream.stop()
+
+    def get_buffer(self):
+        return self.buffer
+
+    def meter_continuous(self, flag):
+        self.meterflag = flag
+        while self.meterflag == 1:
+            peak = max(abs(self.buffer))
+            print_peak = str(np.round(peak, decimals=3))
+            meter_string =  "IN " + str(self.channel) + ": " + print_peak
+            #print ('\r', meter_string, end='')
+            print(meter_string)
+            time.sleep(0.05)
+
+    def meter_instantaneous(self):
+        peak = max(abs(self.buffer))
+        print_peak = str(np.round(peak, decimals=3))
+        meter_string =  "IN " + str(self.channel) + ": " + print_peak
+        #print ('\r', meter_string, end='')
+        print (meter_string)
+
+
+class FilterSound:
     '''
     Compare amplitude and spectral envelopes of one input sound to all sounds present in the
     memory bag. If the input sound is enough similar, it passes through, else is discarded.
@@ -81,31 +130,47 @@ class FilterStream:
     def filter_sound(self, in_sound):
         amp_similarity = self.get_similarity_env(in_sound)
         sp_similarity = self.get_similarity_spenv(in_sound)
+        mean_similarity = (amp_similarity + sp_similarity) / 2
         #if amp OR spectral similarity is above thresh
-        if amp_similarity + sp_similarity >= self.threshold:
+        if mean_similarity >= self.threshold:
             output = in_sound
         else:
             #or if randomly chosen even if not similar
             random_prob = np.random.rand()
-            if random_prob >= self.random_prob:
+            if random_prob <= self.random_prob:
                 output = in_sound
             else:
                 #if none of the above
                 output = None
 
-        return output
+        return output, mean_similarity
 
+class FilterStream:
+    '''
+    Apply FilterSound to multiple input sounds and collects a bag
+    of filtered sounds
+    '''
+    def __init__(self, frequency, streaming_object, filtering_object):
+        self.frequency = frequency
+        self.flag = 0
+        self.streaming_object = streaming_object
+        self.filtering_object = filtering_object
+        self.bag = []
 
+    def filter_input_sound(self):
+        buffer = self.streaming_object.get_buffer()
+        filtered, sim = self.filtering_object.filter_sound(buffer)
+        return filtered
 
-stream_filter = FilterStream(memory_bag=memory_bag, threshold=0.8, random_prob=0.01, env_length=100)
+    def filter_stream(self, flag):
+        self.flag = flag
+        if self.flag == 1:
+            self.bag = []
+        while self.flag == 1:
+            filtered = self.filter_input_sound()
+            if filtered is not None:
+                self.bag.append(filtered)
+            time.sleep(self.frequency)
 
-
-
-'''
-del input
-rec = RecLoop(32000,[0])
-rec.start_rec()
-print ('culo')
-rec.meter()
-print ('cazzo')
-'''
+    def get_bag(self):
+        return self.bag
