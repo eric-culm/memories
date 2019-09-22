@@ -193,6 +193,9 @@ class LatentOperators:
         self.latent_dim = latent_dim
 
     def __random_slice__(self):
+        '''
+        output bounds of a random slice within the latent dim
+        '''
         random_perc = np.random.randint(self.latent_dim)
         random_invperc = np.random.randint(self.latent_dim)
 
@@ -207,14 +210,29 @@ class LatentOperators:
             end = end_init
         return [start, end]
 
+
+    def __slice_wrapper__(self, func_name, x1, x2):
+        '''
+        apply func_name to x1, x2 only in a random slice
+        '''
+        func = getattr(self,func_name)
+        start, end = self.__random_slice__()
+        slice1 = x1[start:end]
+        slice2 = x2[start:end]
+        processed_slice = func(slice1, slice2)
+        output = x1
+        output[start:end] = processed_slice
+
+        return output
+
     def add(self, x1, x2):
-        return torch.add(x1,x2)
+        return torch.sigmoid(torch.add(x1,x2))
 
     def sub(self, x1, x2):
-        return torch.sub(x1,x2)
+        return torch.sigmoid(torch.sub(x1,x2))
 
     def mul(self, x1,x2):
-        return torch.mul(x1,x2)
+        return torch.sigmoid(torch.mul(x1,x2))
 
     def div(self, x1,x2):
-        return torch.mul(x1,x2)
+        return torch.sigmoid(torch.mul(x1,x2))

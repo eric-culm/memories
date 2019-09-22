@@ -402,7 +402,7 @@ def main():
 
     #TRAINING LOOP
     #iterate epochs
-    gradual_add_data = True
+    gradual_add_data = False
     initial_bag = 10
     n_sounds_add = 1
     add_threshold = 0.25
