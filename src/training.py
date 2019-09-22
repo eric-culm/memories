@@ -407,7 +407,10 @@ def main():
     n_sounds_add = 1
     add_threshold = 0.25
     save_best_only = False
-    break_point = initial_bag
+    if gradual_add_data:
+        break_point = initial_bag
+    else:
+        break_point = subdataset_bound
 
     for epoch in range(num_epochs):
         if use_complete_net:
