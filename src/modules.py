@@ -192,7 +192,7 @@ class LatentOperators:
     def __init__(self, latent_dim):
         self.latent_dim = latent_dim
 
-    def random_slice(self):
+    def __random_slice__(self):
         random_perc = np.random.randint(self.latent_dim)
         random_invperc = np.random.randint(self.latent_dim)
 

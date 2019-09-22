@@ -568,7 +568,7 @@ def main():
             #update the break point if training loss is better than
             #add_THRESHOLD
             if gradual_add_data:
-                last_losses = train_joint_hist[-5:]
+                last_losses = train_recon_hist[-5:]
                 last_mean = np.mean(last_losses)
                 if last_mean <= add_threshold:
                     break_point += n_sounds_add
