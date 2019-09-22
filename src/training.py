@@ -557,7 +557,7 @@ def main():
                     print ('saved')
                     saved_epoch = epoch + 1
                 else:
-                    best_loss = min(train_joint_hits[:-1])  #not looking at curr_loss
+                    best_loss = min(train_joint_hist[:-1])  #not looking at curr_loss
                     curr_loss = train_joint_hist[-1]
                     if curr_loss < best_loss:
                         torch.save(model.state_dict(), SAVE_MODEL)
