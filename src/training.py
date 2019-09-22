@@ -45,7 +45,7 @@ except IndexError:
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=100',
-                  'features_type="waveform"', 'dyn_variational_bound=1000']
+                  'features_type="waveform"', 'dyn_variational_bound=500']
 
     SAVE_MODEL = '../models/due'
     results_path = '../results/due'

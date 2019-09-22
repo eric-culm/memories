@@ -946,7 +946,6 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             #after a certain period, ad variational inference
             if self.variational:
                 if dyn_variational:
-                    print ('var on')
                     #activated from training
                     if self.training:
                         std = torch.exp(0.5*logvar)   #So as to get std
@@ -955,7 +954,6 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
                     else:
                         return mu
                 else:
-                    print ('var off')
                     return mu
             else:
                 return mu
