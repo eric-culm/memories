@@ -58,36 +58,27 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up(epochs, init_silence=1500, perc=0.0001, tot_epochs=500):
-    pad = np.zeros(epochs)
-    #ramp_time = int(epochs*perc) - init_silence
-    ramp_time = tot_epochs
-    start = init_silence
-    end = init_silence + ramp_time
-    ramp = np.arange(ramp_time) / ramp_time
+def warm_up_kld(tot_epochs, ramp_delay=1500, ramp_epochs=500):
+    pad = np.zeros(tot_epochs)
+    start = ramp_delay
+    end = ramp_delay + ramp_epochs
+    ramp = np.arange(ramp_epochs) / ramp_epochs
     pad[start:end] = ramp
     pad [end:] = 1.
 
     return pad
 
-def warm_up_reparametrize(epochs, init_silence=1000, perc=0.0001, tot_epochs=500):
+def warm_up_reparametrize(tot_epochs, ramp_delay=1000, ramp_epochs=500):
     pad = np.zeros(epochs)
-    #ramp_time = int(epochs*perc) - init_silence
-    ramp_time = tot_epochs
-    start = init_silence
-    end = init_silence + ramp_time
-    ramp = np.arange(ramp_time) / ramp_time
+    start = ramp_delay
+    end = ramp_delay + ramp_epochs
+    ramp = np.arange(ramp_epochs) / ramp_epochs
     pad[start:end] = ramp
     pad [end:] = 1.
 
     return pad
 
-def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
-
-    if warm_up:
-        kld_weight_epoch = kld_weight * warm_ramp[epoch]
-    else:
-        kld_weight_epoch = kld_weight
+def loss_KLD(mu, logvar, warm_value_kld, recon_x, kld_weight=1.):
 
     '''
     KLD = kld_weight_epoch * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
@@ -99,7 +90,7 @@ def loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight=1.):
 
     ####Now we are gonna define the KL divergence loss
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    kl_loss = -0.5 * kld_weight_epoch * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
+    kl_loss = -0.5 * warm_value_kld * torch.sum(1 + logvar - mu**2 - torch.exp(logvar))
     kl_loss /= scaling_factor
 
     return kl_loss
@@ -125,7 +116,7 @@ def loss_recon(recon_x, x, features_type):
 
     return recon_loss
 
-def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weight=-0.5):
+def loss_joint(recon_x, x, mu, logvar, warm_value_kld, features_type, kld_weight=-0.5):
 
     '''
     #recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
@@ -151,7 +142,7 @@ def loss_joint(recon_x, x, mu, logvar, epoch, warm_ramp, features_type, kld_weig
     scaling_factor = recon_x.shape[0]
     recon_loss = torch.sum(F.mse_loss(recon_x, x, reduction='none'))
     recon_loss /= scaling_factor
-    kl_loss = loss_KLD(mu, logvar, epoch, warm_ramp, recon_x, kld_weight)
+    kl_loss = loss_KLD(mu, logvar, warm_value_kld, recon_x, kld_weight)
 
     joint_loss = recon_loss + kl_loss
 

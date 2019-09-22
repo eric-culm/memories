@@ -82,7 +82,7 @@ from audtorch import metrics
 import numpy as np
 import define_models as choose_model
 import utility_functions as uf
-import losses
+import training_utils
 #import preprocessing_DAIC as pre
 
 #np.random.seed(0)
@@ -98,21 +98,28 @@ train_split = cfg.getfloat('training_defaults', 'train_split')
 validation_split = cfg.getfloat('training_defaults', 'validation_split')
 test_split = cfg.getfloat('training_defaults', 'test_split')
 shuffle_training_data = eval(cfg.get('training_defaults', 'shuffle_training_data'))
-save_best_model_metric = cfg.get('training_defaults', 'save_best_model_metric')
-save_best_model_mode = cfg.get('training_defaults', 'save_best_model_mode')
-early_stopping = eval(cfg.get('training_defaults', 'early_stopping'))
 patience = cfg.getint('training_defaults', 'patience')
 batch_size = cfg.getint('training_defaults', 'batch_size')
 num_epochs = cfg.getint('training_defaults', 'num_epochs')
 learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
 regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
 optimizer = cfg.get('training_defaults', 'optimizer')
-save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
 
+save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
+save_model_freq = eval(cfg.get('training_defaults', 'save_model_freq'))
+save_model_epochs = cfg.getint('training_defaults', 'save_model_epochs')
 save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
 save_figs = eval(cfg.get('training_defaults', 'save_figs'))
 save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
 save_items_n = cfg.getint('training_defaults', 'save_items_n')
+
+
+warm_up_kld = eval(cfg.get('training_defaults', 'warm_up_kld'))
+warm_up_reparametrize = eval(cfg.get('training_defaults', 'warm_up_reparametrize'))
+kld_ramp_delay = cfg.geting('training_defaults', 'kld_ramp_delay')
+kld_ramp_epochs = cfg.geting('training_defaults', 'kld_ramp_epochs')
+reparametrize_ramp_delay = cfg.geting('training_defaults', 'reparametrize_ramp_delay')
+reparametrize_ramp_epochs = cfg.geting('training_defaults', 'reparametrize_ramp_epochs')
 
 
 
@@ -147,25 +154,27 @@ device = torch.device('cuda:' + str(gpu_ID))
 #device = torch.device('cuda:0')
 
 
-#define optimizer ADD HERE DIFFERENT OPTIMIZERS!!!!!!!
+#ADD HERE DIFFERENT OPTIMIZERS!!!!!!!
 
 #build dict with all UPDATED training parameters
 training_parameters = {'train_split': train_split,
     'validation_split': validation_split,
     'test_split': test_split,
     'shuffle_training_data': shuffle_training_data,
-    'save_best_model_metric': save_best_model_metric,
-    'save_best_model_mode': save_best_model_mode,
-    'early_stopping': early_stopping,
     'patience': patience,
     'batch_size': batch_size,
     'num_epochs': num_epochs,
     'learning_rate': learning_rate,
     'regularization_lambda': regularization_lambda,
-    'optimizer': optimizer
+    'optimizer': optimizer,
+    'warm_up_kld': warm_up_kld,
+    'warm_up_reparametrize': warm_up_reparametrize,
+    'kld_ramp_delay': kld_ramp_delay,
+    'kld_ramp_epochs': kld_ramp_epochs,
+    'reparametrize_ramp_delay': reparametrize_ramp_delay,
+    'reparametrize_ramp_epochs': reparametrize_ramp_epochs,
+    'save_model_freq': save_model_freq
     }
-
-
 
 
 def main():
@@ -387,8 +396,9 @@ def main():
                                weight_decay=regularization_lambda)
 
 
-    warm_ramp = losses.warm_up(num_epochs)
-    warm_ramp_reparametrize = losses.warm_up_reparametrize(num_epochs)
+    #create warm up ramps
+    warm_ramp_kld = training_utils.warm_up(num_epochs, kld_ramp_delay, kld_ramp_epochs)
+    warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
 
 
     total_step = len(tr_data)
@@ -421,6 +431,7 @@ def main():
         if epoch >= dyn_variational_bound:
             dyn_variational = True
 
+        warm_value_kld = warm_ramp_kld[epoch]
         warm_value_reparametrize = warm_ramp_reparametrize[epoch]
 
         if use_complete_net:
@@ -450,12 +461,12 @@ def main():
                     outputs = decoder(z)
 
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
+                loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs)
                 #loss_encoder.backward(retain_graph=True)
-                loss_r = losses.loss_recon(outputs, truth, features_type)
+                loss_r = training_utils.loss_recon(outputs, truth, features_type)
                 #loss_decoder.backward(retain_graph=True)
 
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
+                loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type)
                 loss_j.backward(retain_graph=True)
 
                 #print progress and update history, optimizer step
@@ -506,9 +517,9 @@ def main():
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
 
-                    loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
-                    loss_r = losses.loss_recon(outputs, truth, features_type)
-                    loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
+                    loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
+                    loss_r = training_utils.loss_recon(outputs, truth, features_type)
+                    loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type, beta)
 
                     train_batch_losses_k.append(loss_k.item())
                     train_batch_losses_r.append(loss_r.item())
@@ -528,9 +539,9 @@ def main():
                         z = reparametrize(mu, logvar)
                         outputs = decoder(z)
 
-                    loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
-                    loss_r = losses.loss_recon(outputs, truth, features_type)
-                    loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
+                    loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
+                    loss_r = training_utils.loss_recon(outputs, truth, features_type)
+                    loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type, beta)
 
                     val_batch_losses_k.append(loss_k.item())
                     val_batch_losses_r.append(loss_r.item())
