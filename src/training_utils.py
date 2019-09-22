@@ -58,7 +58,7 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up_kld(tot_epochs, ramp_delay=1500, ramp_epochs=500):
+def warm_up_kld(tot_epochs, ramp_delay, ramp_epochs):
     pad = np.zeros(tot_epochs)
     start = ramp_delay
     end = ramp_delay + ramp_epochs
@@ -68,7 +68,7 @@ def warm_up_kld(tot_epochs, ramp_delay=1500, ramp_epochs=500):
 
     return pad
 
-def warm_up_reparametrize(tot_epochs, ramp_delay=1000, ramp_epochs=500):
+def warm_up_reparametrize(tot_epochs, ramp_delay, ramp_epochs):
     pad = np.zeros(epochs)
     start = ramp_delay
     end = ramp_delay + ramp_epochs

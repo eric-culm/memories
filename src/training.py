@@ -364,9 +364,7 @@ def main():
 
 
 
-
     #compute number of parameters
-
     print ('')
     if use_complete_net:
         model_params = sum([np.prod(p.size()) for p in model.parameters()])
