@@ -947,7 +947,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
                 noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
                 return noise.mul(std).add_(mu)
             else:
-                return mean
+                return mu
 
         def forward(self, x):
             mu, logvar = self.enc_func(x)
