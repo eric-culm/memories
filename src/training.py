@@ -406,6 +406,7 @@ def main():
     initial_bag = 10
     n_sounds_add = 1
     add_threshold = 0.1
+    save_best_only = False
     break_point = initial_bag
 
     for epoch in range(num_epochs):
