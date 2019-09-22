@@ -557,10 +557,10 @@ def main():
             #save figures if specified
             #train_data
             uf.save_data(tr_data, model, device, epoch, gen_figs_path, gen_sounds_path,
-                    save_figs, save_sounds, save_items_epochs, save_items_n, features_type, 'training')
+                    save_figs, save_sounds, save_items_epochs, save_items_n, features_type, 'training', dyn_variational)
             #test_data
             uf.save_data(test_data, model, device, epoch, gen_figs_path, gen_sounds_path,
-                    save_figs, save_sounds, save_items_epochs, save_items_n, features_type, 'test')
+                    save_figs, save_sounds, save_items_epochs, save_items_n, features_type, 'test', dyn_variational)
 
             if save_best_only == True:
                 if epoch == 0:

@@ -244,7 +244,7 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
 
 def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
-                save_items_epochs, save_items_n, features_type, dataset='training'):
+                save_items_epochs, save_items_n, features_type, dataset='training', dyn_variational):
     data_gen = []
     data_truth = []
     if save_figs or save_sounds:
@@ -266,7 +266,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     sounds = sounds.to(device)
                     truth = truth.numpy()
                     #compute predictions
-                    outputs, mu, logvar = model(sounds)
+                    outputs, mu, logvar = model(sounds, dyn_variational)
                     outputs = outputs.cpu().numpy()
                     #concatenate predictions
                     for single_sound in outputs:
