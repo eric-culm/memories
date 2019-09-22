@@ -405,6 +405,7 @@ def main():
     gradual_add_data = True
     initial_bag = 10
     n_sounds_add = 1
+    add_threshold = 0.1
     break_point = initial_bag
 
     for epoch in range(num_epochs):
