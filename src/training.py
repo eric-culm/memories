@@ -298,9 +298,9 @@ def main():
     test_dataset = utils.TensorDataset(test_predictors, test_target)
 
     #build data loader from dataset
-    tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=True, pin_memory=True)
-    val_data = utils.DataLoader(val_dataset, batch_size, shuffle=True, pin_memory=True)
-    test_data = utils.DataLoader(test_dataset, batch_size, shuffle=True, pin_memory=True)  #no batch here!!
+    tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=False, pin_memory=True)
+    val_data = utils.DataLoader(val_dataset, batch_size, shuffle=False, pin_memory=True)
+    test_data = utils.DataLoader(test_dataset, batch_size, shuffle=False, pin_memory=True)  #no batch here!!
     #DNN input shape
     time_dim = training_predictors.shape[-2]
     features_dim = training_predictors.shape[-1]
@@ -402,6 +402,10 @@ def main():
 
     #TRAINING LOOP
     #iterate epochs
+
+    initial_bag = 10
+    n_sounds_add = 1
+    break_point = initial_bag
     for epoch in range(num_epochs):
         if use_complete_net:
             model.train()
@@ -413,44 +417,47 @@ def main():
         print ('\n')
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
+
         for i, (sounds, truth) in enumerate(tr_data):
-            sounds = sounds.to(device)
-            truth = truth.to(device)
-            #optimizer_encoder.zero_grad()
-            #optimizer_decoder.zero_grad()
-            optimizer_joint.zero_grad()
+            if i <= break_point:
+                sounds = sounds.to(device)
+                truth = truth.to(device)
+                #optimizer_encoder.zero_grad()
+                #optimizer_decoder.zero_grad()
+                optimizer_joint.zero_grad()
 
-            if use_complete_net:
-                outputs, mu, logvar = model(sounds)
-            else:
-                mu, logvar = encoder(sounds)
-                z = reparametrize(mu, logvar)
-                outputs = decoder(z)
+                if use_complete_net:
+                    outputs, mu, logvar = model(sounds)
+                else:
+                    mu, logvar = encoder(sounds)
+                    z = reparametrize(mu, logvar)
+                    outputs = decoder(z)
 
 
-            loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
-            #loss_encoder.backward(retain_graph=True)
-            loss_r = losses.loss_recon(outputs, truth, features_type)
-            #loss_decoder.backward(retain_graph=True)
+                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs)
+                #loss_encoder.backward(retain_graph=True)
+                loss_r = losses.loss_recon(outputs, truth, features_type)
+                #loss_decoder.backward(retain_graph=True)
 
-            loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
-            loss_j.backward(retain_graph=True)
+                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type)
+                loss_j.backward(retain_graph=True)
 
-            #print progress and update history, optimizer step
-            perc = int(i / len(tr_data) * 20)
-            inv_perc = int(20 - perc - 1)
+                #print progress and update history, optimizer step
+                perc = int(i / len(tr_data) * 20)
+                inv_perc = int(20 - perc - 1)
 
-            loss_k_print_t = str(np.round(loss_k.item(), decimals=5))
-            loss_r_print_t = str(np.round(loss_r.item(), decimals=5))
-            loss_j_print_t = str(np.round(loss_j.item(), decimals=5))
+                loss_k_print_t = str(np.round(loss_k.item(), decimals=5))
+                loss_r_print_t = str(np.round(loss_r.item(), decimals=5))
+                loss_j_print_t = str(np.round(loss_j.item(), decimals=5))
 
-            string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_k_print_t + ' | CCC: ' + loss_r_print_t
-            print ('\r', string_progress, end='')
+                string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_k_print_t + ' | CCC: ' + loss_r_print_t
+                print ('\r', string_progress, end='')
 
-            optimizer_joint.step()
-            #optimizer_encoder.step()
-            #optimizer_decoder.step()
-            #end of batch loop
+                optimizer_joint.step()
+                #optimizer_encoder.step()
+                #optimizer_decoder.step()
+                #end of batch loop
+
 
         #validation loss, training and val accuracy computation
         #after current epoch training
@@ -471,45 +478,47 @@ def main():
 
             #compute training accuracy and loss
             for i, (sounds, truth) in enumerate(tr_data):
-                optimizer_joint.zero_grad()
-                sounds = sounds.to(device)
-                truth = truth.to(device)
+                if i <= break_point:
+                    optimizer_joint.zero_grad()
+                    sounds = sounds.to(device)
+                    truth = truth.to(device)
 
-                if use_complete_net:
-                    outputs, mu, logvar = model(sounds)
-                else:
-                    mu, logvar = encoder(sounds)
-                    z = reparametrize(mu, logvar)
-                    outputs = decoder(z)
+                    if use_complete_net:
+                        outputs, mu, logvar = model(sounds)
+                    else:
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
-                loss_r = losses.loss_recon(outputs, truth, features_type)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
+                    loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
+                    loss_r = losses.loss_recon(outputs, truth, features_type)
+                    loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
 
-                train_batch_losses_k.append(loss_k.item())
-                train_batch_losses_r.append(loss_r.item())
-                train_batch_losses_j.append(loss_j.item())
+                    train_batch_losses_k.append(loss_k.item())
+                    train_batch_losses_r.append(loss_r.item())
+                    train_batch_losses_j.append(loss_j.item())
 
             #compute validation accuracy and loss
             for i, (sounds, truth) in enumerate(val_data):
-                optimizer_joint.zero_grad()
-                sounds = sounds.to(device)
-                truth = truth.to(device)
+                if i <= break_point:
+                    optimizer_joint.zero_grad()
+                    sounds = sounds.to(device)
+                    truth = truth.to(device)
 
-                if use_complete_net:
-                    outputs, mu, logvar = model(sounds)
-                else:
-                    mu, logvar = encoder(sounds)
-                    z = reparametrize(mu, logvar)
-                    outputs = decoder(z)
+                    if use_complete_net:
+                        outputs, mu, logvar = model(sounds)
+                    else:
+                        mu, logvar = encoder(sounds)
+                        z = reparametrize(mu, logvar)
+                        outputs = decoder(z)
 
-                loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
-                loss_r = losses.loss_recon(outputs, truth, features_type)
-                loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
+                    loss_k = losses.loss_KLD(mu, logvar, epoch, warm_ramp, outputs, beta)
+                    loss_r = losses.loss_recon(outputs, truth, features_type)
+                    loss_j = losses.loss_joint(outputs, truth, mu, logvar, epoch, warm_ramp, features_type, beta)
 
-                val_batch_losses_k.append(loss_k.item())
-                val_batch_losses_r.append(loss_r.item())
-                val_batch_losses_j.append(loss_j.item())
+                    val_batch_losses_k.append(loss_k.item())
+                    val_batch_losses_r.append(loss_r.item())
+                    val_batch_losses_j.append(loss_j.item())
 
 
             train_epoch_kld = np.mean(train_batch_losses_k)
@@ -539,7 +548,26 @@ def main():
             uf.save_data(test_data, model, device, epoch, gen_figs_path, gen_sounds_path,
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type, 'test')
 
+            if save_best_only == True:
+                if epoch == 0:
+                    torch.save(model.state_dict(), SAVE_MODEL)
+                    print ('saved')
+                    saved_epoch = epoch + 1
+                else:
+                    best_loss = min(train_joint_hits[:-1])  #not looking at curr_loss
+                    curr_loss = train_joint_hist[-1]
+                    if curr_loss < best_loss:
+                        torch.save(model.state_dict(), SAVE_MODEL)
+                        print ('saved')  #SUBSTITUTE WITH SAVE MODEL FUNC
+                        saved_epoch = epoch + 1
 
+            #update the break point if training loss is better than
+            #add_THRESHOLD
+            if gradual_add_data:
+                last_losses = train_joint_hits[-5:]
+                last_mean = mean(last_losses)
+                if last_mean <= add_threshold:
+                    break_point += n_sounds_add
 
             #end of epoch loop
         '''

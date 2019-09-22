@@ -21,6 +21,8 @@ S2C_PORT = cfg.getint('osc', 's2c_port')
 #create modules instances
 memory_bag = np.load(MEMORY_BAG)
 content_filter = FilterSound(memory_bag=memory_bag, threshold=0.0, random_prob=0.0, env_length=200)
+dummy_model = DummyModel(dur=16384, latent_dim=100)
+
 
 ins = {
         0: InputChannel(dur=DUR, channel=0, total_channels=TOTAL_IN_CHANNELS),

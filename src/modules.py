@@ -174,3 +174,38 @@ class FilterStream:
 
     def get_bag(self):
         return self.bag
+
+class DummyModel(nn.Model):
+    def __init__(self, dur, latent_dim):
+        super(DummyModel, self).__init__()
+        self.dur = dur
+        self.latent_dim = latent_dim
+
+    def encode(self, x):
+        return torch.sigmoid(torch.randn(self.latent_dim))
+
+    def decode(self, z):
+        return torch.tanh(torch.randn(self.dur))
+
+
+class LatentOperators:
+    def __init__(self, latent_dim):
+        self.latent_dim = latent_dim
+
+    def random_slice(self):
+        random_perc = np.random.randint(self.latent_dim)
+        start = np.random.randint(self.latent_dim - random_perc)
+        end = start + random_perc
+        return [start, end]
+
+    def add(self, x1, x2):
+        return torch.add(x1,x2)
+
+    def sub(self, x1, x2):
+        return torch.sub(x1,x2)
+
+    def mul(self, x1,x2):
+        return torch.mul(x1,x2)
+
+    def div(self, x1,x2):
+        return torch.mul(x1,x2)
