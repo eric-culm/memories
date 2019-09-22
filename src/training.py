@@ -402,10 +402,11 @@ def main():
 
     #TRAINING LOOP
     #iterate epochs
-
+    gradual_add_data = True
     initial_bag = 10
     n_sounds_add = 1
     break_point = initial_bag
+
     for epoch in range(num_epochs):
         if use_complete_net:
             model.train()
