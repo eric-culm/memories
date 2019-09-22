@@ -405,7 +405,7 @@ def main():
     gradual_add_data = True
     initial_bag = 10
     n_sounds_add = 1
-    add_threshold = 0.1
+    add_threshold = 0.25
     save_best_only = False
     break_point = initial_bag
 

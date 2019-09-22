@@ -175,7 +175,7 @@ class FilterStream:
     def get_bag(self):
         return self.bag
 
-class DummyModel(nn.Model):
+class DummyModel(nn.Module):
     def __init__(self, dur, latent_dim):
         super(DummyModel, self).__init__()
         self.dur = dur
@@ -194,8 +194,17 @@ class LatentOperators:
 
     def random_slice(self):
         random_perc = np.random.randint(self.latent_dim)
-        start = np.random.randint(self.latent_dim - random_perc)
-        end = start + random_perc
+        random_invperc = np.random.randint(self.latent_dim)
+
+        start_init = np.random.randint(self.latent_dim - random_perc)
+        end_init = start_init + random_perc
+        #randomly invert direction
+        if random_invperc >= self.latent_dim/2:
+            start = self.latent_dim - end_init
+            end = self.latent_dim - start_init
+        else:
+            start = start_init
+            end = end_init
         return [start, end]
 
     def add(self, x1, x2):
