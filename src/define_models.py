@@ -942,10 +942,13 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             return z
 
         def reparametrize(self, mu, logvar):
-            if self.training:
-                std = torch.exp(0.5*logvar)   #So as to get std
-                noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
-                return noise.mul(std).add_(mu)
+            if self.variational:
+                if self.training:
+                    std = torch.exp(0.5*logvar)   #So as to get std
+                    noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
+                    return noise.mul(std).add_(mu)
+                else:
+                    return mu
             else:
                 return mu
 

@@ -231,8 +231,21 @@ class LatentOperators:
     def sub(self, x1, x2):
         return torch.sigmoid(torch.sub(x1,x2))
 
-    def mul(self, x1,x2):
+    def mul(self, x1, x2):
         return torch.sigmoid(torch.mul(x1,x2))
 
-    def div(self, x1,x2):
+    def div(self, x1, x2):
         return torch.sigmoid(torch.mul(x1,x2))
+
+    def mean(self, x1, x2):
+        concat = torch.stack((x1,x2))
+        return torch.mean(concat,0)
+
+    def xfade(self, x1, x2):
+        ramp1 = np.arange(1, x1.shape[0]+1) / x1.shape[0]
+        ramp2 = np.array(np.flip(ramp1))
+        ramp1 = torch.tensor(ramp1).float()
+        ramp2 = torch.tensor(ramp2).float()
+        scaled1 = torch.mul(x1, ramp1)
+        scaled2 = torch.mul(x2, ramp2)
+        return torch.add(scaled1, scaled2)
