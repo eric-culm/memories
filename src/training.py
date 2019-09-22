@@ -45,7 +45,7 @@ except IndexError:
     parameters = ['verbose=False', 'model_size=64', 'variational=False',
                   'beta=0.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=100',
-                  'features_type="waveform"']
+                  'features_type="waveform"', 'dyn_variational_bound=1000']
 
     SAVE_MODEL = '../models/due'
     results_path = '../results/due'
@@ -407,12 +407,19 @@ def main():
     n_sounds_add = 1
     add_threshold = 0.25
     save_best_only = False
+
+    dyn_variational = False
+
     if gradual_add_data:
         break_point = initial_bag
     else:
         break_point = subdataset_bound
 
     for epoch in range(num_epochs):
+
+        if epoch >= dyn_variational_bound:
+            dyn_variational = True
+
         if use_complete_net:
             model.train()
         else:
@@ -433,7 +440,7 @@ def main():
                 optimizer_joint.zero_grad()
 
                 if use_complete_net:
-                    outputs, mu, logvar = model(sounds)
+                    outputs, mu, logvar = model(sounds, dyn_variational)
                 else:
                     mu, logvar = encoder(sounds)
                     z = reparametrize(mu, logvar)
@@ -490,7 +497,7 @@ def main():
                     truth = truth.to(device)
 
                     if use_complete_net:
-                        outputs, mu, logvar = model(sounds)
+                        outputs, mu, logvar = model(sounds, dyn_variational)
                     else:
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
@@ -512,7 +519,7 @@ def main():
                     truth = truth.to(device)
 
                     if use_complete_net:
-                        outputs, mu, logvar = model(sounds)
+                        outputs, mu, logvar = model(sounds, dyn_variational)
                     else:
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
