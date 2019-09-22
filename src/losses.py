@@ -58,7 +58,19 @@ def loss_function_joint_old(recon_x, x, mu, logvar, epoch):
 
 mean_target = torch.zeros(16384)
 
-def warm_up(epochs, init_silence=1000, perc=0.0001, tot_epochs=1000):
+def warm_up(epochs, init_silence=1500, perc=0.0001, tot_epochs=500):
+    pad = np.zeros(epochs)
+    #ramp_time = int(epochs*perc) - init_silence
+    ramp_time = tot_epochs
+    start = init_silence
+    end = init_silence + ramp_time
+    ramp = np.arange(ramp_time) / ramp_time
+    pad[start:end] = ramp
+    pad [end:] = 1.
+
+    return pad
+
+def warm_up_reparametrize(epochs, init_silence=1000, perc=0.0001, tot_epochs=500):
     pad = np.zeros(epochs)
     #ramp_time = int(epochs*perc) - init_silence
     ramp_time = tot_epochs

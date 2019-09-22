@@ -388,6 +388,7 @@ def main():
 
 
     warm_ramp = losses.warm_up(num_epochs)
+    warm_ramp_reparametrize = losses.warm_up_reparametrize(num_epochs)
 
 
     total_step = len(tr_data)
@@ -420,6 +421,8 @@ def main():
         if epoch >= dyn_variational_bound:
             dyn_variational = True
 
+        warm_value_reparametrize = warm_up_reparametrize[epoch]
+
         if use_complete_net:
             model.train()
         else:
@@ -440,7 +443,7 @@ def main():
                 optimizer_joint.zero_grad()
 
                 if use_complete_net:
-                    outputs, mu, logvar = model(sounds, dyn_variational)
+                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
                 else:
                     mu, logvar = encoder(sounds)
                     z = reparametrize(mu, logvar)
@@ -497,7 +500,7 @@ def main():
                     truth = truth.to(device)
 
                     if use_complete_net:
-                        outputs, mu, logvar = model(sounds, dyn_variational)
+                        outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
                     else:
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)
@@ -519,7 +522,7 @@ def main():
                     truth = truth.to(device)
 
                     if use_complete_net:
-                        outputs, mu, logvar = model(sounds, dyn_variational)
+                        outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
                     else:
                         mu, logvar = encoder(sounds)
                         z = reparametrize(mu, logvar)

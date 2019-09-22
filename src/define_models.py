@@ -941,7 +941,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
             return z
 
-        def reparametrize(self, mu, logvar, dyn_variational):
+        def reparametrize(self, mu, logvar, dyn_variational, warm_value_reparametrize):
             #state comes from training
             #after a certain period, ad variational inference
             if self.variational:
@@ -950,6 +950,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
                     if self.training:
                         std = torch.exp(0.5*logvar)   #So as to get std
                         noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
+                        noise *= warm_value_reparametrize
                         return noise.mul(std).add_(mu)
                     else:
                         return mu
@@ -958,9 +959,9 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             else:
                 return mu
 
-        def forward(self, x, dyn_variational):
+        def forward(self, x, dyn_variational, warm_value_reparametrize):
             mu, logvar = self.enc_func(x)
-            z = self.reparametrize(mu, logvar, dyn_variational)
+            z = self.reparametrize(mu, logvar, dyn_variational, warm_value_reparametrize)
             out = self.dec_func(z)
             return out, mu, logvar
 
