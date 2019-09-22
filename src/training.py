@@ -47,8 +47,8 @@ except IndexError:
                   'hybrid_dataset=False', 'subdataset_bound=100',
                   'features_type="waveform"', 'dyn_variational_bound=500']
 
-    SAVE_MODEL = '../models/due'
-    results_path = '../results/due'
+    SAVE_MODEL = '../models/tre'
+    results_path = '../results/tre'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
