@@ -45,7 +45,7 @@ except IndexError:
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
                   'hybrid_dataset=False', 'subdataset_bound=100',
-                  'features_type="waveform"', 'dyn_variational_bound=500']
+                  'features_type="waveform"', 'dyn_variational_bound=1000']
 
     SAVE_MODEL = '../models/tre'
     results_path = '../results/tre'
@@ -421,7 +421,7 @@ def main():
         if epoch >= dyn_variational_bound:
             dyn_variational = True
 
-        warm_value_reparametrize = warm_up_reparametrize[epoch]
+        warm_value_reparametrize = warm_ramp_reparametrize[epoch]
 
         if use_complete_net:
             model.train()
