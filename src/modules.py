@@ -12,11 +12,11 @@ from scipy.fftpack import fft
 from threading import Thread
 import sounddevice as sd
 from multiprocessing import Process
+import define_models as choose_model
 import time
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import utility_functions as uf
-import losses
 import configparser
 import loadconfig
 
@@ -250,8 +250,37 @@ class LatentOperators:
         scaled2 = torch.mul(x2, ramp2)
         return torch.add(scaled1, scaled2)
 
-class VAE:
-    def __init__(self, architecture, weights_path, time_dim, features_dim, parameters):
-        model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
+class VAE_model:
+    def __init__(self, architecture, weights_path, parameters, device):
+        model_string = 'model_class, model_parameters = choose_model.' + architecture + '(1, 1, parameters)'
         exec(model_string)
-        model = locals()['model_class'].to(device)
+        self.device = torch.device(device)
+        weights = torch.load(weights_path,map_location=self.device)
+        self.model = locals()['model_class'].to(self.device)
+        self.model.load_state_dict(weights, strict=False)
+        self.dim = 16384
+
+    def encode_ext(self, x):
+        x = torch.tensor(x).float().reshape(1,1,self.dim)
+        mu, logvar = self.model.enc_func(x)
+        return mu
+
+    def decode_ext(self, z):
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        return x
+
+    def gen_random(self):
+        z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        return x
+
+    def gen_random_peak(self):
+        z = np.zeros(self.model.latent_dim)
+        pos = np.random.randind(self.model.latent_dim)
+        peak = np.random.randind(self.model.latent_dim) / float(self.model.latent_dim)
+        z[pos] = peak
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        return x

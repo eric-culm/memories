@@ -3,6 +3,7 @@ from pythonosc import dispatcher
 from pythonosc import osc_server
 from modules import *
 import numpy as np
+import sys
 import time
 import sounddevice as sd
 import configparser
@@ -17,11 +18,29 @@ TOTAL_IN_CHANNELS = cfg.getint('main', 'total_in_channels')
 MEMORY_BAG = cfg.get('main', 'memory_bag')
 SERVER_IP = cfg.get('osc', 'server_ip')
 S2C_PORT = cfg.getint('osc', 's2c_port')
+MODEL_WEIGHTS_PATH = cfg.get('main', 'model_weights_path')
 
 #create modules instances
 memory_bag = np.load(MEMORY_BAG)
 content_filter = FilterSound(memory_bag=memory_bag, threshold=0.0, random_prob=0.0, env_length=200)
 dummy_model = DummyModel(dur=16384, latent_dim=100)
+
+model_parameters = ['verbose=False', 'model_size=64', 'variational=True',
+                    'latent_dim=100',]
+
+VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
+                parameters=model_parameters, device='cpu')
+
+a = np.random.rand(16384)
+VAE.encode_ext(a)
+
+rand = np.zeros(100)
+rand[45] = 1.
+x = VAE.decode_ext(rand)
+uf.wavwrite(x, 16000, '../../kulo.wav')
+print (x.shape)
+
+sys.exit(0)
 
 
 ins = {
