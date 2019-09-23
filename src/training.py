@@ -114,10 +114,10 @@ save_items_n = cfg.getint('training_defaults', 'save_items_n')
 warm_up_after_convergence = eval(cfg.get('training_defaults', 'warm_up_after_convergence'))
 warm_up_kld = eval(cfg.get('training_defaults', 'warm_up_kld'))
 warm_up_reparametrize = eval(cfg.get('training_defaults', 'warm_up_reparametrize'))
-kld_ramp_delay = cfg.geting('training_defaults', 'kld_ramp_delay')
-kld_ramp_epochs = cfg.geting('training_defaults', 'kld_ramp_epochs')
-reparametrize_ramp_delay = cfg.geting('training_defaults', 'reparametrize_ramp_delay')
-reparametrize_ramp_epochs = cfg.geting('training_defaults', 'reparametrize_ramp_epochs')
+kld_ramp_delay = cfg.getint('training_defaults', 'kld_ramp_delay')
+kld_ramp_epochs = cfg.getint('training_defaults', 'kld_ramp_epochs')
+reparametrize_ramp_delay = cfg.getint('training_defaults', 'reparametrize_ramp_delay')
+reparametrize_ramp_epochs = cfg.getint('training_defaults', 'reparametrize_ramp_epochs')
 
 percs = [train_split, validation_split, test_split]
 
