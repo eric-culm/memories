@@ -301,12 +301,12 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
-        '''
+
         if not convergence_flag:
             SAVE_MODEL_final_path = SAVE_MODEL + 'before_convergence'
         else:
             SAVE_MODEL_final_path = SAVE_MODEL + 'after_convergence'
-        '''
+        
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
             #from curent epoch
