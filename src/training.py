@@ -34,17 +34,12 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    generator = True
     dataset = 'sc09_reduced'
     mnist_test = True
     architecture = 'WAVE_CNN_complete_net'
-    encoder_architecture = 'simple_encoder_spectrum'
-    decoder_architecture = 'simple_decoder_spectrum'
-    reparametrize_architecture = 'reparametrize'
-    use_complete_net = True
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'hybrid_dataset=False', 'subdataset_bound=100',
+                  'subdataset_bound=100',
                   'features_type="waveform"', 'dyn_variational_bound=1000']
 
     SAVE_MODEL = '../models/tre'
@@ -104,8 +99,11 @@ num_epochs = cfg.getint('training_defaults', 'num_epochs')
 learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
 regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
 optimizer = cfg.get('training_defaults', 'optimizer')
+recompute_matrices = eval(cfg.get('training_defaults', 'recompute_matrices'))
 
 save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
+save_model_xepochs = eval(cef.get('training_defaults', 'save_model_xepochs'))
+save_model_nepochs = eval(cef.get('training_defaults', 'save_model_nepochs'))
 save_model_freq = eval(cfg.get('training_defaults', 'save_model_freq'))
 save_model_epochs = cfg.getint('training_defaults', 'save_model_epochs')
 save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
@@ -113,7 +111,7 @@ save_figs = eval(cfg.get('training_defaults', 'save_figs'))
 save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
 save_items_n = cfg.getint('training_defaults', 'save_items_n')
 
-
+warm_up_after_convergence = eval(cfg.get('training_defaults', 'warm_up_after_convergence'))
 warm_up_kld = eval(cfg.get('training_defaults', 'warm_up_kld'))
 warm_up_reparametrize = eval(cfg.get('training_defaults', 'warm_up_reparametrize'))
 kld_ramp_delay = cfg.geting('training_defaults', 'kld_ramp_delay')
@@ -121,13 +119,7 @@ kld_ramp_epochs = cfg.geting('training_defaults', 'kld_ramp_epochs')
 reparametrize_ramp_delay = cfg.geting('training_defaults', 'reparametrize_ramp_delay')
 reparametrize_ramp_epochs = cfg.geting('training_defaults', 'reparametrize_ramp_epochs')
 
-
-
 percs = [train_split, validation_split, test_split]
-
-#path for saving best val loss and best val acc models
-BVL_model_path = SAVE_MODEL
-recompute_matrices = False
 
 #OVERWRITE DEFAULT PARAMETERS IF IN XVAL MODE
 try:
@@ -143,18 +135,8 @@ DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
 SR = cfg.getint('sampling', 'sr_target')
 predictors_name = dataset + '_predictors.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
-if hybrid_dataset:
-    target_name = dataset + '_target.npy'
-    TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
-
-
-
 
 device = torch.device('cuda:' + str(gpu_ID))
-#device = torch.device('cuda:0')
-
-
-#ADD HERE DIFFERENT OPTIMIZERS!!!!!!!
 
 #build dict with all UPDATED training parameters
 training_parameters = {'train_split': train_split,
@@ -173,7 +155,9 @@ training_parameters = {'train_split': train_split,
     'kld_ramp_epochs': kld_ramp_epochs,
     'reparametrize_ramp_delay': reparametrize_ramp_delay,
     'reparametrize_ramp_epochs': reparametrize_ramp_epochs,
-    'save_model_freq': save_model_freq
+    'save_model_freq': save_model_freq,
+    'warm_up_after_convergence': warm_up_after_convergence,
+    'recompute_matrices': recompute_matrices
     }
 
 
@@ -198,26 +182,6 @@ def main():
                 percs=percs, train_path=train_pred_path, val_path=val_pred_path,
                 test_path=test_pred_path, recompute_matrices=recompute_matrices)
 
-    if hybrid_dataset:
-        #load features as predictors and waveform as target
-        train_target_path = dataset + '_training_target_fold_' + str(num_fold) + '.npy'
-        train_target_path = os.path.join(folds_dataset_path, train_target_path)
-        val_target_path = dataset + '_validation_target_fold_' + str(num_fold) + '.npy'
-        val_target_path = os.path.join(folds_dataset_path, val_target_path)
-        test_target_path = dataset + '_test_target_fold_' + str(num_fold) + '.npy'
-        test_target_path = os.path.join(folds_dataset_path, test_target_path)
-
-        training_target, validation_target, test_target = uf.get_dataset_matrices(
-                    data_path=TARGET_LOAD, num_folds=num_folds, num_fold=num_fold,
-                    percs=percs, train_path=train_target_path, val_path=val_target_path,
-                    test_path=test_target_path, recompute_matrices=recompute_matrices)
-    else:
-        #load waveform for both
-        training_target = training_predictors
-        validation_target = validation_predictors
-        test_target = test_predictors
-
-
     #select a subdataset for testing (to be commented when normally trained)
     if subdataset_bound != 'all':
         training_predictors = training_predictors[:subdataset_bound]
@@ -230,67 +194,25 @@ def main():
     print ('Training predictors shape: ' + str(training_predictors.shape))
     print ('Training target shape: ' + str(training_target.shape))
 
-
-    #normalize to 0 mean and unity std (according to training set mean and std)
-    '''
-    tr_mean = np.mean(training_predictors)
-    tr_std = np.std(training_predictors)
-    training_predictors = np.subtract(training_predictors, tr_mean)
-    training_predictors = np.divide(training_predictors, tr_std)
-    validation_predictors = np.subtract(validation_predictors, tr_mean)
-    validation_predictors = np.divide(validation_predictors, tr_std)
-    test_predictors = np.subtract(test_predictors, tr_mean)
-    test_predictors = np.divide(test_predictors, tr_std)
-    '''
-
     #normalize to 0-1
-
     tr_max = np.max(training_predictors)
     training_predictors = np.divide(training_predictors, tr_max)
     validation_predictors = np.divide(validation_predictors, tr_max)
     test_predictors = np.divide(test_predictors, tr_max)
 
-
-    #sys.exit(0)
-    '''
-    tr_pred = []
-    for i in range(100):
-        tr_pred.append(training_predictors[0])
-        tr_pred.append(training_predictors[1])
-
-    tr_pred = np.array(tr_pred)
-    training_predictors = tr_pred
-    validation_predictors = training_predictors
-    test_predictors = test_predictors
-    '''
-
     #reshape tensors
-    #INSERT HERE FUNCTION FOR CUSTOM RESHAPING!!!!!
-
-    #reshape
-    if hybrid_dataset:
+    if features_type == 'waveform':
+        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
+        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
+        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
+    elif features_type =='spectrum':
         training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
         validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
         test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
 
-    else:
-        if features_type == 'waveform':
-            training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
-            validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
-            test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
-        elif features_type =='spectrum':
-            training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
-            validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
-            test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
-
-    if features_type == 'waveform':
-        training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1])
-        validation_target = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1])
-        test_target = test_target.reshape(test_target.shape[0], 1, test_target.shape[1])
-    elif features_type =='spectrum':
-        training_target = training_target.reshape(training_target.shape[0], 1, training_target.shape[1],training_target.shape[2])
-        validation_target = validation_target.reshape(validation_target.shape[0], 1, validation_target.shape[1], validation_target.shape[2])
-        test_target = test_target.reshape(test_target.shape[0], 1, test_target.shape[1], test_target.shape[2])
+    training_target = training_predictors
+    validation_target = validation_predictors
+    test_target = test_predictors
 
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float()
@@ -313,42 +235,15 @@ def main():
     #DNN input shape
     time_dim = training_predictors.shape[-2]
     features_dim = training_predictors.shape[-1]
-    '''
-    if mnist_test:
-        #load MNIST
-        tr_data = utils.DataLoader(
-            datasets.MNIST('../data', train=True, download=True,transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True)
-        val_data = utils.DataLoader(
-            datasets.MNIST('../data', train=False, transform=transforms.ToTensor()),
-            batch_size=batch_size, shuffle=True)
-        test_data = val_data
-    '''
-
-
 
     #load model (model is in locals()['model'])
     print('\n loading models...')
 
-    if use_complete_net:
-        model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
-        exec(model_string)
-        model = locals()['model_class'].to(device)
-    else:
-        encoder_string = 'encoder_class, encoder_parameters = choose_model.' + encoder_architecture + '(time_dim, features_dim, parameters)'
-        decoder_string = 'decoder_class, decoder_parameters = choose_model.' + decoder_architecture + '(time_dim, features_dim, parameters)'
-        reparametrize_string = 'reparametrize_class = choose_model.' + reparametrize_architecture + '(time_dim, features_dim, parameters)'
+    model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
+    exec(model_string)
+    model = locals()['model_class'].to(device)
 
-        exec(encoder_string)
-        exec(decoder_string)
-        exec(reparametrize_string)
-
-        encoder = locals()['encoder_class'].to(device)
-        decoder = locals()['decoder_class'].to(device)
-        reparametrize = locals()['reparametrize_class'].to(device)
-
-
-    #run training
+    #create results folders
     if not os.path.exists(results_path):
         os.makedirs(results_path)
     model_folder = os.path.dirname(SAVE_MODEL)
@@ -362,43 +257,19 @@ def main():
     if not os.path.exists(gen_figs_path):
         os.makedirs(gen_figs_path)
 
-
-
     #compute number of parameters
     print ('')
-    if use_complete_net:
-        model_params = sum([np.prod(p.size()) for p in model.parameters()])
-        print ('Total paramters: ' + str(model_params))
-        optimizer_joint = optim.Adam(model.parameters(), lr=learning_rate,
-                               weight_decay=regularization_lambda)
-    else:
-        encoder_params = sum([np.prod(p.size()) for p in encoder.parameters()])
-        decoder_params = sum([np.prod(p.size()) for p in decoder.parameters()])
-        reparametrize_params = sum([np.prod(p.size()) for p in reparametrize.parameters()])
-        print ('Encoder paramters: ' + str(encoder_params))
-        print ('Decoder paramters: ' + str(decoder_params))
-        print ('Reparametrize paramters: ' + str(reparametrize_params))
-        print ('Total paramters: ' + str(encoder_params+decoder_params+reparametrize_params))
-
-        #define optimizers
-        joint_parameters = list(encoder.parameters()) + list(decoder.parameters())+ list(reparametrize.parameters())
-        '''
-        optimizer_encoder = optim.Adam(encoder.parameters(), lr=learning_rate,
-                               weight_decay=regularization_lambda)
-        optimizer_decoder = optim.Adam(decoder.parameters(), lr=learning_rate,
-                               weight_decay=regularization_lambda)
-        '''
-
-
-        optimizer_joint = optim.Adam(joint_parameters, lr=learning_rate,
-                               weight_decay=regularization_lambda)
-
+    model_params = sum([np.prod(p.size()) for p in model.parameters()])
+    print ('Total paramters: ' + str(model_params))
+    optimizer_joint = optim.Adam(model.parameters(), lr=learning_rate,
+                           weight_decay=regularization_lambda)
 
     #create warm up ramps
-    warm_ramp_kld = training_utils.warm_up(num_epochs, kld_ramp_delay, kld_ramp_epochs)
-    warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
+    if not warm_up_after_convergence:
+        warm_ramp_kld = training_utils.warm_up(num_epochs, kld_ramp_delay, kld_ramp_epochs)
+        warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
 
-
+    #init utility lists
     total_step = len(tr_data)
     loss_list = []
     train_joint_hist = []
@@ -409,40 +280,41 @@ def main():
     val_recon_hist = []
     patience_vec = []
 
-    #TRAINING LOOP
-    #iterate epochs
-    gradual_add_data = False
-    initial_bag = 10
-    n_sounds_add = 1
-    add_threshold = 0.25
-    save_best_only = False
-
+    #init variables for dynamic warm up
+    convergence_threshold = 0.1
     dyn_variational = False
-
+    convergence_flag = False
     if gradual_add_data:
         break_point = initial_bag
     else:
         break_point = subdataset_bound
 
+    #TRAINING LOOP
+    #iterate epochs
     for epoch in range(num_epochs):
-
+        #open variational gate after x epochs
         if epoch >= dyn_variational_bound:
             dyn_variational = True
 
-        warm_value_kld = warm_ramp_kld[epoch]
-        warm_value_reparametrize = warm_ramp_reparametrize[epoch]
+        if warm_up_after_convergence:
+            #if it is not still converged, create ramps starting
+            #from curent epoch
+            if not convergence_flag:
+                warm_ramp_kld = training_utils.warm_up_kld(num_epochs, kld_ramp_delay, kld_ramp_epochs)
+                warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
+                warm_value_kld = 0.
+                warm_value_reparametrize = 0.
+            #if it converged, keep ramp of last epoch
+            else:
+                warm_value_kld = warm_ramp_kld[epoch]
+                warm_value_reparametrize = warm_ramp_reparametrize[epoch]
 
-        if use_complete_net:
-            model.train()
-        else:
-            encoder.train()
-            decoder.train()
-            reparametrize.train()
 
         print ('\n')
         string = 'Epoch: [' + str(epoch+1) + '/' + str(num_epochs) + '] '
         #iterate batches
 
+        model.train()
         for i, (sounds, truth) in enumerate(tr_data):
             if i <= break_point:
                 sounds = sounds.to(device)
@@ -451,20 +323,12 @@ def main():
                 #optimizer_decoder.zero_grad()
                 optimizer_joint.zero_grad()
 
-                if use_complete_net:
-                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
-                else:
-                    mu, logvar = encoder(sounds)
-                    z = reparametrize(mu, logvar)
-                    outputs = decoder(z)
-
+                outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                 loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs)
-                #loss_encoder.backward(retain_graph=True)
                 loss_r = training_utils.loss_recon(outputs, truth, features_type)
-                #loss_decoder.backward(retain_graph=True)
-
                 loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type)
+
                 loss_j.backward(retain_graph=True)
 
                 #print progress and update history, optimizer step
@@ -479,10 +343,6 @@ def main():
                 print ('\r', string_progress, end='')
 
                 optimizer_joint.step()
-                #optimizer_encoder.step()
-                #optimizer_decoder.step()
-                #end of batch loop
-
 
         #validation loss, training and val accuracy computation
         #after current epoch training
@@ -493,27 +353,16 @@ def main():
         train_batch_losses_j = []
         val_batch_losses_j = []
 
+        model.eval()
         with torch.no_grad():
-            if use_complete_net:
-                model.eval()
-            else:
-                encoder.eval()
-                decoder.eval()
-                reparametrize.eval()
-
-            #compute training accuracy and loss
+            #compute training losses
             for i, (sounds, truth) in enumerate(tr_data):
                 if i <= break_point:
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
                     truth = truth.to(device)
 
-                    if use_complete_net:
-                        outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
-                    else:
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
+                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
                     loss_r = training_utils.loss_recon(outputs, truth, features_type)
@@ -523,19 +372,14 @@ def main():
                     train_batch_losses_r.append(loss_r.item())
                     train_batch_losses_j.append(loss_j.item())
 
-            #compute validation accuracy and loss
+            #compute validation losses
             for i, (sounds, truth) in enumerate(val_data):
                 if i <= break_point:
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
                     truth = truth.to(device)
 
-                    if use_complete_net:
-                        outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
-                    else:
-                        mu, logvar = encoder(sounds)
-                        z = reparametrize(mu, logvar)
-                        outputs = decoder(z)
+                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
                     loss_r = training_utils.loss_recon(outputs, truth, features_type)
@@ -545,7 +389,7 @@ def main():
                     val_batch_losses_r.append(loss_r.item())
                     val_batch_losses_j.append(loss_j.item())
 
-
+            #average batch losses
             train_epoch_kld = np.mean(train_batch_losses_k)
             train_epoch_recon = np.mean(train_batch_losses_r)
             train_epoch_joint = np.mean(train_batch_losses_j)
@@ -553,6 +397,7 @@ def main():
             val_epoch_recon = np.mean(val_batch_losses_r)
             val_epoch_joint = np.mean(val_batch_losses_j)
 
+            #append losses to history
             train_joint_hist.append(train_epoch_joint)
             train_kld_hist.append(train_epoch_kld)
             train_recon_hist.append(train_epoch_recon)
@@ -576,6 +421,7 @@ def main():
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type,
                     'test', dyn_variational, warm_value_reparametrize)
 
+            #save best model
             if save_best_only == True:
                 if epoch == 0:
                     torch.save(model.state_dict(), SAVE_MODEL)
@@ -589,13 +435,24 @@ def main():
                         print ('saved')  #SUBSTITUTE WITH SAVE MODEL FUNC
                         saved_epoch = epoch + 1
 
+            #save model every x epochs
+            if save_model_xepochs == True:
+                if epoch % save_model_nepochs == 0:
+                    torch.save(model.state_dict(), SAVE_MODEL)
+
+
             #update the break point if training loss is better than
             #add_THRESHOLD
-            if gradual_add_data:
-                last_losses = train_recon_hist[-5:]
-                last_mean = np.mean(last_losses)
-                if last_mean <= add_threshold:
+            #compute mean of last 10 losses
+            last_losses = train_recon_hist[-10:]
+            last_mean = np.mean(last_losses)
+
+            if last_mean <= convergence_threshold:
+                convergence_flag = True
+                if gradually_add_data:
                     break_point += n_sounds_add
+            print ('')
+            print('convergence_flag: '+str(convergence_flag))
 
             #end of epoch loop
         '''
