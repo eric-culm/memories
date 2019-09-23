@@ -100,6 +100,7 @@ learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
 regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
 optimizer = cfg.get('training_defaults', 'optimizer')
 recompute_matrices = eval(cfg.get('training_defaults', 'recompute_matrices'))
+convergence_threshold = cfg.getfloat('training_defaults', 'convergence_threshold')
 
 save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
 save_model_xepochs = eval(cfg.get('training_defaults', 'save_model_xepochs'))
@@ -157,7 +158,8 @@ training_parameters = {'train_split': train_split,
     'reparametrize_ramp_epochs': reparametrize_ramp_epochs,
     'save_model_freq': save_model_freq,
     'warm_up_after_convergence': warm_up_after_convergence,
-    'recompute_matrices': recompute_matrices
+    'recompute_matrices': recompute_matrices,
+    'convergence_threshold': convergence_threshold
     }
 
 
@@ -290,9 +292,6 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
-        #open variational gate after x epochs
-        if epoch >= dyn_variational_bound:
-            dyn_variational = True
 
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
@@ -304,6 +303,7 @@ def main():
                 warm_value_reparametrize = 0.
             #if it converged, keep ramp of last epoch
             else:
+                dyn_variational = True
                 warm_value_kld = warm_ramp_kld[epoch]
                 warm_value_reparametrize = warm_ramp_reparametrize[epoch]
 
@@ -316,8 +316,6 @@ def main():
         for i, (sounds, truth) in enumerate(tr_data):
                 sounds = sounds.to(device)
                 truth = truth.to(device)
-                #optimizer_encoder.zero_grad()
-                #optimizer_decoder.zero_grad()
                 optimizer_joint.zero_grad()
 
                 outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
@@ -433,6 +431,7 @@ def main():
             if save_model_xepochs == True:
                 if epoch % save_model_nepochs == 0:
                     torch.save(model.state_dict(), SAVE_MODEL)
+                    print ('\nModel saved')
 
 
             #update the break point if training loss is better than
@@ -444,8 +443,8 @@ def main():
             if last_mean <= convergence_threshold:
                 convergence_flag = True
 
-            print ('')
-            print('convergence_flag: '+str(convergence_flag))
+            print('variational active: ' + str(convergence_flag) + '| loss worm: ' +
+                str(warm_value_kld) + '| noise worm: ' + str(warm_value_reparametrize))
 
             #end of epoch loop
         '''
