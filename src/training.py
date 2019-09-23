@@ -26,7 +26,7 @@ try:
         print ('dataset: ' + dataset)
         print ('')
         print ('saving results at: ' + results_path)
-        print('saving model at: ' + SAVE_MODEL + '.hdf5')
+        print('saving model at: ' + SAVE_MODEL)
         print ('')
 
 except IndexError:
@@ -301,11 +301,12 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
+        '''
         if not convergence_flag:
             SAVE_MODEL = SAVE_MODEL + 'before_convergence'
         else:
             SAVE_MODEL = SAVE_MODEL + 'after_convergence'
-
+        '''
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
             #from curent epoch
