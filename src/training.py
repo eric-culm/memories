@@ -38,7 +38,7 @@ except IndexError:
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound="all"',
+                  'subdataset_bound=100',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/alldata'
@@ -100,6 +100,9 @@ regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda
 optimizer = cfg.get('training_defaults', 'optimizer')
 recompute_matrices = eval(cfg.get('training_defaults', 'recompute_matrices'))
 convergence_threshold = cfg.getfloat('training_defaults', 'convergence_threshold')
+load_pretrained = eval(cfg.get('training_defaults', 'load_pretrained'))
+pretrained_path = cfg.get('training_defaults', 'pretrained_path')
+
 
 save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
 save_model_xepochs = eval(cfg.get('training_defaults', 'save_model_xepochs'))
@@ -158,7 +161,9 @@ training_parameters = {'train_split': train_split,
     'save_model_freq': save_model_freq,
     'warm_up_after_convergence': warm_up_after_convergence,
     'recompute_matrices': recompute_matrices,
-    'convergence_threshold': convergence_threshold
+    'convergence_threshold': convergence_threshold,
+    'load_pretrained': load_pretrained,
+    'pretrained_path': pretrained_path
     }
 
 
@@ -245,6 +250,10 @@ def main():
     exec(model_string)
     model = locals()['model_class'].to(device)
 
+    #load pretrained if specified
+    if load_pretrained:
+        model.load_state_dict(torch.load(pretrained_path), strict=False)
+
     #create results folders
     if not os.path.exists(results_path):
         os.makedirs(results_path)
@@ -290,6 +299,10 @@ def main():
     #TRAINING LOOP
     #iterate epochs
     for epoch in range(num_epochs):
+        if not convergence_flag:
+            SAVE_MODEL = SAVE_MODEL + 'before_convergence'
+        else:
+            SAVE_MODEL = SAVE_MODEL + 'after_convergence'
 
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
