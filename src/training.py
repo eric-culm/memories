@@ -272,6 +272,8 @@ def main():
     print ('')
     model_params = sum([np.prod(p.size()) for p in model.parameters()])
     print ('Total paramters: ' + str(model_params))
+
+    #define optimizer
     optimizer_joint = optim.Adam(model.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
 
