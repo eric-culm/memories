@@ -299,7 +299,7 @@ def main():
     convergence_flag = False
 
     training_dict = {'train_joint_loss': [],
-                     'train_recon_loss:': [],
+                     'train_recon_loss': [],
                      'train_kld_loss': [],
                      'val_joint_loss': [],
                      'val_recon_loss:': [],
