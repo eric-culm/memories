@@ -182,17 +182,6 @@ def main():
                 percs=percs, train_path=train_pred_path, val_path=val_pred_path,
                 test_path=test_pred_path, recompute_matrices=recompute_matrices)
 
-    #select a subdataset for testing (to be commented when normally trained)
-    if subdataset_bound != 'all':
-        training_predictors = training_predictors[:subdataset_bound]
-        validation_predictors = validation_predictors[:subdataset_bound]
-        test_predictors = test_predictors[:subdataset_bound]
-        training_target = training_target[:subdataset_bound]
-        validation_target = validation_target[:subdataset_bound]
-        test_target = test_target[:subdataset_bound]
-
-    print ('Training predictors shape: ' + str(training_predictors.shape))
-    print ('Training target shape: ' + str(training_target.shape))
 
     #normalize to 0-1
     tr_max = np.max(training_predictors)
@@ -213,6 +202,18 @@ def main():
     training_target = training_predictors
     validation_target = validation_predictors
     test_target = test_predictors
+
+    #select a subdataset for testing (to be commented when normally trained)
+    if subdataset_bound != 'all':
+        training_predictors = training_predictors[:subdataset_bound]
+        validation_predictors = validation_predictors[:subdataset_bound]
+        test_predictors = test_predictors[:subdataset_bound]
+        training_target = training_target[:subdataset_bound]
+        validation_target = validation_target[:subdataset_bound]
+        test_target = test_target[:subdataset_bound]
+
+    print ('Training predictors shape: ' + str(training_predictors.shape))
+    print ('Training target shape: ' + str(training_target.shape))
 
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float()
