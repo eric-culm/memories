@@ -38,7 +38,7 @@ except IndexError:
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=100',
+                  'subdataset_bound="all"',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/alldata'
@@ -303,9 +303,9 @@ def main():
     for epoch in range(num_epochs):
         '''
         if not convergence_flag:
-            SAVE_MODEL = SAVE_MODEL + 'before_convergence'
+            SAVE_MODEL_final_path = SAVE_MODEL + 'before_convergence'
         else:
-            SAVE_MODEL = SAVE_MODEL + 'after_convergence'
+            SAVE_MODEL_final_path = SAVE_MODEL + 'after_convergence'
         '''
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
@@ -430,21 +430,21 @@ def main():
             #save best model
             if save_best_only == True:
                 if epoch == 0:
-                    torch.save(model.state_dict(), SAVE_MODEL)
+                    torch.save(model.state_dict(), SAVE_MODEL_final_path)
                     print ('saved')
                     saved_epoch = epoch + 1
                 else:
                     best_loss = min(train_joint_hist[:-1])  #not looking at curr_loss
                     curr_loss = train_joint_hist[-1]
                     if curr_loss < best_loss:
-                        torch.save(model.state_dict(), SAVE_MODEL)
+                        torch.save(model.state_dict(), SAVE_MODEL_final_path)
                         print ('saved')  #SUBSTITUTE WITH SAVE MODEL FUNC
                         saved_epoch = epoch + 1
 
             #save model every x epochs
             if save_model_xepochs == True:
                 if epoch % save_model_nepochs == 0:
-                    torch.save(model.state_dict(), SAVE_MODEL)
+                    torch.save(model.state_dict(), SAVE_MODEL_final_path)
                     print ('\nModel saved')
 
 
