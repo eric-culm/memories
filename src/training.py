@@ -303,10 +303,10 @@ def main():
     for epoch in range(num_epochs):
 
         if not convergence_flag:
-            SAVE_MODEL_final_path = SAVE_MODEL + 'before_convergence'
+            SAVE_MODEL_final_path = SAVE_MODEL + '_before_convergence'
         else:
-            SAVE_MODEL_final_path = SAVE_MODEL + 'after_convergence'
-        
+            SAVE_MODEL_final_path = SAVE_MODEL + '_after_convergence'
+
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
             #from curent epoch
