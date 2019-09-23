@@ -232,7 +232,7 @@ def main():
     test_dataset = utils.TensorDataset(test_predictors, test_target)
 
     #build data loader from dataset
-    tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=False, pin_memory=True)
+    tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=shuffle_training_data, pin_memory=True)
     val_data = utils.DataLoader(val_dataset, batch_size, shuffle=False, pin_memory=True)
     test_data = utils.DataLoader(test_dataset, batch_size, shuffle=False, pin_memory=True)  #no batch here!!
     #DNN input shape
@@ -297,8 +297,8 @@ def main():
             #if it is not still converged, create ramps starting
             #from curent epoch
             if not convergence_flag:
-                warm_ramp_kld = training_utils.warm_up_kld(num_epochs, kld_ramp_delay, kld_ramp_epochs)
-                warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
+                warm_ramp_kld = training_utils.warm_up_kld(num_epochs, epoch, kld_ramp_epochs)
+                warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, epoch, reparametrize_ramp_epochs)
                 warm_value_kld = 0.
                 warm_value_reparametrize = 0.
             #if it converged, keep ramp of last epoch
@@ -443,8 +443,8 @@ def main():
             if last_mean <= convergence_threshold:
                 convergence_flag = True
 
-            print('variational active: ' + str(convergence_flag) + '| loss worm: ' +
-                str(warm_value_kld) + '| noise worm: ' + str(warm_value_reparametrize))
+            print(' variational active: ' + str(convergence_flag) + ' | loss worm: ' +
+                str(warm_value_kld) + ' | noise worm: ' + str(warm_value_reparametrize))
 
             #end of epoch loop
         '''
