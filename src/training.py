@@ -38,11 +38,12 @@ except IndexError:
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound="all"',
+                  'subdataset_bound=10',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/alldata'
     results_path = '../results/alldata'
+    training_dict_path = '../results/alldata_training_dict.npy'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
@@ -297,6 +298,16 @@ def main():
     dyn_variational = False
     convergence_flag = False
 
+    training_dict = {'train_joint_loss': [],
+                     'train_recon_loss:': [],
+                     'train_kld_loss': [],
+                     'val_joint_loss': [],
+                     'val_recon_loss:': [],
+                     'val_kld_loss': [],
+                     'variational_active': [],
+                     'loss_worm': [],
+                     'noise_worm': []
+                     }
 
     #TRAINING LOOP
     #iterate epochs
@@ -416,7 +427,6 @@ def main():
             print ('  train_KLD: ' + str(np.round(train_epoch_kld.item(), decimals=5)) + ' | val_KLD: ' + str(np.round(val_epoch_kld.item(), decimals=5)))
             print ('  train_recon :' + str(np.round(train_epoch_recon.item(), decimals=5)) + ' | val_recon: ' + str(np.round(val_epoch_recon.item(), decimals=5)))
 
-
             #save figures if specified
             #train_data
             uf.save_data(tr_data, model, device, epoch, gen_figs_path, gen_sounds_path,
@@ -460,64 +470,28 @@ def main():
             print('  variational active: ' + str(convergence_flag) + ' | loss worm: ' +
                 str(warm_value_kld) + ' | noise worm: ' + str(warm_value_reparametrize))
 
+
+            #save training stats dict
+            training_dict['train_joint_loss'].append(train_epoch_joint)
+            training_dict['train_kld_loss'].append(train_epoch_kld)
+            training_dict['train_recon_loss'].append(train_epoch_recon)
+            training_dict['val_joint_loss'].append(val_epoch_joint)
+            training_dict['val_kld_loss'].append(val_epoch_kld)
+            training_dict['val_recon_loss'].append(val_epoch_recon)
+            training_dict['loss_worm'].append(warm_value_kld)
+            if convergence_flag:
+                training_dict['variational_active'].append(1.)
+            else:
+                training_dict['variational_active'].append(0.)
+
+            if save_model_xepochs == True:
+                if epoch % save_model_nepochs == 0:
+                    np.save(training_dict_path, training_dict_path)
+
+
             #end of epoch loop
         '''
-        #compute train and val mean accuracy and loss of current epoch
-        train_epoch_loss_e = np.mean(train_batch_losses_e)
-        train_epoch_loss_d = np.mean(train_batch_losses_d)
-        val_epoch_loss_e = np.mean(val_batch_losses_e)
-        val_epoch_loss_d = np.mean(val_batch_losses_d)
 
-        #append values to histories
-        train_loss_hist_e.append(train_epoch_loss_e)
-        train_loss_hist_d.append(train_epoch_loss_d)
-        val_loss_hist_e.append(val_epoch_loss_e)
-        val_loss_hist_d.append(val_epoch_loss_d)
-
-        #print loss and accuracy of the current epoch
-        print ('\r', 'train_loss_encoder: ' + str(train_epoch_loss) + '| val_loss: ' + str(val_epoch_loss))
-
-        #save best model (metrics = loss)
-        if save_best_only == True:
-            if epoch == 0:
-                torch.save(model.state_dict(), BVL_model_path)
-                print ('saved_BVL')
-                saved_epoch = epoch + 1
-            else:
-                best_loss = min(val_loss_hist[:-1])  #not looking at curr_loss
-                curr_loss = val_loss_hist[-1]
-                if curr_loss < best_loss:
-                    torch.save(model.state_dict(), BVL_model_path)
-                    print ('saved_BVL')  #SUBSTITUTE WITH SAVE MODEL FUNC
-                    saved_epoch = epoch + 1
-
-        utilstring = 'dataset: ' + str(dataset) + ', exp: ' + str(num_experiment) + ', run: ' + str(num_run) + ', fold: ' + str(num_fold)
-        print (utilstring)
-
-
-        #early stopping
-        if early_stopping and epoch >= patience:
-            prev_loss = val_hist[-2]
-            curr_loss = val_hist[-1]
-            if curr_loss < prev_loss:
-                patience_vec = []
-            else:
-                patience_vec.append(curr_loss)
-                if len(patience_vec) == patience:
-                    print ('\n')
-                    print ('Training stopped with patience = ' + str(patience) + ', saved at epoch = ' + str(saved_epoch))
-                    break
-
-        #AS LAST THING, AFTER OPTIMIZER.STEP AND EVENTUAL MODEL SAVING
-        #AVERAGE MULTISCALE CONV KERNELS!!!!!!!!!!!!!!!!!!!!!!!!!
-        try:
-            model.multiscale1.update_kernels()
-            model.multiscale2.update_kernels()
-            model.multiscale3.update_kernels()
-        except:
-            pass
-
-        #END OF EPOCH
 
     #compute train, val and test accuracy LOADING the best saved model
     #best validation loss
