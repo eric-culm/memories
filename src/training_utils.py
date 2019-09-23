@@ -69,7 +69,7 @@ def warm_up_kld(tot_epochs, ramp_delay, ramp_epochs):
     return pad
 
 def warm_up_reparametrize(tot_epochs, ramp_delay, ramp_epochs):
-    pad = np.zeros(epochs)
+    pad = np.zeros(tot_epochs)
     start = ramp_delay
     end = ramp_delay + ramp_epochs
     ramp = np.arange(ramp_epochs) / ramp_epochs
