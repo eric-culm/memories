@@ -35,15 +35,14 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_reduced'
-    mnist_test = True
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
                   'subdataset_bound=100',
                   'features_type="waveform"', 'dyn_variational_bound=1000']
 
-    SAVE_MODEL = '../models/tre'
-    results_path = '../results/tre'
+    SAVE_MODEL = '../models/alldata'
+    results_path = '../results/alldata'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
@@ -284,7 +283,6 @@ def main():
     patience_vec = []
 
     #init variables for dynamic warm up
-    convergence_threshold = 0.1
     dyn_variational = False
     convergence_flag = False
 
@@ -443,7 +441,7 @@ def main():
             if last_mean <= convergence_threshold:
                 convergence_flag = True
 
-            print(' variational active: ' + str(convergence_flag) + ' | loss worm: ' +
+            print('  variational active: ' + str(convergence_flag) + ' | loss worm: ' +
                 str(warm_value_kld) + ' | noise worm: ' + str(warm_value_reparametrize))
 
             #end of epoch loop
