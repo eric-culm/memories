@@ -38,8 +38,8 @@ except IndexError:
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=100',
-                  'features_type="waveform"', 'dyn_variational_bound=1000']
+                  'subdataset_bound="all"',
+                  'features_type="waveform"']
 
     SAVE_MODEL = '../models/alldata'
     results_path = '../results/alldata'
