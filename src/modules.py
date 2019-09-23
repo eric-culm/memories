@@ -249,3 +249,9 @@ class LatentOperators:
         scaled1 = torch.mul(x1, ramp1)
         scaled2 = torch.mul(x2, ramp2)
         return torch.add(scaled1, scaled2)
+
+class VAE:
+    def __init__(self, architecture, weights_path, time_dim, features_dim, parameters):
+        model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
+        exec(model_string)
+        model = locals()['model_class'].to(device)
