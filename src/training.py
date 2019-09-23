@@ -285,10 +285,7 @@ def main():
     convergence_threshold = 0.1
     dyn_variational = False
     convergence_flag = False
-    if gradual_add_data:
-        break_point = initial_bag
-    else:
-        break_point = subdataset_bound
+
 
     #TRAINING LOOP
     #iterate epochs
@@ -317,7 +314,6 @@ def main():
 
         model.train()
         for i, (sounds, truth) in enumerate(tr_data):
-            if i <= break_point:
                 sounds = sounds.to(device)
                 truth = truth.to(device)
                 #optimizer_encoder.zero_grad()
@@ -358,7 +354,6 @@ def main():
         with torch.no_grad():
             #compute training losses
             for i, (sounds, truth) in enumerate(tr_data):
-                if i <= break_point:
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
                     truth = truth.to(device)
@@ -375,7 +370,6 @@ def main():
 
             #compute validation losses
             for i, (sounds, truth) in enumerate(val_data):
-                if i <= break_point:
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
                     truth = truth.to(device)
@@ -450,8 +444,7 @@ def main():
 
             if last_mean <= convergence_threshold:
                 convergence_flag = True
-                if gradually_add_data:
-                    break_point += n_sounds_add
+
             print ('')
             print('convergence_flag: '+str(convergence_flag))
 
