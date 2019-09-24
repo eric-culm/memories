@@ -66,7 +66,7 @@ def get_label_sc09(filename):
     return label
 
 
-def main(input_folder):
+def main():
     '''
     custom preprocessing routine for the iemocap dataset
     '''
