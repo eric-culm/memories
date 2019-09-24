@@ -100,8 +100,7 @@ def main():
             get_label_func = get_label_sc09
         curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
         #append preprocessed predictors and target to the dict
-        if not np.isnan(np.std(curr_predictors)):
-            print (np.std(curr_predictors))
+        if not np.isnan(np.std(curr_predictors)):  #cut empty sounds
             predictors[i] = curr_predictors
             target[i] = curr_target
 
