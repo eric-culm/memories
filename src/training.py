@@ -34,8 +34,8 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'nsynth'
-    exp_name = 'nsynth'
+    dataset = 'sc09_reduced'
+    exp_name = 'sc09_alldata_new'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
@@ -117,6 +117,8 @@ save_figs = eval(cfg.get('training_defaults', 'save_figs'))
 save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
 save_items_n = cfg.getint('training_defaults', 'save_items_n')
 
+kld_holes = eval(cfg.get('training_defaults', 'kld_holes'))
+kld_epochs_n = cfg.getint('training_defaults', 'kld_epochs_n')
 warm_up_after_convergence = eval(cfg.get('training_defaults', 'warm_up_after_convergence'))
 warm_up_kld = eval(cfg.get('training_defaults', 'warm_up_kld'))
 warm_up_reparametrize = eval(cfg.get('training_defaults', 'warm_up_reparametrize'))
@@ -166,7 +168,9 @@ training_parameters = {'train_split': train_split,
     'recompute_matrices': recompute_matrices,
     'convergence_threshold': convergence_threshold,
     'load_pretrained': load_pretrained,
-    'pretrained_path': pretrained_path
+    'pretrained_path': pretrained_path,
+    'kld_epochs_n': kld_epochs_n,
+    'kld_holes': kld_holes
     }
 
 
@@ -333,6 +337,18 @@ def main():
                 dyn_variational = True
                 warm_value_kld = warm_ramp_kld[epoch]
                 warm_value_reparametrize = warm_ramp_reparametrize[epoch]
+
+        else:
+            warm_value_kld = warm_ramp_kld[epoch]
+            warm_value_reparametrize = warm_ramp_reparametrize[epoch]
+
+        #if use kld loss every k epochs
+        if kld_holes:
+            if epoch % kld_epochs_n == 0:
+                warm_value_kld = warm_value_kld
+            else:
+                warm_value_kld = 0.
+
 
 
         print ('\n')
