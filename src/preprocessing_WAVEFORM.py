@@ -14,86 +14,139 @@ cfg.read(config)
 
 #get values from config file
 
-SR = cfg.getint('sampling', 'sr_target')
+
+#get values from config file
 DUR = cfg.getfloat('preprocessing', 'sequence_length')
-SEQUENCE_LENGTH = cfg.getfloat('preprocessing', 'sequence_length')
-SEQUENCE_OVERLAP = cfg.getfloat('preprocessing', 'sequence_overlap')
-#in
-#INPUT_RAVDESS_FOLDER =  cfg.get('preprocessing', 'input_audio_folder_ravdess')
+FEATURES_TYPE = cfg.get('feature_extraction', 'features_type')
+SR = cfg.getint('sampling', 'sr_target')
+AUGMENTATION = eval(cfg.get('feature_extraction', 'augmentation'))
+NUM_AUG_SAMPLES = eval(cfg.get('feature_extraction', 'num_aug_samples'))
+SEGMENTATION = eval(cfg.get('feature_extraction', 'segmentation'))
+OUTPUT_FOLDER = cfg.get('preprocessing', 'output_folder')
+if not os.path.exists(OUTPUT_FOLDER):
+    os.makedirs(OUTPUT_FOLDER)
+if AUGMENTATION:
+    print ('Augmentation: ' + str(AUGMENTATION) + ' | num_aug_samples: ' + str(NUM_AUG_SAMPLES) )
+else:
+    print ('Augmentation: ' + str(AUGMENTATION))
+
+print ('Segmentation: ' + str(SEGMENTATION))
+print ('Features type: ' + str(FEATURES_TYPE))
+
+
 
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
 FEATURES_TYPE = sys.argv[3]
-HYBRID = False
 
-#out
-OUTPUT_FOLDER = cfg.get('preprocessing', 'output_folder')
 
-SEGMENTATION = False
-print ('Segmentation: ' + str(SEGMENTATION))
 
-def prepare_sound(input_sound, features_type):
-    '''
-    generate predictors (stft) and target (valence sequence)
-    of one sound file from the OMG dataset
-    '''
-    raw_samples, sr = librosa.core.load(input_sound, sr=SR)  #read audio
-    #dur_samps = int(np.round(SR * DUR))
-    dur_samps = 16384
-    if SEGMENTATION:
-        # if segment cut initial and final silence if present
-        samples = uf.strip_silence(raw_samples)
+def get_label_sc09(filename):
 
-    else:
-        #if not, zero pad all sounds to the same length
-        samples = np.zeros(dur_samps)
-        samples[:len(raw_samples)] = raw_samples[:dur_samps]  #zero padding
-    #normalize
-    features = pre.extract_features(samples, features_type)
+    if 'Zero' in filename:
+        label = 0
+    elif 'One' in filename:
+        label = 1
+    elif 'Two' in filename:
+        label = 2
+    elif 'Three' in filename:
+        label = 3
+    elif 'Four' in filename:
+        label = 4
+    elif 'Five' in filename:
+        label = 5
+    elif 'Six' in filename:
+        label = 6
+    elif 'Seven' in filename:
+        label = 7
+    elif 'Eight' in filename:
+        label = 8
+    elif 'Nine' in filename:
+        label = 9
 
-    return features
-
-def segment_datapoint(vector_input):
-    '''
-    segment features and annotations of one long audio file
-    into smaller matrices of length "sequence_length"
-    and overlapped by "sequence_overlap"
-    '''
-    num_frames = len(vector_input)
-
-    step = (SEQUENCE_LENGTH*SR)*(SEQUENCE_OVERLAP*SR) #segmentation overlap step
-    pointer = np.arange(0, num_frames, step, dtype='int')  #initail positions of segments
-    predictors = []
-    #slice arrays and append datapoints to vectors
-    if SEGMENTATION:
-        for start in pointer:
-            stop = int(start + SEQUENCE_LENGTH)
-            #print start_annotation, stop_annotation, start_features, stop_features
-            if stop <= num_frames:
-                temp_predictors = vector_input[start:stop]
-
-                predictors.append(temp_predictors)
-            else:  #last datapoint has a different overlap
-                temp_predictors = vector_input[-int(SEQUENCE_LENGTH):]
-                predictors.append(temp_predictors)
-    else:
-        predictors.append(vector_input)
-    predictors = np.array(predictors)
-
-    return predictors
-
-def preprocess_datapoint(input_sound, features_type):
-
-    sound_file = os.path.join(INPUT_FOLDER , input_sound)  #get correspective sound
-    predictors = prepare_sound(sound_file, features_type)  #compute features
-    if SEGMENTATION:
-        predictors = segment_datapoint(long_predictors)   #slice feature maps
-    predictors = np.array(predictors)
-
-    return predictors
+    return label
 
 
 def main(input_folder):
+    '''
+    custom preprocessing routine for the iemocap dataset
+    '''
+    print ('')
+    print ('Setting up preprocessing...')
+    print('')
+    sounds_list = os.listdir(INPUT_FOLDER)  #get list of all soundfile paths
+    sounds_list = list(filter(lambda x: x[-3:] == "wav", sounds_list))  #get only wav
+    sounds_list = [os.path.join(INPUT_FOLDER, x) for x in sounds_list]  #append full path
+    num_files = len(sounds_list)
+    #init predictors and target dicts
+    predictors = {}
+    target = {}
+    #create output paths for the npy matrices
+    appendix = '_' + FEATURES_TYPE
+    if AUGMENTATION:
+        predictors_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_predictors.npy')
+        target_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_target.npy')
+    else:
+        predictors_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_predictors.npy')
+        target_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_target.npy')
+    index = 1  #index for progress bar
+    for i in sounds_list:
+        #print progress bar
+        uf.print_bar(index, num_files)
+        curr_list = [i]
+        #compute predictors and target
+        if DATASET_NAME == 'sc09':
+            get_label_func = get_label_sc09
+        if DATASET_NAME == 'nsynth':
+            get_label_func = get_label_sc09
+        curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
+        #append preprocessed predictors and target to the dict
+        predictors[i] = curr_predictors
+        target[i] = curr_target
+
+        index +=1
+
+    #save dicts
+    np.save(predictors_save_path, predictors)
+    np.save(target_save_path, target)
+    #print dimensions
+    count = 0
+    predictors_dims = 0
+    keys = list(predictors.keys())
+    for i in keys:
+        count += predictors[i].shape[0]
+    pred_shape = np.array(predictors[keys[0]]).shape[1:]
+    tg_shape = np.array(target[keys[0]]).shape[1:]
+    print ('')
+    print ('MATRICES SUCCESFULLY COMPUTED')
+    print ('')
+    print ('Total number of datapoints: ' + str(count))
+    print (' Predictors shape: ' + str(pred_shape))
+    print (' Target shape: ' + str(tg_shape))
+
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    '''
+
     contents = os.listdir(INPUT_FOLDER)
     contents = list(filter(lambda x: x[-3:] == "wav", contents))
     #contents = contents [:5]
@@ -121,6 +174,7 @@ def main(input_folder):
     np.save(predictors_save_path, predictors)
     if HYBRID:
         np.save(target_save_path, target)
+    '''
 
 if __name__ == '__main__':
     main(INPUT_FOLDER)
