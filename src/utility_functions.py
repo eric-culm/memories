@@ -89,10 +89,10 @@ def folds_generator(num_folds, foldable_list, percs):
     return fold_actors_list
 '''
 def build_matrix_dataset(merged_predictors, actors_list):
-    '''
-    load preprocessing dict and output numpy matrices of predictors and target
-    containing only samples defined in actors_list
-    '''
+    
+    #load preprocessing dict and output numpy matrices of predictors and target
+    #containing only samples defined in actors_list
+
     predictors = np.array([])
     target = np.array([])
     index = 0
