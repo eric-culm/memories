@@ -37,8 +37,7 @@ print ('Features type: ' + str(FEATURES_TYPE))
 
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
-FEATURES_TYPE = sys.argv[3]
-
+#FEATURES_TYPE = sys.argv[3]
 
 
 def get_label_sc09(filename):
@@ -84,8 +83,8 @@ def main(input_folder):
     #create output paths for the npy matrices
     appendix = '_' + FEATURES_TYPE
     if AUGMENTATION:
-        predictors_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_predictors.npy')
-        target_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_target.npy')
+        predictors_save_path = os.path.join(OUTPUT_FOLDER, DATASET_NAME + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_predictors.npy')
+        target_save_path = os.path.join(OUTPUT_FOLDER, DATASET_NAME + appendix + '_aug' + str(NUM_AUG_SAMPLES) + '_target.npy')
     else:
         predictors_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_predictors.npy')
         target_save_path = os.path.join(OUTPUT_FOLDER, 'iemocap' + appendix + '_target.npy')
