@@ -411,8 +411,10 @@ def plot_train_dict(dict_path):
     dict = dict.item()
     keys = list(dict.keys())
     keys = list(filter(lambda x: 'val' not in x, keys))
+    legend = []
     for key in keys:
         if 'joint' in key:
+            legend.append(key)
             plt.plot(dict[key])
-    plt.legend(keys)
+    plt.legend(legend)
     plt.show()
