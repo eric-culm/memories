@@ -89,7 +89,7 @@ def folds_generator(num_folds, foldable_list, percs):
     return fold_actors_list
 '''
 def build_matrix_dataset(merged_predictors, actors_list):
-    
+
     #load preprocessing dict and output numpy matrices of predictors and target
     #containing only samples defined in actors_list
 
@@ -137,7 +137,8 @@ def build_matrix_dataset(merged_predictors, merged_target, actors_list):
         else:
             if np.array(merged_predictors[i]).shape != (0,):  #if it not void due to preprocessing errors
                 expanded_predictors = np.expand_dims(merged_predictors[i], axis=0)
-                predictors = np.concatenate((predictors, np.array(expanded_predictors)), axis=0)                target = np.concatenate((target, np.array(merged_target[i],dtype='float32')), axis=0)
+                predictors = np.concatenate((predictors, np.array(expanded_predictors)), axis=0)
+                target = np.concatenate((target, np.array(merged_target[i],dtype='float32')), axis=0)
         index += 1
         perc = int(index / total * 20)
         perc_progress = int(np.round((float(index)/total) * 100))
