@@ -24,7 +24,7 @@ SEQUENCE_OVERLAP = cfg.getfloat('preprocessing', 'sequence_overlap')
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
 FEATURES_TYPE = sys.argv[3]
-HYBRID = sys.argv[4]
+HYBRID = False
 
 #out
 OUTPUT_FOLDER = cfg.get('preprocessing', 'output_folder')
@@ -38,6 +38,7 @@ def prepare_sound(input_sound, features_type):
     of one sound file from the OMG dataset
     '''
     raw_samples, sr = librosa.core.load(input_sound, sr=SR)  #read audio
+    print (sr)
     dur_samps = int(np.round(SR * DUR))
     if SEGMENTATION:
         # if segment cut initial and final silence if present
