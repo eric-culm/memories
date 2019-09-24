@@ -405,3 +405,13 @@ def magspect2audio(msgram, fftsize, hop_length)  :
 
 def logspect2audio(lsgram, fftsize, hop_length) :
     return spsi(np.power(10, lsgram/20), fftsize, hop_length)
+
+def plot_train_dict(dict_path):
+    dict = np.load(dict_path, allow_pickle=True)
+    dict = dict.item()
+    keys = list(dict.keys())
+    for key in keys:
+        if 'val' not in key:
+            plt.plot(key)
+    plt.legend(keys)
+    plt.show()

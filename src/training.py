@@ -486,7 +486,7 @@ def main():
 
             if save_model_xepochs == True:
                 if epoch % save_model_nepochs == 0:
-                    np.save(training_dict_path, training_dict_path)
+                    np.save(training_dict_path, training_dict)
 
 
             #end of epoch loop
