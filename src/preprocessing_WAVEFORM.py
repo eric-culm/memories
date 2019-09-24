@@ -16,7 +16,7 @@ cfg.read(config)
 
 
 #get values from config file
-DUR = cfg.getfloat('preprocessing', 'sequence_length')
+DUR = cfg.getint('main', 'dur')
 FEATURES_TYPE = cfg.get('feature_extraction', 'features_type')
 SR = cfg.getint('sampling', 'sr_target')
 AUGMENTATION = eval(cfg.get('feature_extraction', 'augmentation'))
