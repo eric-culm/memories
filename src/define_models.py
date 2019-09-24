@@ -728,7 +728,8 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
     'alpha': 0.2,
     'variational': True,
     'upsample': True,
-    'post_proc_filt_len': 512
+    'post_proc_filt_len': 512,
+    'drop_prob': 0.5
     }
     p = parse_parameters(p, user_parameters)
     flattened_dim = time_dim * features_dim
@@ -757,7 +758,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
         def __init__(self, model_size=p['model_size'], latent_dim=p['latent_dim'],
                         verbose=p['verbose'], num_channels=p['num_channels'], alpha=p['alpha'],
                         variational=p['variational'],upsample=p['upsample'],
-                        post_proc_filt_len=p['post_proc_filt_len']):
+                        post_proc_filt_len=p['post_proc_filt_len'], drop_prob=p['drop_prob']):
             super().__init__()
 
             #ENCODER
@@ -767,6 +768,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
             self.alpha = alpha
             self.verbose = verbose
             self.latent_dim = latent_dim
+            self.drop_prob = drop_prob
             # Conv2d(in_channels, out_channels, kernel_size, stride=1, etc.)
             self.conv1 = nn.Conv1d(num_channels, model_size, 25, stride=4, padding=11)
             self.conv2 = nn.Conv1d(model_size, 2 * model_size, 25, stride=4, padding=11)
@@ -928,7 +930,7 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
             x = self.encode(x)
             x = F.relu(self.fc1_e(x))
-            x = F.dropout2d(x, 0.5)
+            x = F.dropout2d(x, self.drop_prob)
 
             mu = F.sigmoid(self.mu(x))
             logvar = F.sigmoid(self.logvar(x))

@@ -41,9 +41,9 @@ except IndexError:
                   'subdataset_bound="all"',
                   'features_type="waveform"']
 
-    SAVE_MODEL = '../models/alldata'
-    results_path = '../results/alldata'
-    training_dict_path = '../results/alldata_training_dict.npy'
+    SAVE_MODEL = '../models/alldata_new'
+    results_path = '../results/alldata_new'
+    training_dict_path = '../results/alldata_new_training_dict.npy'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
