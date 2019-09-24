@@ -192,6 +192,14 @@ def main():
     test_pred_path = dataset + '_test_predictors_fold_' + str(num_fold) + '.npy'
     test_pred_path = os.path.join(folds_dataset_path, test_pred_path)
 
+    train_target_path = dataset + '_training_target_fold_' + str(num_fold) + '.npy'
+    train_target_path = os.path.join(folds_dataset_path, train_target_path)
+    val_target_path = dataset + '_validation_target_fold_' + str(num_fold) + '.npy'
+    val_target_path = os.path.join(folds_dataset_path, val_target_path)
+    test_target_path = dataset + '_test_target_fold_' + str(num_fold) + '.npy'
+    test_target_path = os.path.join(folds_dataset_path, test_target_path)
+
+
     '''
     training_predictors, validation_predictors, test_predictors = uf.get_dataset_matrices(
                 data_path=PREDICTORS_LOAD, num_folds=num_folds, num_fold=num_fold,
