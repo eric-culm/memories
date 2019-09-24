@@ -35,15 +35,17 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_reduced'
+    exp_name = 'nsynth'
+
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=0.5', 'warm_up=True', 'latent_dim=100',
                   'subdataset_bound="all"',
                   'features_type="waveform"']
 
-    SAVE_MODEL = '../models/alldata_new'
-    results_path = '../results/alldata_new'
-    training_dict_path = '../results/alldata_new_training_dict.npy'
+    SAVE_MODEL = '../models/' + exp_name
+    results_path = '../results/' + exp_name
+    training_dict_path = '../results/' + exp_name + '_training_dict.npy'
     parameters_path = results_path + '/parameters'
     SAVE_RESULTS = results_path
     num_fold = 0
