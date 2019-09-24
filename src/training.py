@@ -34,8 +34,8 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'nsynth'
-    exp_name = 'nsynth_new'
+    dataset = 'sc09'
+    exp_name = 'sc09NEWprova'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
@@ -142,7 +142,9 @@ for param in parameters:
 DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
 SR = cfg.getint('sampling', 'sr_target')
 predictors_name = dataset + '_predictors.npy'
+target_name = dataset + '_target.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
+TARGET_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
 
 device = torch.device('cuda:' + str(gpu_ID))
 
@@ -190,10 +192,87 @@ def main():
     test_pred_path = dataset + '_test_predictors_fold_' + str(num_fold) + '.npy'
     test_pred_path = os.path.join(folds_dataset_path, test_pred_path)
 
+    '''
     training_predictors, validation_predictors, test_predictors = uf.get_dataset_matrices(
                 data_path=PREDICTORS_LOAD, num_folds=num_folds, num_fold=num_fold,
                 percs=percs, train_path=train_pred_path, val_path=val_pred_path,
                 test_path=test_pred_path, recompute_matrices=recompute_matrices)
+    '''
+
+    #compute which actors put in train, val, test for current fold
+    dummy = np.load(TARGET_LOAD,allow_pickle=True)
+    dummy = dummy.item()
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
+    #TRAIN/VAL/TEST IN A BALANCED WAY
+    foldable_list = list(dummy.keys())
+    fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
+    train_list = fold_actors_list[int(num_fold)]['train']
+    val_list = fold_actors_list[int(num_fold)]['val']
+    test_list = fold_actors_list[int(num_fold)]['test']
+    del dummy
+
+    #if tensors of current fold has not been computed:
+    if recompute_matrices:
+        predictors_merged = np.load(PREDICTORS_LOAD,allow_pickle=True)
+        target_merged = np.load(TARGET_LOAD,allow_pickle=True)
+        predictors_merged = predictors_merged.item()
+        target_merged = target_merged.item()
+
+        print ('\n building dataset for current fold')
+        print ('\n training:')
+        training_predictors, training_target = uf.build_matrix_dataset(predictors_merged,
+                                                            target_merged, train_list)
+        print ('\n validation:')
+
+        validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged,
+                                                            target_merged, val_list)
+        print ('\n test:')
+        test_predictors, test_target = uf.build_matrix_dataset(predictors_merged,
+                                                            target_merged, test_list)
+
+        np.save(train_pred_path, training_predictors)
+        np.save(train_target_path, training_target)
+        np.save(val_pred_path, validation_predictors)
+        np.save(val_target_path, validation_target)
+        np.save(test_pred_path, test_predictors)
+        np.save(test_target_path, test_target)
+
+    if not recompute_matrices:
+        if not os.path.exists(test_target_path):
+            #load merged dataset, compute and save current tensors
+            predictors_merged = np.load(PREDICTORS_LOAD,allow_pickle=True)
+            target_merged = np.load(TARGET_LOAD,allow_pickle=True)
+            predictors_merged = predictors_merged.item()
+            target_merged = target_merged.item()
+
+            print ('\n building dataset for current fold')
+            print ('\n training:')
+            training_predictors, training_target = uf.build_matrix_dataset(predictors_merged,
+                                                                target_merged, train_list)
+            print ('\n validation:')
+
+            validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged,
+                                                                target_merged, val_list)
+            print ('\n test:')
+            test_predictors, test_target = uf.build_matrix_dataset(predictors_merged,
+                                                                target_merged, test_list)
+
+            np.save(train_pred_path, training_predictors)
+            np.save(train_target_path, training_target)
+            np.save(val_pred_path, validation_predictors)
+            np.save(val_target_path, validation_target)
+            np.save(test_pred_path, test_predictors)
+            np.save(test_target_path, test_target)
+
+        else:
+            #load pre-computed tensors
+            training_predictors = np.load(train_pred_path,allow_pickle=True)
+            training_target = np.load(train_target_path,allow_pickle=True)
+            validation_predictors = np.load(val_pred_path,allow_pickle=True)
+            validation_target = np.load(val_target_path,allow_pickle=True)
+            test_predictors = np.load(test_pred_path,allow_pickle=True)
+            test_target = np.load(test_target_path,allow_pickle=True)
 
 
     #normalize to 0-1
