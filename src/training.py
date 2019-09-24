@@ -34,8 +34,8 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'sc09_reduced'
-    exp_name = 'sc09_alldata_new'
+    dataset = 'nsynth'
+    exp_name = 'nsynth_new'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
