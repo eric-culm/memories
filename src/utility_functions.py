@@ -413,7 +413,7 @@ def plot_train_dict(dict_path):
     keys = list(filter(lambda x: 'val' not in x, keys))
     legend = []
     for key in keys:
-        if 'joint' in key:
+        if 'culo' not in key:
             legend.append(key)
             plt.plot(dict[key])
     plt.legend(legend)
