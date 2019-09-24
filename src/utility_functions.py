@@ -87,7 +87,7 @@ def folds_generator(num_folds, foldable_list, percs):
                           'test': test_ac}
 
     return fold_actors_list
-
+'''
 def build_matrix_dataset(merged_predictors, actors_list):
     '''
     load preprocessing dict and output numpy matrices of predictors and target
@@ -118,6 +118,36 @@ def build_matrix_dataset(merged_predictors, actors_list):
     print ('\n')
 
     return predictors
+'''
+def build_matrix_dataset(merged_predictors, merged_target, actors_list):
+    '''
+    load preprocessing dict and output numpy matrices of predictors and target
+    containing only samples defined in actors_list
+    '''
+    predictors = np.array([])
+    target = np.array([])
+    index = 0
+    total = len(actors_list)
+    for i in actors_list:
+        if i == actors_list[0]:  #if is first item
+            predictors = np.array(merged_predictors[i])
+            predictors = np.expand_dims(predictors, axis=0)
+            target = np.array(merged_target[i],dtype='float32')
+            #print (i, predictors.shape)
+        else:
+            if np.array(merged_predictors[i]).shape != (0,):  #if it not void due to preprocessing errors
+                expanded_predictors = np.expand_dims(merged_predictors[i], axis=0)
+                predictors = np.concatenate((predictors, np.array(expanded_predictors)), axis=0)                target = np.concatenate((target, np.array(merged_target[i],dtype='float32')), axis=0)
+        index += 1
+        perc = int(index / total * 20)
+        perc_progress = int(np.round((float(index)/total) * 100))
+        inv_perc = int(20 - perc - 1)
+        string = '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' Progress: ' + str(perc_progress) + '%'
+        print ('\r', string, end='')
+    print(' | shape: ' + str(predictors.shape))
+    print ('\n')
+
+    return predictors, target
 
 def find_longest_audio(input_folder):
     '''
