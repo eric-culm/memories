@@ -412,6 +412,6 @@ def plot_train_dict(dict_path):
     keys = list(dict.keys())
     for key in keys:
         if 'val' not in key:
-            plt.plot(key)
+            plt.plot(dict[key])
     plt.legend(keys)
     plt.show()
