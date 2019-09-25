@@ -101,9 +101,9 @@ def main():
         uf.print_bar(index, num_files)
         curr_list = [i]
         #compute predictors and target
-        if DATASET_NAME == 'sc09':
+        if 'sc09' in DATASET_NAME:
             get_label_func = get_label_sc09
-        if DATASET_NAME == 'nsynth':
+        if 'nsynth' in DATASET_NAME:
             get_label_func = get_label_sc09
         curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
         #append preprocessed predictors and target to the dict
