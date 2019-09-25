@@ -301,7 +301,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
 
             for i, (sounds, truth) in enumerate(dataloader):
                 sounds = sounds.to(device)
-                truth = sounds.numpy()
+                truth = sounds.cpu().numpy()
                 batch_labels = truth.cpu().numpy()
                 #compute predictions
                 outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
