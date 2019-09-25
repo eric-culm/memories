@@ -452,7 +452,6 @@ def main():
 
         model.train()
         for i, (sounds, truth) in enumerate(tr_data):
-                print (truth)
                 sounds = sounds.to(device)
                 truth = truth.to(device)
                 optimizer_joint.zero_grad()
