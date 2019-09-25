@@ -81,7 +81,7 @@ def main():
     random.shuffle(sounds_list)
 
     if DATA_N != 'all':
-        sounds_list = sounds_list[:DATA_N]
+        sounds_list = sounds_list[:int(DATA_N)]
     print (sounds_list)
     sys.exit(0)
 
