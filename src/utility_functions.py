@@ -359,25 +359,25 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 fig_distribution_path = os.path.join(curr_distribution_path, fig_distribution_name)
                 z_embedded = TSNE(n_components=2).fit_transform(latent_dims)
                 for i in range(len(z_embedded)):
-                    if(labels[i].numpy() == 0):
+                    if(labels[i] == 0):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='black')
-                    elif(labels[i].numpy() == 1):
+                    elif(labels[i] == 1):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='red')
-                    elif(labels[i].numpy() == 2):
+                    elif(labels[i] == 2):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='green')
-                    elif(labels[i].numpy() == 3):
+                    elif(labels[i] == 3):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='pink')
-                    elif(labels[i].numpy() == 4):
+                    elif(labels[i] == 4):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='gray')
-                    elif(labels[i].numpy() == 5):
+                    elif(labels[i] == 5):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='purple')
-                    elif(labels[i].numpy() == 6):
+                    elif(labels[i] == 6):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='maroon')
-                    elif(labels[i].numpy() == 7):
+                    elif(labels[i] == 7):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='yellow')
-                    elif(labels[i].numpy() == 8):
+                    elif(labels[i] == 8):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='brown')
-                    elif(labels[i].numpy() == 9):
+                    elif(labels[i] == 9):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='blue')
                 plt.savefig(fig_distribution_path)
                 plt.close()
