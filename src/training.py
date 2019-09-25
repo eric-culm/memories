@@ -601,13 +601,10 @@ def main():
                 if epoch % save_model_nepochs == 0:
                     np.save(training_dict_path, training_dict)
 
-            if save_distribution_figure:
 
 
             #end of epoch loop
     '''
-
-
     #compute train, val and test accuracy LOADING the best saved model
     #best validation loss
     #init batch results
@@ -664,10 +661,6 @@ def main():
     temp_results['train_loss'] = train_loss
     temp_results['val_loss'] = val_loss
     temp_results['test_loss'] = test_loss
-
-
-
-
 
     np.save(results_path, temp_results)
 
