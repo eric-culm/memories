@@ -293,9 +293,9 @@ def main():
 
     #reshape tensors
     if features_type == 'waveform':
-        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
-        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
-        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
+        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[2])
+        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[2])
+        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[2])
     elif features_type =='spectrum':
         training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
         validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
