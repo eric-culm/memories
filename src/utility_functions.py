@@ -358,7 +358,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 fig_distribution_name = 'hidden_distribution.png'
                 fig_distribution_path = os.path.join(curr_distribution_path, fig_distribution_name)
                 z_embedded = TSNE(n_components=2).fit_transform(latent_dims)
-                for i in range_len(z_embedded):
+                for i in range(len(z_embedded)):
                     if(labels[i].numpy() == 0):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='black')
                     elif(labels[i].numpy() == 1):
