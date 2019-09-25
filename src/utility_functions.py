@@ -359,8 +359,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 fig_distribution_path = os.path.join(curr_distribution_path, fig_distribution_name)
                 z_embedded = TSNE(n_components=2).fit_transform(latent_dims)
                 for i in range(len(z_embedded)):
-                    print('culo')
-                    print (labels[i])
+
                     if(labels[i] == 0):
                         plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='black')
                     elif(labels[i] == 1):
