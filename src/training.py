@@ -146,7 +146,7 @@ SR = cfg.getint('sampling', 'sr_target')
 predictors_name = dataset + '_predictors.npy'
 target_name = dataset + '_target.npy'
 PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
-TARGET_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
+TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
 
 device = torch.device('cuda:' + str(gpu_ID))
 
