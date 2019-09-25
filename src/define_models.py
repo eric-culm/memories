@@ -930,10 +930,13 @@ def WAVE_CNN_complete_net(time_dim, features_dim, user_parameters=['niente = 0']
 
             x = self.encode(x)
             x = F.relu(self.fc1_e(x))
-            x = F.dropout2d(x, self.drop_prob)
+            #x = F.dropout2d(x, self.drop_prob)
 
-            mu = F.sigmoid(self.mu(x))
-            logvar = F.sigmoid(self.logvar(x))
+            #mu = F.sigmoid(self.mu(x))
+            #logvar = F.sigmoid(self.logvar(x))
+
+            mu = self.mu(x)
+            logvar = self.logvar(x)
 
             return mu, logvar
 
@@ -990,35 +993,36 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             super().__init__()
 
             #So here we will first define layers for encoder network
-            self.encoder = nn.Sequential(nn.Linear(16384,2000),
+            self.encoder = nn.Sequential(F.relu(nn.Linear(16384,2000)),
                                          nn.BatchNorm1d(2000),
-                                         nn.Linear(2000,2000),
+                                         F.relu(nn.Linear(2000,2000)),
                                          nn.BatchNorm1d(2000),
-                                         nn.Linear(2000,2000),
+                                         F.relu(nn.Linear(2000,2000)),
                                          )
 
             #These two layers are for getting logvar and mean
-            self.fc1 = nn.Linear(2000, 256)
-            self.fc2 = nn.Linear(256, 128)
+            self.fc1 = F.relu(nn.Linear(2000, 256))
+            self.fc2 = F.relu(nn.Linear(256, 128))
             self.mean = nn.Linear(128, num_latent)
             self.var = nn.Linear(128, num_latent)
 
             #######The decoder part
             #This is the first layer for the decoder part
-            self.expand = nn.Linear(num_latent, 128)
-            self.fc3 = nn.Linear(128, 256)
-            self.fc4 = nn.Linear(256, 2000)
-            self.decoder = nn.Sequential(nn.Linear(2000,2000),
+            self.expand = F.relu(nn.Linear(num_latent, 128))
+            self.fc3 = F.relu(nn.Linear(128, 256))
+            self.fc4 = F.relu(nn.Linear(256, 2000))
+            self.decoder = nn.Sequential(F.relu(nn.Linear(2000,2000)),
                                          nn.BatchNorm1d(2000),
-                                         nn.Linear(2000,2000),
+                                         F.relu(nn.Linear(2000,2000)),
                                          nn.BatchNorm1d(2000),
-                                         nn.Linear(2000,16384))
+                                         F.relu(nn.Linear(2000,16384)))
 
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
             x = x.view([-1, 16384])
             x = self.encoder(x)
-            x = F.dropout2d(self.fc1(x), 0.5)
+            #x = F.dropout2d(self.fc1(x), 0.5)
+            x = self.fc1(x)
             x = self.fc2(x)
 
             mean = self.mean(x)
@@ -1028,28 +1032,38 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
         def dec_func(self, z):
             #here z is the latent variable state
             z = self.expand(z)
-            z = F.dropout2d(self.fc3(z), 0.5)
+            #z = F.dropout2d(self.fc3(z), 0.5)
             z = self.fc4(z)
 
             out = self.decoder(z)
             #out = out.view([-1, time_dim, features_dim])
             out = out.view([-1, 1, 16384])
-            out = F.sigmoid(out)
+            out = F.tanh(out)
             return out
 
-        def get_hidden(self, mean, logvar):
-            if self.training:
-                std = torch.exp(0.5*logvar)   #So as to get std
-                noise = torch.randn_like(mean)   #So as to get the noise of standard distribution
-                return noise.mul(std).add_(mean)
+        def reparametrize(self, mu, logvar, dyn_variational, warm_value_reparametrize):
+            #state comes from training
+            #after a certain period, ad variational inference
+            if self.variational:
+                if dyn_variational:
+                    #activated from training
+                    if self.training:
+                        std = torch.exp(0.5*logvar)   #So as to get std
+                        noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
+                        noise *= warm_value_reparametrize
+                        return noise.mul(std).add_(mu)
+                    else:
+                        return mu
+                else:
+                    return mu
             else:
-                return mean
+                return mu
 
         def forward(self, x):
-            mean, logvar = self.enc_func(x)
-            z = self.get_hidden(mean, logvar)
+            ,u, logvar = self.enc_func(x)
+            z = self.reparametrize(mean, logvar)
             out = self.dec_func(z)
-            return out, mean, logvar
+            return out, mu, logvar
 
     out = Net()
 

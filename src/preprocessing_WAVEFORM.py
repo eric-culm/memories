@@ -2,6 +2,7 @@ from __future__ import print_function
 import loadconfig
 import configparser
 import utility_functions as uf
+import random
 import preprocessing_utils as pre
 import numpy as np
 import librosa
@@ -76,6 +77,7 @@ def main():
     sounds_list = os.listdir(INPUT_FOLDER)  #get list of all soundfile paths
     sounds_list = list(filter(lambda x: x[-3:] == "wav", sounds_list))  #get only wav
     sounds_list = [os.path.join(INPUT_FOLDER, x) for x in sounds_list]  #append full path
+    random.shuffle(sounds_list)
     num_files = len(sounds_list)
     #init predictors and target dicts
     predictors = {}
