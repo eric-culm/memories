@@ -7,6 +7,7 @@ from scipy.io.wavfile import read, write
 from scipy.fftpack import fft
 from scipy.signal import iirfilter, butter, filtfilt, lfilter
 from shutil import copyfile
+from sklearn.manifold import TSNE
 import torch
 import scipy
 import librosa
@@ -276,9 +277,12 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
 
 def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
-                save_items_epochs, save_items_n, features_type, dataset, dyn_variational, warm_value_reparametrize):
+                save_items_epochs, save_items_n, features_type, dataset, dyn_variational, warm_value_reparametrize,
+                gen_distributions_path, save_latent_distribution):
     data_gen = []
     data_truth = []
+    latent_dims = []
+    labels = []
     if save_figs or save_sounds:
         if epoch % save_items_epochs == 0: #save only every n epochs
             #create folders
@@ -290,29 +294,35 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 curr_sounds_path = os.path.join(gen_sounds_path, dataset , 'epoch_'+str(epoch))
                 if not os.path.exists(curr_sounds_path):
                     os.makedirs(curr_sounds_path)
-
-
+            if save_latent_distribution:
+                curr_distribution_path = os.path.join(gen_distributions_path, dataset , 'epoch_'+str(epoch))
+                if not os.path.exists(curr_distribution_path):
+                    os.makedirs(curr_distribution_path)
 
             for i, (sounds, truth) in enumerate(dataloader):
-                if len(data_truth) <= save_items_n:
-                    sounds = sounds.to(device)
-                    truth = truth.numpy()
-                    #compute predictions
-                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
-                    outputs = outputs.cpu().numpy()
-                    #concatenate predictions
-                    for single_sound in outputs:
-                        if features_type == 'waveform':
-                            data_gen.append(single_sound)
-                        elif features_type == 'spectrum':
-                            data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                    for single_sound in truth:
-                        if features_type == 'waveform':
-                            data_truth.append(single_sound)
-                        elif features_type == 'spectrum':
-                            data_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                else:
-                    break
+                sounds = sounds.to(device)
+                truth = sounds.numpy()
+                batch_labels = truth.numpy()
+                #compute predictions
+                outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
+                outputs = outputs.cpu().numpy()
+                latents = mu.cpu().numpy()
+                #concatenate predictions
+                for single_vec in latents:
+                    latent_dims.append(single_vec.reshape(np.max(single_vec.shape)))
+                for label in batch_labels:
+                    labels.append(label)
+                for single_sound in outputs:
+                    if features_type == 'waveform':
+                        data_gen.append(single_sound)
+                    elif features_type == 'spectrum':
+                        data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+                for single_sound in truth:
+                    if features_type == 'waveform':
+                        data_truth.append(single_sound)
+                    elif features_type == 'spectrum':
+                        data_truth.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
+
             #save items
             for i in range(save_items_n):
                 if save_figs:
@@ -343,6 +353,35 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                     orig = np.divide(orig, np.max(orig))
                     orig = np.multiply(orig, 0.8)
                     wavwrite(orig, SR, orig_path)
+
+            if save_latent_distribution:
+                fig_distribution_name = 'hidden_distribution.png'
+                fig_distribution_path = os.path.join(curr_distribution_path, fig_distribution_name)
+                z_embedded = TSNE(n_components=2).fit_transform(latent_dims)
+                for i in range_len(z_embedded):
+                    if(labels[i].numpy() == 0):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='black')
+                    elif(labels[i].numpy() == 1):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='red')
+                    elif(labels[i].numpy() == 2):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='green')
+                    elif(labels[i].numpy() == 3):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='pink')
+                    elif(labels[i].numpy() == 4):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='gray')
+                    elif(labels[i].numpy() == 5):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='purple')
+                    elif(labels[i].numpy() == 6):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='maroon')
+                    elif(labels[i].numpy() == 7):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='yellow')
+                    elif(labels[i].numpy() == 8):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='brown')
+                    elif(labels[i].numpy() == 9):
+                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='blue')
+                plt.savefig(fig_distribution_path)
+                plt.close()
+
             print ('')
             if save_figs:
                 print ('Generated figures saved')

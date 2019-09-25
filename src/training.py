@@ -116,6 +116,8 @@ save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
 save_figs = eval(cfg.get('training_defaults', 'save_figs'))
 save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
 save_items_n = cfg.getint('training_defaults', 'save_items_n')
+save_latent_distribution = eval(cfg.get('training_defaults', 'save_latent_distribution'))
+save_distribution_epochs_n = cfg.getint('training_defaults', 'save_distribution_epochs_n')
 
 kld_holes = eval(cfg.get('training_defaults', 'kld_holes'))
 kld_epochs_n = cfg.getint('training_defaults', 'kld_epochs_n')
@@ -299,9 +301,11 @@ def main():
         validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
         test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
 
+    '''
     training_target = training_predictors
     validation_target = validation_predictors
     test_target = test_predictors
+    '''
 
     #select a subdataset for testing (to be commented when normally trained)
     if subdataset_bound != 'all':
@@ -337,6 +341,7 @@ def main():
     time_dim = training_predictors.shape[-2]
     features_dim = training_predictors.shape[-1]
 
+
     #load model (model is in locals()['model'])
     print('\n loading models...')
 
@@ -361,6 +366,9 @@ def main():
     gen_figs_path = os.path.join(results_path, 'gen_figs')
     if not os.path.exists(gen_figs_path):
         os.makedirs(gen_figs_path)
+    gen_distribution_path = os.path.join(results_path, 'hidden_distribution')
+    if not os.path.exists(gen_distribution_path):
+        os.makedirs(gen_distribution_path)
 
     #compute number of parameters
     print ('')
@@ -451,8 +459,8 @@ def main():
                 outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                 loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs)
-                loss_r = training_utils.loss_recon(outputs, truth, features_type)
-                loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type)
+                loss_r = training_utils.loss_recon(outputs, sounds, features_type)
+                loss_j = training_utils.loss_joint(outputs, sounds, mu, logvar, warm_value_kld, features_type)
 
                 loss_j.backward(retain_graph=True)
 
@@ -489,8 +497,8 @@ def main():
                     outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
-                    loss_r = training_utils.loss_recon(outputs, truth, features_type)
-                    loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type, beta)
+                    loss_r = training_utils.loss_recon(outputs, sounds, features_type)
+                    loss_j = training_utils.loss_joint(outputs, sounds, mu, logvar, warm_value_kld, features_type, beta)
 
                     train_batch_losses_k.append(loss_k.item())
                     train_batch_losses_r.append(loss_r.item())
@@ -505,8 +513,8 @@ def main():
                     outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
-                    loss_r = training_utils.loss_recon(outputs, truth, features_type)
-                    loss_j = training_utils.loss_joint(outputs, truth, mu, logvar, warm_value_kld, features_type, beta)
+                    loss_r = training_utils.loss_recon(outputs, sounds, features_type)
+                    loss_j = training_utils.loss_joint(outputs, sounds, mu, logvar, warm_value_kld, features_type, beta)
 
                     val_batch_losses_k.append(loss_k.item())
                     val_batch_losses_r.append(loss_r.item())
@@ -536,11 +544,11 @@ def main():
             #train_data
             uf.save_data(tr_data, model, device, epoch, gen_figs_path, gen_sounds_path,
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type,
-                    'training', dyn_variational, warm_value_reparametrize)
+                    'training', dyn_variational, warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
             #test_data
             uf.save_data(test_data, model, device, epoch, gen_figs_path, gen_sounds_path,
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type,
-                    'test', dyn_variational, warm_value_reparametrize)
+                    'test', dyn_variational, warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
 
             #save best model
             if save_best_only == True:
@@ -592,6 +600,8 @@ def main():
             if save_model_xepochs == True:
                 if epoch % save_model_nepochs == 0:
                     np.save(training_dict_path, training_dict)
+
+            if save_distribution_figure:
 
 
             #end of epoch loop
