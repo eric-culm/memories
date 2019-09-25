@@ -38,6 +38,7 @@ print ('Features type: ' + str(FEATURES_TYPE))
 
 INPUT_FOLDER = sys.argv[1]
 DATASET_NAME = sys.argv[2]
+DATA_N = sys.argv[3]
 #FEATURES_TYPE = sys.argv[3]
 
 
@@ -78,6 +79,12 @@ def main():
     sounds_list = list(filter(lambda x: x[-3:] == "wav", sounds_list))  #get only wav
     sounds_list = [os.path.join(INPUT_FOLDER, x) for x in sounds_list]  #append full path
     random.shuffle(sounds_list)
+
+    if DATA_N != 'all':
+        sounds_list = sounds_list[:DATA_N]
+    print (sounds_list)
+    sys.exit(0)
+
     num_files = len(sounds_list)
     #init predictors and target dicts
     predictors = {}
