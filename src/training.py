@@ -34,7 +34,7 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'sc09_waveform'
+    dataset = 'sc09_1000s_waveform'
     exp_name = 'sc09NEWprova'
 
     architecture = 'WAVE_CNN_complete_net'
