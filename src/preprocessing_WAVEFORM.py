@@ -78,7 +78,7 @@ def main():
     sounds_list = os.listdir(INPUT_FOLDER)  #get list of all soundfile paths
     sounds_list = list(filter(lambda x: x[-3:] == "wav", sounds_list))  #get only wav
     sounds_list = [os.path.join(INPUT_FOLDER, x) for x in sounds_list]  #append full path
-    #random.shuffle(sounds_list)
+    random.shuffle(sounds_list)
 
     if DATA_N != 'all':
         sounds_list = sounds_list[:int(DATA_N)]
