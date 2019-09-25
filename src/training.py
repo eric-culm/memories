@@ -366,9 +366,9 @@ def main():
     gen_figs_path = os.path.join(results_path, 'gen_figs')
     if not os.path.exists(gen_figs_path):
         os.makedirs(gen_figs_path)
-    gen_distribution_path = os.path.join(results_path, 'hidden_distribution')
-    if not os.path.exists(gen_distribution_path):
-        os.makedirs(gen_distribution_path)
+    gen_distributions_path = os.path.join(results_path, 'hidden_distribution')
+    if not os.path.exists(gen_distributions_path):
+        os.makedirs(gen_distributions_path)
 
     #compute number of parameters
     print ('')
