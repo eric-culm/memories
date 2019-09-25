@@ -82,8 +82,6 @@ def main():
 
     if DATA_N != 'all':
         sounds_list = sounds_list[:int(DATA_N)]
-    print (sounds_list)
-    sys.exit(0)
 
     num_files = len(sounds_list)
     #init predictors and target dicts
