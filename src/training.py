@@ -307,8 +307,7 @@ def main():
     test_target = test_predictors
     '''
 
-    print ('CULO')
-    print(np.count_nonzero(np.isnan(training_predictors)))
+
     #select a subdataset for testing (to be commented when normally trained)
     if subdataset_bound != 'all':
         training_predictors = training_predictors[:subdataset_bound]
