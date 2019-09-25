@@ -301,7 +301,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
 
             for i, (sounds, truth) in enumerate(dataloader):
                 sounds = sounds.to(device)
-                truth = sounds.cpu().numpy()
+                target = sounds.cpu().numpy()
                 batch_labels = truth.cpu().numpy()
                 #compute predictions
                 outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
@@ -317,7 +317,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                         data_gen.append(single_sound)
                     elif features_type == 'spectrum':
                         data_gen.append(single_sound.reshape(single_sound.shape[-2], single_sound.shape[-1]))
-                for single_sound in truth:
+                for single_sound in target:
                     if features_type == 'waveform':
                         data_truth.append(single_sound)
                     elif features_type == 'spectrum':
