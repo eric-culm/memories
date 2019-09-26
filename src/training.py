@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_1000s_waveform'
-    exp_name = 'sc09_beta1Nokldholes200warm'
+    exp_name = 'sc09_nowaitCOnverg'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
