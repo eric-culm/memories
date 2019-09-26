@@ -35,12 +35,12 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_1000s_waveform'
-    exp_name = 'sc09_nowaitCOnverg'
+    exp_name = 'sc09_nowaitCOnverg_1000s'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=100',
+                  'subdataset_bound="all"',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/' + exp_name
@@ -420,6 +420,7 @@ def main():
         else:
             SAVE_MODEL_final_path = SAVE_MODEL + '_after_convergence'
 
+
         if warm_up_after_convergence:
             #if it is not still converged, create ramps starting
             #from curent epoch
@@ -444,6 +445,17 @@ def main():
                 warm_value_kld = warm_value_kld
             else:
                 warm_value_kld = 0.
+
+        if warm_up_kld:
+            warm_value_kld = warm_value_kld
+        else:
+            warm_value_kld = 1.
+
+        if warm_up_reparametrize:
+            warm_value_reparametrize = warm_value_reparametrize
+        else:
+            warm_value_reparametrize = 1.
+
 
 
 
