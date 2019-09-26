@@ -35,12 +35,12 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_complete_waveform'
-    exp_name = 'sc09_nowaitCOnverg_allsounds'
+    exp_name = 'sc09_nowaitCOnverg_1000s_NOwarmuprep'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound="all"',
+                  'subdataset_bound=1000',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/' + exp_name
@@ -52,7 +52,7 @@ except IndexError:
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 1
+    gpu_ID = 2
 
 
     print ('test mode: I/O from config.ini file')
