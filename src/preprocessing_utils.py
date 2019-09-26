@@ -226,14 +226,14 @@ def segment_datapoint(features, label):
 
     return predictors, target
 
-def preprocess_foldable_item(sounds_list, max_file_length, get_label_function):
+def preprocess_foldable_item(sounds_list, max_file_length, get_label_function, print_item_progress=False):
     '''
     compute predictors and target of all sounds in sound list
     sound_list should contain all filenames of 1 single foldable item
     '''
 
-    predictors = np.array([])
-    target = np.array([])
+    predictors = []
+    target = []
 
     #librosa sr is None if no resampling is required (speed up)
 
@@ -249,39 +249,39 @@ def preprocess_foldable_item(sounds_list, max_file_length, get_label_function):
     librosa_SR = SR
 
     #process all files in sound_list
-    index = 0
+    index_ = 0
     for sound_file in sounds_list:
-        label = get_label_function(sound_file)
-        samples, sr = librosa.core.load(sound_file, sr=librosa_SR)  #read audio
-        if NORMALIZATION:
-            samples = np.divide(samples, np.max(samples))
-            samples = np.multiply(samples, 0.8)
-        if AUGMENTATION:
-            sounds_list = [samples]
-            for i in range(NUM_AUG_SAMPLES):
-                temp_aug = augmentation.gen_datapoint(samples)
-                sounds_list.append(temp_aug)
+        try:
+            label = get_label_function(sound_file)
+            samples, sr = librosa.core.load(sound_file, sr=librosa_SR)  #read audio
+            if NORMALIZATION:
+                samples = np.divide(samples, np.max(samples))
+                samples = np.multiply(samples, 0.8)
+            if AUGMENTATION:
+                curr_list = [samples]
+                for i in range(NUM_AUG_SAMPLES):
+                    temp_aug = augmentation.gen_datapoint(samples)
+                    curr_list.append(temp_aug)
 
-        else:
-            sounds_list = [samples]
+            else:
+                curr_list = [samples]
 
-        for sound in sounds_list:
-            try:
-                long_predictors = preprocess_datapoint(sound, max_file_length)  #compute features
-                cut_predictors, cut_target = segment_datapoint(long_predictors, label)   #segment feature maps
-                if not np.isnan(np.std(cut_predictors)):   #some sounds give nan for no reason
-                    if predictors.shape == (0,):
-                        predictors = cut_predictors
-                        target = cut_target
-                    else:
-                        predictors = np.append(predictors, cut_predictors, axis=0)
-                        target = np.append(target, cut_target, axis=0)
-            except (ValueError):
-                if str(e) == 'File format b\'FORM\'... not understood.':
-                    pass
-        #print ('\n | shape:' + str(predictors.shape))
+            for sound in curr_list:
+                    long_predictors = preprocess_datapoint(sound, max_file_length)  #compute features
+                    cut_predictors, cut_target = segment_datapoint(long_predictors, label)   #segment feature maps
+                    if not np.isnan(np.std(cut_predictors)):   #some sounds give nan for no reason
+                        for i in range(cut_predictors.shape[0]):
+                            predictors.append(cut_predictors[i])
+                            target.append(cut_target[i])
+                        #print ('Foldable item progress:')
+        except Exception as e:
+            #print ('\r corrupted file found: not added to dataset')
+            #print (e)
+            pass
 
-        #uf.print_bar(index, num_sounds)
+        index_ += 1
+        if print_item_progress:
+            uf.print_bar(index_, len(sounds_list))
 
     predictors = np.array(predictors)
     target = np.array(target)
