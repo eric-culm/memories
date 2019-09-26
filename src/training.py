@@ -382,7 +382,7 @@ def main():
 
     #create warm up ramps
     if not warm_up_after_convergence:
-        warm_ramp_kld = training_utils.warm_up(num_epochs, kld_ramp_delay, kld_ramp_epochs)
+        warm_ramp_kld = training_utils.warm_up_kld(num_epochs, kld_ramp_delay, kld_ramp_epochs)
         warm_ramp_reparametrize = training_utils.warm_up_reparametrize(num_epochs, reparametrize_ramp_delay, reparametrize_ramp_epochs)
 
     #init utility lists
