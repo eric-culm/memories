@@ -83,8 +83,6 @@ def main():
     if DATA_N != 'all':
         sounds_list = sounds_list[:int(DATA_N)]
 
-    print (sounds_list)
-    sys.exit(0)
     num_files = len(sounds_list)
     #init predictors and target dicts
     predictors = {}
@@ -108,6 +106,7 @@ def main():
         if 'nsynth' in DATASET_NAME:
             get_label_func = get_label_sc09
         curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
+        print (curr_predictors.shape)
         #append preprocessed predictors and target to the dict
         if not np.isnan(np.std(curr_predictors)):  #cut empty sounds
             predictors[i] = curr_predictors
