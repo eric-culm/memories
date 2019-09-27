@@ -83,6 +83,8 @@ def main():
     if DATA_N != 'all':
         sounds_list = sounds_list[:int(DATA_N)]
 
+    print (sounds_list)
+    sys.exit(0)
     num_files = len(sounds_list)
     #init predictors and target dicts
     predictors = {}
@@ -123,8 +125,8 @@ def main():
     keys = list(predictors.keys())
     for i in keys:
         count += predictors[i].shape[0]
-    pred_shape = np.array(predictors[keys[0]]).shape
-    tg_shape = np.array(target[keys[0]]).shape
+    pred_shape = np.array(predictors[keys[0]]).shape[1:]
+    tg_shape = np.array(target[keys[0]]).shape[1:]
     print ('')
     print ('MATRICES SUCCESFULLY COMPUTED')
     print ('')
