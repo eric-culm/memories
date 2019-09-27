@@ -123,8 +123,8 @@ def main():
     keys = list(predictors.keys())
     for i in keys:
         count += predictors[i].shape[0]
-    pred_shape = np.array(predictors[keys[0]]).shape[1:]
-    tg_shape = np.array(target[keys[0]]).shape[1:]
+    pred_shape = np.array(predictors[keys[0]]).shape[]
+    tg_shape = np.array(target[keys[0]]).shape[]
     print ('')
     print ('MATRICES SUCCESFULLY COMPUTED')
     print ('')
