@@ -52,7 +52,7 @@ except IndexError:
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 2
+    gpu_ID = 1
 
 
     print ('test mode: I/O from config.ini file')
