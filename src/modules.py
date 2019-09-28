@@ -11,6 +11,7 @@ from scipy.signal import hilbert, resample
 from scipy.fftpack import fft
 from threading import Thread
 import sounddevice as sd
+import subprocess
 from multiprocessing import Process
 import define_models as choose_model
 import time
@@ -19,10 +20,88 @@ import numpy as np
 import utility_functions as uf
 import configparser
 import loadconfig
+import os
 
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
+SR = cfg.getint('sampling', 'sr_target')
+CLIENT_IP = cfg.get('osc', 'client_ip')
+
+class Memory:
+    '''
+    long-term and short-term memory bags of the system
+    '''
+    def __init__(self, memory_lt_path, memory_st_path, memory_st_limit=100):
+        self.memory_st_limit = memory_st_limit
+        self.memory_st_path = memory_st_path
+        self.memory_lt = list(np.load(memory_lt_path))
+        try:
+            self.memory_st = list(np.load(memory_st_path))
+        except:
+            self.memory_st = []
+
+    def get_state(self):
+        return len(self.memory_lt), len(self.memory_st)
+
+    def get_memory_lt(self):
+        return self.memory_lt
+
+    def get_memory_st(self):
+        return self.memory_st
+
+    def save_memory_st(self):
+        np.save(self.memory_st_path, self.memory_st)
+
+    def append_to_st(self, input_list):
+        if not isinstance(input_list, list):
+            input_list = [input_list]
+        for i in input_list:
+            if len(self.memory_st) >= self.memory_st_limit:
+                del self.memory_st[0]
+            self.memory_st.append(i)
+
+    def del_st(self):
+        self.memory_st = []
+
+
+class Allocator:
+    '''
+    manage the shared folder between server and client.
+    '''
+    def __init__(self, server_shared_path, client_shared_path, sr=SR,
+                client_ip=CLIENT_IP, client_username='eric'):
+        self.sr = sr
+        self.client_ip = client_ip
+        self.client_username = client_username
+        self.server_path = server_shared_path
+        self.client_path = client_shared_path
+
+    def write_local(self, input_list, query_name):
+        print (np.array(input_list).shape)
+        print ('Writing sounds to local shared path')
+        output_path = os.path.join(self.server_path, query_name)
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        if not isinstance(input_list, list):
+            input_list = [input_list]
+        index = 0
+        for sound in input_list:
+            curr_path = os.path.join(output_path, str(index)+'.wav')
+            uf.wavwrite(sound, self.sr, curr_path)
+            index += 1
+        print ('All sounds written')
+
+    def to_client(self, query_name):
+        input_path = os.path.join(self.server_path, query_name)
+        output_path = os.path.join(self.client_path, query_name)
+
+        line = 'scp -pr ' + input_path + ' ' + self.client_username + '@' + self.client_ip + ':' + output_path
+        process = subprocess.Popen(line, shell=True)
+        process.communicate()
+        process.wait()
+
+
 
 
 class InputChannel:
@@ -162,15 +241,20 @@ class FilterStream:
         filtered, sim = self.filtering_object.filter_sound(buffer)
         return filtered
 
-    def filter_stream(self, flag):
+    def filter_stream(self, flag, channel, memory):
         self.flag = flag
         if self.flag == 1:
+            print ("\nStarted storing stimuli from channel: " + str(channel))
             self.bag = []
+        else:
+            print ("\nStopped storing stimuli from channel: " + str(channel))
         while self.flag == 1:
             filtered = self.filter_input_sound()
             if filtered is not None:
                 self.bag.append(filtered)
+                memory.append_to_st(filtered)
             time.sleep(self.frequency)
+
 
     def get_bag(self):
         return self.bag

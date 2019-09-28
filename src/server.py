@@ -15,23 +15,25 @@ cfg = configparser.ConfigParser()
 cfg.read(config)
 DUR = cfg.getint('main', 'dur')
 TOTAL_IN_CHANNELS = cfg.getint('main', 'total_in_channels')
-MEMORY_BAG = cfg.get('main', 'memory_bag')
 SERVER_IP = cfg.get('osc', 'server_ip')
 S2C_PORT = cfg.getint('osc', 's2c_port')
 MODEL_WEIGHTS_PATH = cfg.get('main', 'model_weights_path')
+MEMORY_LT_PATH = cfg.get('main', 'memory_lt_path')
+MEMORY_ST_PATH = cfg.get('main', 'memory_st_path')
+CLIENT_PATH = cfg.get('osc', 'client_path')
 
 #create modules instances
-memory_bag = np.load(MEMORY_BAG)
-content_filter = FilterSound(memory_bag=memory_bag, threshold=0.0, random_prob=0.0, env_length=200)
+memory = Memory(memory_lt_path=MEMORY_LT_PATH, memory_st_path=MEMORY_ST_PATH)
+allocator = Allocator(server_shared_path='../shared',
+                    client_shared_path=os.path.join(CLIENT_PATH, 'shared'))
+content_filter = FilterSound(memory_bag=memory.get_memory_lt(), threshold=0.0, random_prob=0.0, env_length=200)
 dummy_model = DummyModel(dur=16384, latent_dim=100)
 
 model_parameters = ['verbose=False', 'model_size=64', 'variational=True',
                     'latent_dim=100',]
 
-#VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
-#                parameters=model_parameters, device='cpu')
-
-
+VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
+                parameters=model_parameters, device='cpu')
 
 
 
@@ -79,12 +81,20 @@ def filter_input_sound(unused_addr, args, channel):
     filtered, sim = content_filter.filter_sound(buffer)
     return filtered
 
-def filter_input_stream(unused_addr, args, channel, flag):
-    filters[channel].filter_stream(flag)
-    if flag == 0:
-        bag = filters[channel].get_bag()
-        print (len(bag))
+def collect_stream_stimuli(unused_addr, args, channel, flag):
+    filters[channel].filter_stream(flag, channel, memory)
 
+def get_memory_state(unused_addr, args):
+    lt, st = memory.get_state()
+    print ('Long term memory len: ' + str(lt))
+    print ('Short term memory len: ' + str(st))
+
+def write_st_local(unused_addr, args, query_name):
+    sounds = memory.get_memory_st()
+    allocator.write_local(sounds, query_name)
+
+def write_to_client(unused_addr, args, query_name):
+    allocator.to_client(query_name)
 
 
 
@@ -100,7 +110,11 @@ dispatcher.map("/rec", rec, 'channel', 'flag')
 dispatcher.map("/in_meter", in_meter, 'channel', 'flag')
 dispatcher.map("/get_inamp", get_inamp, 'channel')
 dispatcher.map("/filter_input_sound", filter_input_sound, 'channel')
-dispatcher.map("/filter_input_stream", filter_input_stream, 'channel', 'flag')
+dispatcher.map("/collect_stream_stimuli", collect_stream_stimuli, 'channel', 'flag')
+dispatcher.map("/get_memory_state", get_memory_state, 'args')
+dispatcher.map("/write_st_local", write_st_local, 'query_name')
+dispatcher.map("/write_to_client", write_to_client, 'query_name')
+
 
 server = osc_server.ThreadingOSCUDPServer((SERVER_IP, S2C_PORT), dispatcher)
 print("Serving on {}".format(server.server_address))
