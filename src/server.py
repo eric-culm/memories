@@ -28,19 +28,11 @@ dummy_model = DummyModel(dur=16384, latent_dim=100)
 model_parameters = ['verbose=False', 'model_size=64', 'variational=True',
                     'latent_dim=100',]
 
-VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
-                parameters=model_parameters, device='cpu')
+#VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
+#                parameters=model_parameters, device='cpu')
 
-a = np.random.rand(16384)
-VAE.encode_ext(a)
 
-rand = np.zeros(100)
-rand[45] = 1.
-x = VAE.decode_ext(rand)
-uf.wavwrite(x, 16000, '../../kulo.wav')
-print (x.shape)
 
-sys.exit(0)
 
 
 ins = {
@@ -101,7 +93,9 @@ def filter_input_stream(unused_addr, args, channel, flag):
 
 
 
+
 dispatcher = dispatcher.Dispatcher()
+dispatcher.map("/print", print, 'text')
 dispatcher.map("/rec", rec, 'channel', 'flag')
 dispatcher.map("/in_meter", in_meter, 'channel', 'flag')
 dispatcher.map("/get_inamp", get_inamp, 'channel')

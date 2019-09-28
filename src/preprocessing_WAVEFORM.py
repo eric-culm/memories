@@ -67,6 +67,46 @@ def get_label_sc09(filename):
 
     return label
 
+def get_label_nsynth(filename):
+
+    if 'bass_electronic' in filename:
+        label = 0
+    elif 'bass_synthetic' in filename:
+        label = 1
+    elif 'keyboard_acoustic' in filename:
+        label = 2
+    elif 'keyboard_electronic' in filename:
+        label = 3
+    elif 'keyboard_synthetic' in filename:
+        label = 4
+    elif 'mallet_acoustic' in filename:
+        label = 5
+    elif 'brass_acoustic' in filename:
+        label = 6
+    elif 'organ_electronic' in filename:
+        label = 7
+    elif 'flute_acoustic' in filename:
+        label = 8
+    elif 'flute_synthetic' in filename:
+        label = 9
+    elif 'guitar_acoustic' in filename:
+        label = 10
+    elif 'guitar_electronic' in filename:
+        label = 11
+    elif 'reed_acoustic' in filename:
+        label = 12
+    elif 'string_acoustic' in filename:
+        label = 13
+    elif 'vocal_acoustic' in filename:
+        label = 14
+    elif 'vocal_synthetic' in filename:
+        label = 15
+    else:
+        label = 16
+
+    return label
+
+
 
 def main():
     '''
