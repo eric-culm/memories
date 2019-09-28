@@ -356,28 +356,10 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 fig_distribution_name = 'hidden_distribution.png'
                 fig_distribution_path = os.path.join(curr_distribution_path, fig_distribution_name)
                 z_embedded = TSNE(n_components=2).fit_transform(latent_dims)
-                for i in range(len(z_embedded)):
+                plt.scatter(z_embedded[:, 0], z_embedded[:, 1], c=labels,
+                            alpha=.4, s=3**2, cmap='plasma')
+                plt.colorbar()
 
-                    if(labels[i] == 0):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='black')
-                    elif(labels[i] == 1):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='red')
-                    elif(labels[i] == 2):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='green')
-                    elif(labels[i] == 3):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='pink')
-                    elif(labels[i] == 4):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='gray')
-                    elif(labels[i] == 5):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='purple')
-                    elif(labels[i] == 6):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='maroon')
-                    elif(labels[i] == 7):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='yellow')
-                    elif(labels[i] == 8):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='brown')
-                    elif(labels[i] == 9):
-                        plt.scatter(z_embedded[i, 0], z_embedded[i, 1], c='blue')
                 plt.savefig(fig_distribution_path)
                 plt.close()
 

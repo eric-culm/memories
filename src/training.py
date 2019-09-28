@@ -34,8 +34,8 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'sc09_complete_waveform'
-    exp_name = 'sc09_nowaitCOnverg_1000s_NOwarmuprep'
+    dataset = 'sc09_valid_waveform'
+    exp_name = 'nsynth_1000s_overlapped'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
