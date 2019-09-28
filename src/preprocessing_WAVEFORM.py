@@ -144,7 +144,7 @@ def main():
         if 'sc09' in DATASET_NAME:
             get_label_func = get_label_sc09
         if 'nsynth' in DATASET_NAME:
-            get_label_func = get_label_sc09
+            get_label_func = get_label_nsynth
         curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
         print (curr_predictors.shape)
         #append preprocessed predictors and target to the dict
