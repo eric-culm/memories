@@ -160,12 +160,13 @@ def main():
 
     if len(list(predictors.keys())) == 1:
         data = predictors[list(predictors.keys())[0]]
+        targ = target[list(predictors.keys())[0]]
         num_data = data.shape[0]
         predictors = {}
         target = {}
         for i in range(num_data):
             predictors[i] = data[i]
-            target[i] = np.array([0])
+            target[i] = targ[i]
 
 
     #save dicts
