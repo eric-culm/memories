@@ -171,9 +171,12 @@ def preprocess_datapoint(input_vector, max_file_length):
 
     else:
         #if not, zero pad all sounds to the same length
-        pad = np.zeros(max_file_length)
-        pad[:len(input_vector)] = input_vector  #zero padding
-        input_vector = pad
+        if len(input_vector) > seq_len_samps:
+            input_vector = input_vector[:seq_len_samps]
+        else:
+            pad = np.zeros(max_file_length)
+            pad[:len(input_vector)] = input_vector  #zero padding
+            input_vector = pad
 
     feats = extract_features(input_vector, FEATURES_TYPE)  #extract features
 

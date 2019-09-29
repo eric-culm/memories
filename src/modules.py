@@ -10,6 +10,7 @@ from scipy.stats import pearsonr
 from scipy.signal import hilbert, resample
 from scipy.fftpack import fft
 from threading import Thread
+from audtorch import metrics
 import sounddevice as sd
 import subprocess
 from multiprocessing import Process
@@ -27,28 +28,36 @@ cfg = configparser.ConfigParser()
 cfg.read(config)
 SR = cfg.getint('sampling', 'sr_target')
 CLIENT_IP = cfg.get('osc', 'client_ip')
+GRID_LT_PATH = cfg.get('main', 'grid_lt_path')
+GRID_ST_PATH = cfg.get('main', 'grid_st_path')
+
 
 class Memory:
     '''
     long-term and short-term memory bags of the system
     '''
-    def __init__(self, memory_lt_path, memory_st_path, memory_st_limit=100):
+    def __init__(self, memory_lt_path, memory_st_path, memory_st_limit=100, memory_rt_limit=100):
         self.memory_st_limit = memory_st_limit
+        self.memory_rt_limit = memory_rt_limit
         self.memory_st_path = memory_st_path
-        self.memory_lt = list(np.load(memory_lt_path))
+        self.memory_lt = list(np.load(memory_lt_path, allow_pickle=True))
+        self.memory_rt = []
         try:
-            self.memory_st = list(np.load(memory_st_path))
+            self.memory_st = list(np.load(memory_st_path, allow_pickle=True))
         except:
             self.memory_st = []
 
     def get_state(self):
-        return len(self.memory_lt), len(self.memory_st)
+        return len(self.memory_lt), len(self.memory_st), len(self.memory_rt)
 
     def get_memory_lt(self):
         return self.memory_lt
 
     def get_memory_st(self):
         return self.memory_st
+
+    def get_memory_rt(self):
+        return self.memory_rt
 
     def save_memory_st(self):
         np.save(self.memory_st_path, self.memory_st)
@@ -61,8 +70,19 @@ class Memory:
                 del self.memory_st[0]
             self.memory_st.append(i)
 
+    def append_to_rt(self, input_list):
+        if not isinstance(input_list, list):
+            input_list = [input_list]
+        for i in input_list:
+            if len(self.memory_rt) >= self.memory_rt_limit:
+                del self.memory_rt[0]
+            self.memory_rt.append(i)
+
     def del_st(self):
         self.memory_st = []
+
+    def del_rt(self):
+        self.memory_rt = []
 
 
 class Allocator:
@@ -78,7 +98,6 @@ class Allocator:
         self.client_path = client_shared_path
 
     def write_local(self, input_list, query_name):
-        print (np.array(input_list).shape)
         print ('Writing sounds to local shared path')
         output_path = os.path.join(self.server_path, query_name)
         if not os.path.exists(output_path):
@@ -93,6 +112,7 @@ class Allocator:
         print ('All sounds written')
 
     def to_client(self, query_name):
+        print ('Transfering to client')
         input_path = os.path.join(self.server_path, query_name)
         output_path = os.path.join(self.client_path, query_name)
 
@@ -103,17 +123,16 @@ class Allocator:
 
 
 
-
 class InputChannel:
     '''
     record a sliding buffer from a desired input channel
     '''
-    def __init__(self, dur, channel, total_channels):
+    def __init__(self, dur, channel, total_channels, sr):
         self.dur = dur
         self.channel = channel
         self.total_channels = total_channels
         self.buffer = np.zeros(dur)
-        self.stream =  sd.InputStream(channels=self.total_channels,
+        self.stream =  sd.InputStream(channels=self.total_channels, samplerate=sr,
                                     blocksize=512 , callback=self.rec_callback)
 
     def rec_callback(self, indata, frames, time, status):
@@ -241,18 +260,21 @@ class FilterStream:
         filtered, sim = self.filtering_object.filter_sound(buffer)
         return filtered
 
-    def filter_stream(self, flag, channel, memory):
+    def filter_stream(self, flag, channel, memory, memory_type):
         self.flag = flag
         if self.flag == 1:
-            print ("\nStarted storing stimuli from channel: " + str(channel))
+            print ("\nStarted storing stimuli from channel " + str(channel)) + ' to memory ' + memory_type
             self.bag = []
         else:
-            print ("\nStopped storing stimuli from channel: " + str(channel))
+            print ("\nStopped storing stimuli from channel " + str(channel))+ ' to memory ' + memory_type
         while self.flag == 1:
             filtered = self.filter_input_sound()
             if filtered is not None:
                 self.bag.append(filtered)
-                memory.append_to_st(filtered)
+                if memory_type == 'st':
+                    memory.append_to_st(filtered)
+                if memory_type == 'rt':
+                    memory.append_to_rt(filtered)
             time.sleep(self.frequency)
 
 
@@ -325,6 +347,21 @@ class LatentOperators:
         concat = torch.stack((x1,x2))
         return torch.mean(concat,0)
 
+    def blur(self, x, mul):
+        noise = (torch.randn(self.latent_dim) * mul).reshape(1, self.latent_dim)
+        return torch.add(x, noise)
+
+    def spike(self, x, n_peaks):
+        noise = np.zeros(self.latent_dim)
+        for i in range(n_peaks):
+            pos = np.random.randint(self.latent_dim)
+            peak = np.random.randint(self.latent_dim) / float(self.latent_dim)
+            noise[pos] = peak * 0.3
+        noise = torch.tensor(noise).float().reshape(1, self.latent_dim)
+
+        return torch.add(x, noise)
+
+
     def xfade(self, x1, x2):
         ramp1 = np.arange(1, x1.shape[0]+1) / x1.shape[0]
         ramp2 = np.array(np.flip(ramp1))
@@ -343,6 +380,16 @@ class VAE_model:
         self.model = locals()['model_class'].to(self.device)
         self.model.load_state_dict(weights, strict=False)
         self.dim = 16384
+        try:
+            self.grid_lt = list(np.load(GRID_LT_PATH, allow_pickle=True))
+        except:
+            self.grid_lt = []
+        try:
+            self.grid_st = list(np.load(GRID_ST_PATH, allow_pickle=True))
+        except:
+            self.grid_st = []
+        self.CCC =  metrics.ConcordanceCC()
+
 
     def encode_ext(self, x):
         x = torch.tensor(x).float().reshape(1,1,self.dim)
@@ -352,19 +399,88 @@ class VAE_model:
     def decode_ext(self, z):
         z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
         x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        x = x / np.max(x)
+        x = x * 0.8
         return x
 
-    def gen_random(self):
+    def encode_int(self, x):
+        #x = torch.tensor(x).float().reshape(1,1,self.dim)
+        mu, logvar = self.model.enc_func(x)
+        return mu
+
+    def decode_int(self, z):
+        #z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        x = x / np.max(x)
+        x = x * 0.8
+        return x
+
+    def get_z_loss(self, x):
+        x = torch.tensor(x).float().reshape(1,1,self.dim)
+        mu, logvar = self.model.enc_func(x)
+        recon_x = self.model.dec_func(mu).reshape(self.dim)
+        recon_loss = 1 - torch.abs(self.CCC(recon_x, torch.squeeze(x))).detach().numpy()
+        return mu, recon_loss
+
+    def gen_random_x(self):
+        max_grid = np.max(np.array(self.grid_lt))
         z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
+        z = z / max_grid
         z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
         x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
         return x
 
+    def gen_random_z(self):
+        max_grid = np.max(np.array(self.grid_lt))
+        z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
+        z = z * max_grid
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+
+        return z
+
     def gen_random_peak(self):
+        max_grid = np.max(np.array(self.grid_lt))
         z = np.zeros(self.model.latent_dim)
-        pos = np.random.randind(self.model.latent_dim)
-        peak = np.random.randind(self.model.latent_dim) / float(self.model.latent_dim)
+        pos = np.random.randint(self.model.latent_dim)
+        peak = np.random.randint(self.model.latent_dim) / float(self.model.latent_dim)
+        peak = peak / max_grid
         z[pos] = peak
         z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
         x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
         return x
+
+    def quantize(self, z, grid_type='lt'):
+        if grid_type == 'lt':
+            grid = torch.tensor(self.grid_lt)
+        if grid_type == 'st':
+            grid = torch.tensor(self.grid_st)
+        dists = []
+        for i in grid:
+            curr_dist = self.CCC(z, i)
+            dists.append(curr_dist.cpu().numpy())
+        nearest_z = np.argmax(dists)
+        return grid[nearest_z]
+
+
+    def compute_quantization_grid(self, memory, memory_type, threshold=0.3):
+        print('\nComputing quantization grid')
+        temp_list = []
+        if not isinstance(memory, list):
+            input_list = [memory]
+        index=1
+        for sound in memory:
+            z, loss = self.get_z_loss(sound)
+            temp_list.append((z.detach().numpy(), loss))
+            uf.print_bar(index, len(memory))
+            index += 1
+        sorted_list = sorted(temp_list, key=lambda x: x[1])  #sort from lowest to highest CCC
+        filtered_list = list(filter(lambda x: x[1] <= threshold, sorted_list))  #cut items with highest CCC
+        filtered_list = [x[0] for x in filtered_list]  #cut CCCs from list
+        if memory_type == 'lt':
+            self.grid_lt = filtered_list
+            np.save(GRID_LT_PATH, filtered_list)
+        if memory_type == 'st':
+            self.grid_st = filtered_list
+            np.save(GRID_ST_PATH, filtered_list)
+        print ('\nGrid ' + str(memory_type) + ' succesfully saved')
+        print ('Num datapoints: ' + str(len(filtered_list)) + ' | Discarded ' + str(len(sorted_list) - len(filtered_list)))
