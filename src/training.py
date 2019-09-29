@@ -310,10 +310,10 @@ def main():
 
     #select a subdataset for testing (to be commented when normally trained)
     if subdataset_bound != 'all':
-        training_predictors = training_predictors[offset_bound:subdataset_bound]
+        training_predictors = training_predictors[offset_bound:offset_bound+subdataset_bound]
         validation_predictors = validation_predictors[:subdataset_bound]
         test_predictors = test_predictors[:subdataset_bound]
-        training_target = training_target[offset_bound:subdataset_bound]
+        training_target = training_target[offset_bound:offset_bound+subdataset_bound]
         validation_target = validation_target[:subdataset_bound]
         test_target = test_target[:subdataset_bound]
 
