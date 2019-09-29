@@ -160,14 +160,12 @@ def main():
 
     if len(list(predictors.keys())) == 1:
         data = predictors[list(predictors.keys())[0]]
-        print (data.shape)
+        num_data = data.shape[0]
         predictors = {}
         target = {}
-        index = 0
-        for i in data:
-            predictors[index] = i
-            target[index] = 0
-            index += 1
+        for i in range(num_data):
+            predictors[i] = data[i]
+            target[i] = 0
 
 
     #save dicts
