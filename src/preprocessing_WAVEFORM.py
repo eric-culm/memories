@@ -159,7 +159,7 @@ def main():
         index +=1
 
     if len(list(predictors.keys())) == 1:
-        data = predictors[0]
+        data = predictors[list(predictors.keys())[0]]
         predictors = {}
         target = {}
         index = 0
