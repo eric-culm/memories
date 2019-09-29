@@ -257,27 +257,28 @@ def preprocess_foldable_item(sounds_list, max_file_length, get_label_function, p
         try:
             label = get_label_function(sound_file)
             samples, sr = librosa.core.load(sound_file, sr=librosa_SR)  #read audio
-            #samples = samples[:480000]
-            if NORMALIZATION:
-                samples = np.divide(samples, np.max(samples))
-                samples = np.multiply(samples, 0.8)
-            if AUGMENTATION:
-                curr_list = [samples]
-                for i in range(NUM_AUG_SAMPLES):
-                    temp_aug = augmentation.gen_datapoint(samples)
-                    curr_list.append(temp_aug)
+            if np.max(samples) > 0.05:
+                #samples = samples[:480000]
+                if NORMALIZATION:
+                    samples = np.divide(samples, np.max(samples))
+                    samples = np.multiply(samples, 0.8)
+                if AUGMENTATION:
+                    curr_list = [samples]
+                    for i in range(NUM_AUG_SAMPLES):
+                        temp_aug = augmentation.gen_datapoint(samples)
+                        curr_list.append(temp_aug)
 
-            else:
-                curr_list = [samples]
+                else:
+                    curr_list = [samples]
 
-            for sound in curr_list:
-                    long_predictors = preprocess_datapoint(sound, max_file_length)  #compute features
-                    cut_predictors, cut_target = segment_datapoint(long_predictors, label)   #segment feature maps
-                    if not np.isnan(np.std(cut_predictors)):   #some sounds give nan for no reason
-                        for i in range(cut_predictors.shape[0]):
-                            predictors.append(cut_predictors[i])
-                            target.append(cut_target[i])
-                        #print ('Foldable item progress:')
+                for sound in curr_list:
+                        long_predictors = preprocess_datapoint(sound, max_file_length)  #compute features
+                        cut_predictors, cut_target = segment_datapoint(long_predictors, label)   #segment feature maps
+                        if not np.isnan(np.std(cut_predictors)):   #some sounds give nan for no reason
+                            for i in range(cut_predictors.shape[0]):
+                                predictors.append(cut_predictors[i])
+                                target.append(cut_target[i])
+                            #print ('Foldable item progress:')
         except Exception as e:
             #print ('\r corrupted file found: not added to dataset')
             print (e)
