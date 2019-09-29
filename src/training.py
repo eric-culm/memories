@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'nsynth_valid_waveform'
-    exp_name = 'nsynth_1000s_overlapped'
+    exp_name = 'nsynth_1000s_truncated'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
