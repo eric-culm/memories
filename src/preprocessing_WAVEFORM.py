@@ -160,6 +160,7 @@ def main():
 
     if len(list(predictors.keys())) == 1:
         data = predictors[list(predictors.keys())[0]]
+        print (data.shape)
         predictors = {}
         target = {}
         index = 0
