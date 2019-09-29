@@ -159,9 +159,9 @@ def preprocess_datapoint(input_vector, max_file_length):
     generate predictors (stft) and target (valence sequence)
     of one sound file from the OMG dataset
     '''
+    seq_len_samps = int(SEQUENCE_LENGTH * SR)
     if SEGMENTATION:
 
-        seq_len_samps = int(SEQUENCE_LENGTH * SR)
         # if segment cut initial and final silence if present
         #samples = uf.strip_silence(raw_samples)
         if len(input_vector) < seq_len_samps:
