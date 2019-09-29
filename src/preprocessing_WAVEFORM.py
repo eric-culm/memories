@@ -165,7 +165,7 @@ def main():
         target = {}
         for i in range(num_data):
             predictors[i] = data[i]
-            target[i] = [0.,1.]
+            target[i] = np.array([0])
 
 
     #save dicts
