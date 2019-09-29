@@ -165,8 +165,8 @@ def main():
         predictors = {}
         target = {}
         for i in range(num_data):
-            predictors[i] = data[i]
-            target[i] = targ[i]
+            predictors[i] = np.expand_dims(data[i],axis=0)
+            target[i] = np.expand_dims(targ[i],axis=0)
 
 
     #save dicts
