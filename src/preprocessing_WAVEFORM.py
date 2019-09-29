@@ -164,8 +164,9 @@ def main():
         target = {}
         index = 0
         for i in data:
-            predictors[index] = data[i]
+            predictors[index] = data[index]
             target[index] = 0
+            index += 1
 
 
     #save dicts

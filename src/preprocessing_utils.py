@@ -257,7 +257,7 @@ def preprocess_foldable_item(sounds_list, max_file_length, get_label_function, p
         try:
             label = get_label_function(sound_file)
             samples, sr = librosa.core.load(sound_file, sr=librosa_SR)  #read audio
-            samples = samples[:4800000]
+            samples = samples[:480000]
             if NORMALIZATION:
                 samples = np.divide(samples, np.max(samples))
                 samples = np.multiply(samples, 0.8)
