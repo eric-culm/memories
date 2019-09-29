@@ -149,7 +149,7 @@ def main():
             get_label_func = get_label_nsynth
         if 'chorder' in DATASET_NAME:
             get_label_func = get_dummy
-        curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func)
+        curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func, True)
         print (curr_predictors.shape)
         #append preprocessed predictors and target to the dict
         if not np.isnan(np.std(curr_predictors)):  #cut empty sounds
@@ -157,6 +157,16 @@ def main():
             target[i] = curr_target
 
         index +=1
+
+    if len(list(predictors.keys())) == 1:
+        data = list(predictors.keys())[0]
+        predictors = {}
+        target = {}
+        index = 0
+        for i in data:
+            predictors[index] = data[i]
+            target[index] = 0
+
 
     #save dicts
     print ('\nSaving data...')
