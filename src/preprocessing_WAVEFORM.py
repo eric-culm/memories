@@ -164,7 +164,7 @@ def main():
         target = {}
         index = 0
         for i in data:
-            predictors[index] = data[index]
+            predictors[index] = i
             target[index] = 0
             index += 1
 
