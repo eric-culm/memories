@@ -34,13 +34,13 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'nsynth_valid_waveform'
-    exp_name = 'nsynth_1000s_truncated'
+    dataset = 'chorder_buffer_waveform'
+    exp_name = 'chorder_1000s'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=1.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=1000',
+                  'subdataset_bound=1000','offset_bound=1000',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/' + exp_name
@@ -310,10 +310,10 @@ def main():
 
     #select a subdataset for testing (to be commented when normally trained)
     if subdataset_bound != 'all':
-        training_predictors = training_predictors[:subdataset_bound]
+        training_predictors = training_predictors[offset_bound:subdataset_bound]
         validation_predictors = validation_predictors[:subdataset_bound]
         test_predictors = test_predictors[:subdataset_bound]
-        training_target = training_target[:subdataset_bound]
+        training_target = training_target[offset_bound:subdataset_bound]
         validation_target = validation_target[:subdataset_bound]
         test_target = test_target[:subdataset_bound]
 
