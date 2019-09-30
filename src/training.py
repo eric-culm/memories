@@ -40,7 +40,7 @@ except IndexError:
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=1000','offset_bound="all"',
+                  'subdataset_bound=1000','offset_bound=0',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/' + exp_name
@@ -309,10 +309,8 @@ def main():
 
 
     #select a subdataset for testing (to be commented when normally trained)
-    if subdataset_bound == 'all':
-        offset_bound = 0
-        subdataset_bound = 0
-    if subdataset_bound != 'all':
+
+    if subdataset_bound != 0:
         training_predictors = training_predictors[offset_bound:offset_bound+subdataset_bound]
         validation_predictors = validation_predictors[:subdataset_bound]
         test_predictors = test_predictors[:subdataset_bound]
