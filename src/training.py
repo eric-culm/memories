@@ -35,12 +35,12 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'chorder_buffer_waveform'
-    exp_name = 'chorder_1000s_beta2'
+    exp_name = 'chorder_allS_beta2'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=1000','offset_bound=1000',
+                  'subdataset_bound=1000','offset_bound="all"',
                   'features_type="waveform"']
 
     SAVE_MODEL = '../models/' + exp_name
