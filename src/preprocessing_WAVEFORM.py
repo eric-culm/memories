@@ -162,11 +162,15 @@ def main():
         data = predictors[list(predictors.keys())[0]]
         targ = target[list(predictors.keys())[0]]
         num_data = data.shape[0]
+        rand_index = np.arange(num_data)
+        random.shuffle(rand_index)
         predictors = {}
         target = {}
-        for i in range(num_data):
-            predictors[i] = np.expand_dims(data[i],axis=0)
-            target[i] = np.expand_dims(targ[i],axis=0)
+        index = 0
+        for i in rand_index:
+            predictors[index] = np.expand_dims(data[i],axis=0)
+            target[index] = np.expand_dims(targ[i],axis=0)
+            index += 1
 
 
     #save dicts
