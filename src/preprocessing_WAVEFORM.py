@@ -158,6 +158,7 @@ def main():
 
         index +=1
 
+    #if preprocessing on long sound as chorder_buffer:
     if len(list(predictors.keys())) == 1:
         data = predictors[list(predictors.keys())[0]]
         targ = target[list(predictors.keys())[0]]
