@@ -73,9 +73,17 @@ def folds_generator(num_folds, foldable_list, percs):
     test_perc = percs[2]
     num_actors = len(foldable_list)
     ac_list = foldable_list * num_folds
+
     n_train = int(np.round(num_actors * tr_perc))
     n_val = int(np.round(num_actors * val_perc))
     n_test = int(num_actors - (n_train + n_val))
+
+    #ensure that no set has 0 actors
+    if n_test == 0 or n_val == 0:
+        n_test = int(np.ceil(num_actors*test_perc))
+        n_val = int(np.ceil(num_actors*val_perc))
+        n_train = int(num_actors - (n_val + n_test))
+
     shift = num_actors / num_folds
     fold_actors_list = {}
     for i in range(num_folds):
