@@ -4,14 +4,17 @@ import torch
 import torch.utils.data as utils
 from torch import optim
 from torch import nn
+import numpy as np
+
 
 device = torch.device('cpu')
-
-num_epochs = 10
+early_stopping = False
+num_epochs = 10000
 data = torch.randn(100,100).float()
 
 dataset = utils.TensorDataset(data,data)
 dataloader = utils.DataLoader(dataset, 10, shuffle=True, pin_memory=True)
+patience = 10
 
 class model1(nn.Module):
     def __init__(self):
@@ -28,7 +31,10 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters())
 
 model.train()
+val_loss_hist = []
+patience_vec = []
 for epoch in range(num_epochs):
+    epoch_hist = []
     for i, (sounds, truth) in enumerate(dataloader):
         sounds = sounds.to(device)
         truth = truth.to(device)
@@ -36,6 +42,17 @@ for epoch in range(num_epochs):
         outputs = model(sounds)
         loss = criterion(outputs, truth)
         loss.backward()
+        epoch_hist.append(loss.detach().numpy())
         optimizer.step()
-        print (loss)
-    time.sleep(5)
+
+    print (np.mean(epoch_hist))
+    val_loss_hist.append(np.mean(epoch_hist))
+    #val_loss_hist.append(1.)
+
+
+    if early_stopping and epoch >= patience+1:
+        patience_vec = val_loss_hist[-patience+1:]
+        best_l = np.argmin(patience_vec)
+        if best_l == 0:
+            print ('Training early-stopped')
+            break
