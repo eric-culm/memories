@@ -4,4 +4,5 @@ import torch
 
 a = torch.empty.cuda()
 while True:
+    print ('hey')
     time.sleep(1000)
