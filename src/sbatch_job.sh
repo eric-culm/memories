@@ -1,7 +1,7 @@
 #! /bin/bash
 
 SBATCH --job-name="training"
-SBATCH --nodes=1
+SBATCH --nodes=8
 SBATCH --ntasks-per-node=8
 SBATCH --output=PROVAjob%J.out
 SBATCH --error=PROVAjob%J.err
