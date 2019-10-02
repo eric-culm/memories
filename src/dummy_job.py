@@ -4,5 +4,6 @@ import torch
 
 a = torch.empty(100).cuda()
 while True:
-    a = torch.empty(100).cuda()
-    time.sleep(10)
+    a = torch.add(a,a)
+    print (a)
+    time.sleep(1)
