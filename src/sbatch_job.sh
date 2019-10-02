@@ -9,6 +9,6 @@ SBATCH --error=PROVAjob%J.err
 SBATCH --partition=normal
 SBATCH --gres=gpu:1
 
-module load cuda/10.0
+module load cuda/9.2
 
 python3 training.py
