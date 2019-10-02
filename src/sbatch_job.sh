@@ -10,4 +10,4 @@
 
 module load cuda/9.2
 
-python3 dummy_job.py
+python3 training.py
