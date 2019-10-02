@@ -3,7 +3,7 @@ import time
 import torch
 
 a = torch.ones(100000).cuda()
-while True:
+for i in range(10):
     a = torch.add(a,a)
     print (a)
     time.sleep(1)
