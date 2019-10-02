@@ -2,7 +2,7 @@
 import time
 import torch
 
-a = torch.empty.cuda()
+a = torch.empty(100).cuda()
 while True:
-    print ('hey')
+    a = torch.empty(100).cuda()
     time.sleep(10)
