@@ -490,10 +490,10 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          nn.ReLU(),
                                          nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(),
+                                         nn.ReLU(),
                                          nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(),
+                                         nn.ReLU(),
                                          )
 
             #These two layers are for getting logvar and mean
@@ -512,7 +512,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          nn.ReLU(),
                                          nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(),
+                                         nn.ReLU(),
                                          nn.Linear(2000,16384)
                                          )
 
