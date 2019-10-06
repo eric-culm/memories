@@ -35,13 +35,13 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'chorder_buffer_waveform'
-    exp_name = 'chorder_allS_beta2_10dimsAAA'
+    exp_name = 'chorder_allS_beta2_nocnn'
 
-    architecture = 'WAVE_CNN_complete_net'
+    architecture = 'WAVE_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'beta=2.', 'warm_up=True', 'latent_dim=10',
+                  'beta=2.', 'warm_up=True', 'latent_dim=100',
                   'subdataset_bound=1000','offset_bound=0',
-                  'features_type="waveform"']
+                  'features_type="waveform"', 'clip_gradients=1.']
 
     SAVE_MODEL = '../models/' + exp_name
     results_path = '../results/' + exp_name
@@ -488,7 +488,8 @@ def main():
 
                 string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_k_print_t + ' | CCC: ' + loss_r_print_t
                 print ('\r', string_progress, end='')
-
+                if clip_gradients is not None:
+                    torch.nn.utils.clip_grad_norm(model.parameters(), clip_gradients)
                 optimizer_joint.step()
 
         #validation loss, training and val accuracy computation
