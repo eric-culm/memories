@@ -34,14 +34,14 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'chorder_buffer_waveform'
-    exp_name = 'chorder_allS_beta2_gradclip_100s'
+    dataset = 'sc09_buffer_waveform'
+    exp_name = 'EXP_0_sc09_beta2_NOclip_100s_W3030200100'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
                   'subdataset_bound=100','offset_bound=0',
-                  'features_type="waveform"', 'clip_gradients=1.']
+                  'features_type="waveform"', 'clip_gradients=None']
 
     SAVE_MODEL = '../models/' + exp_name
     results_path = '../results/' + exp_name
@@ -52,7 +52,7 @@ except IndexError:
     num_experiment = 0
     num_run = 0
     num_folds = 1
-    gpu_ID = 1
+    gpu_ID = 0
 
 
     print ('test mode: I/O from config.ini file')
