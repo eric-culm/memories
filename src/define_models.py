@@ -485,11 +485,15 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             super().__init__()
 
             #So here we will first define layers for encoder network
-            self.encoder = nn.Sequential(F.relu(nn.Linear(16384,2000)),
+            self.encoder = nn.Sequential(nn.Linear(16384,2000),
+                                        nn.BatchNorm1d(2000),
+                                         F.relu(),
+                                         nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(nn.Linear(2000,2000)),
-                                         nn.BatchNorm1d(2000),
-                                         F.relu(nn.Linear(2000,2000)),
+                                         F.relu(),
+                                         nn.Linear(2000,2000),
+                                         nn.BatchNorm1d(2000)
+                                         F.relu(),
                                          )
 
             #These two layers are for getting logvar and mean
@@ -503,11 +507,13 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             self.expand = F.relu(nn.Linear(num_latent, 128))
             self.fc3 = F.relu(nn.Linear(128, 256))
             self.fc4 = F.relu(nn.Linear(256, 2000))
-            self.decoder = nn.Sequential(F.relu(nn.Linear(2000,2000)),
+            self.decoder = nn.Sequential(nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(nn.Linear(2000,2000)),
+                                         F.relu(),
+                                         nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
-                                         F.relu(nn.Linear(2000,16384)))
+                                         F.relu(),
+                                         nn.Linear(2000,16384),
 
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
