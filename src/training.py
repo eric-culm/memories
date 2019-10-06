@@ -34,14 +34,14 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'sc09_complete_waveform'
-    exp_name = 'EXP_0_sc09_beta2_NOclip_100s_W3030200100'
+    dataset = 'ssiege_glitch_waveform'
+    exp_name = 'EXP_0_ssiege_beta2_clip_alls'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=100','offset_bound=0',
-                  'features_type="waveform"', 'clip_gradients=None']
+                  'subdataset_bound="all"','offset_bound=0',
+                  'features_type="waveform"', 'clip_gradients=1.']
 
     SAVE_MODEL = '../models/' + exp_name
     results_path = '../results/' + exp_name
@@ -594,7 +594,7 @@ def main():
             if last_mean <= convergence_threshold:
                 convergence_flag = True
 
-            print('  variational active: ' + str(convergence_flag) + ' | loss worm: ' +
+            print('convrgence flag: ' + str(convergence_flag) + ' | loss worm: ' +
                 str(warm_value_kld) + ' | noise worm: ' + str(warm_value_reparametrize))
 
 
