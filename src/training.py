@@ -558,11 +558,11 @@ def main():
             #train_data
             uf.save_data(tr_data, model, device, epoch, gen_figs_path, gen_sounds_path,
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type,
-                    'training', dyn_variational, warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
+                    'training', warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
             #test_data
             uf.save_data(test_data, model, device, epoch, gen_figs_path, gen_sounds_path,
                     save_figs, save_sounds, save_items_epochs, save_items_n, features_type,
-                    'test', dyn_variational, warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
+                    'test', warm_value_reparametrize, gen_distributions_path, save_latent_distribution)
 
             #save best model
             if save_best_only == True:
