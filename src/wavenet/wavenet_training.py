@@ -70,7 +70,7 @@ class WavenetTrainer:
                 self.optimizer.zero_grad()
                 loss.backward()
                 #loss = loss.data[0]
-                loss = loss.data()
+                loss = loss.item()
 
                 if self.clip is not None:
                     torch.nn.utils.clip_grad_norm(self.model.parameters(), self.clip)
@@ -102,7 +102,7 @@ class WavenetTrainer:
             output = self.model(x)
             loss = F.cross_entropy(output.squeeze(), target.squeeze())
             #total_loss += loss.data[0]
-            loss = loss.data()
+            loss = loss.item()
 
             predictions = torch.max(output, 1)[1].view(-1)
             correct_pred = torch.eq(target, predictions)
