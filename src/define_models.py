@@ -492,7 +492,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          nn.BatchNorm1d(2000),
                                          F.relu(),
                                          nn.Linear(2000,2000),
-                                         nn.BatchNorm1d(2000)
+                                         nn.BatchNorm1d(2000),
                                          F.relu(),
                                          )
 
