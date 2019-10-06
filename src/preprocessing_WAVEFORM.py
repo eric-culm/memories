@@ -147,7 +147,7 @@ def main():
             get_label_func = get_label_sc09
         if 'nsynth' in DATASET_NAME:
             get_label_func = get_label_nsynth
-        if 'chorder' in DATASET_NAME:
+        else:
             get_label_func = get_dummy
         curr_predictors, curr_target = pre.preprocess_foldable_item(curr_list, DUR, get_label_func, True)
         print (curr_predictors.shape)
