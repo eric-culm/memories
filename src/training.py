@@ -439,6 +439,8 @@ def main():
         else:
             warm_value_kld = warm_ramp_kld[epoch]
             warm_value_reparametrize = warm_ramp_reparametrize[epoch]
+            dyn_variational = True
+
 
         #if use kld loss every k epochs
         if kld_holes:
@@ -489,7 +491,7 @@ def main():
                 string_progress = string + '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' loss: ' + loss_j_print_t  + ' | KLD: ' + loss_k_print_t + ' | CCC: ' + loss_r_print_t
                 print ('\r', string_progress, end='')
                 if clip_gradients is not None:
-                    torch.nn.utils.clip_grad_norm(model.parameters(), clip_gradients)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), clip_gradients)
                 optimizer_joint.step()
 
         #validation loss, training and val accuracy computation
