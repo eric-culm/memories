@@ -57,6 +57,12 @@ def generate_and_log_samples(step):
     logger.audio_summary('temperature_1.0', tf_samples, step, sr=16000)
     print("audio clips generated")
 
+logger = TensorboardLogger(log_interval=200,
+                           validation_interval=400,
+                           generate_interval=1000,
+                           generate_function=generate_and_log_samples,
+                           log_dir="logs/chaconne_model")
+
 
 trainer = WavenetTrainer(model=model,
                          dataset=data,
