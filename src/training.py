@@ -398,7 +398,6 @@ def main():
     patience_vec = []
 
     #init variables for dynamic warm up
-    dyn_variational = False
     convergence_flag = False
 
     training_dict = {'train_joint_loss': [],
@@ -432,14 +431,12 @@ def main():
                 warm_value_reparametrize = 0.
             #if it converged, keep ramp of last epoch
             else:
-                dyn_variational = True
                 warm_value_kld = warm_ramp_kld[epoch]
                 warm_value_reparametrize = warm_ramp_reparametrize[epoch]
 
         else:
             warm_value_kld = warm_ramp_kld[epoch]
             warm_value_reparametrize = warm_ramp_reparametrize[epoch]
-            dyn_variational = True
 
 
         #if use kld loss every k epochs
@@ -472,7 +469,7 @@ def main():
                 truth = truth.to(device)
                 optimizer_joint.zero_grad()
 
-                outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
+                outputs, mu, logvar = model(sounds, warm_value_reparametrize)
 
                 loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs)
                 loss_r = training_utils.loss_recon(outputs, sounds, features_type)
@@ -511,7 +508,7 @@ def main():
                     sounds = sounds.to(device)
                     truth = truth.to(device)
 
-                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
+                    outputs, mu, logvar = model(sounds, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
                     loss_r = training_utils.loss_recon(outputs, sounds, features_type)
@@ -527,7 +524,7 @@ def main():
                     sounds = sounds.to(device)
                     truth = truth.to(device)
 
-                    outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
+                    outputs, mu, logvar = model(sounds, warm_value_reparametrize)
 
                     loss_k = training_utils.loss_KLD(mu, logvar, warm_value_kld, outputs, beta)
                     loss_r = training_utils.loss_recon(outputs, sounds, features_type)

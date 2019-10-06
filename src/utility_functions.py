@@ -283,7 +283,7 @@ def get_dataset_matrices(data_path, num_folds, num_fold, percs, train_path, val_
 
 
 def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, save_figs, save_sounds,
-                save_items_epochs, save_items_n, features_type, dataset, dyn_variational, warm_value_reparametrize,
+                save_items_epochs, save_items_n, features_type, dataset, warm_value_reparametrize,
                 gen_distributions_path, save_latent_distribution):
     data_gen = []
     data_truth = []
@@ -310,7 +310,7 @@ def save_data(dataloader, model, device,epoch, gen_figs_path, gen_sounds_path, s
                 target = sounds.cpu().numpy()
                 batch_labels = truth.cpu().numpy()
                 #compute predictions
-                outputs, mu, logvar = model(sounds, dyn_variational, warm_value_reparametrize)
+                outputs, mu, logvar = model(sounds, warm_value_reparametrize)
                 outputs = outputs.cpu().numpy()
                 latents = mu.cpu().numpy()
                 #concatenate predictions
