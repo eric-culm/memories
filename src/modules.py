@@ -484,3 +484,53 @@ class VAE_model:
             np.save(GRID_ST_PATH, filtered_list)
         print ('\nGrid ' + str(memory_type) + ' succesfully saved')
         print ('Num datapoints: ' + str(len(filtered_list)) + ' | Discarded ' + str(len(sorted_list) - len(filtered_list)))
+
+class Postprocessing:
+    def __init__(self, sr, irs_path):
+        self.sr = sr
+        self.irs_path = irs_path
+
+
+    def strip_silence(self, samples, threshold=35):
+        #strip initial and final silence
+        cut = pp.strip_silence(samples, threshold)
+        return cut
+
+    def paulstretch(self, samples, stretch_factor, winsize, transients_level):
+        #extreme time stretching with crazy algo
+        print ('paulstretching:')
+        stretched = pp.paulstretch_wrap(self.sr, samples, stretch_factor, winsize, transients_level)
+        return stretched
+
+    def stretch(self, samples, stretch_factor, granularity=5):
+        #phase vocoder based stretching
+        stretched = rub.pyrb.time_stretch(samples, self.sr, stretch_factor, {'-c':granularity})
+        return stretched
+
+    def reverb(self, samples, rev_type):
+        #convolution with randomly-selected impulse response
+        folder = os.path.join(self.irs_path, rev_type)
+        irs = os.listdir(folder)
+        random_rev = random.choice(irs)
+        rev_amount = np.random.rand() * 0.7 + 0.3
+
+        IR, sr = librosa.core.load(random_rev, mono=False, sr=self.sr)
+
+        try:  #convert to mono if sample is stereo
+            IR = IR[0]
+        except:
+            pass
+
+        IR = IR * rev_amount
+
+        out = scipy.signal.convolve(samples, IR)
+        out = out / max(out)
+        out = out * 0.9
+        return out
+
+    def convolve(self, samples1, samples2):
+        #convolve 2 signals
+        out = scipy.signal.convolve(samples1, samples2)
+        out = out / max(out)
+        out = out * 0.9
+        return out
