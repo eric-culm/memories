@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'chorder_buffer_waveform'
-    exp_name = 'chorder_allS_beta2_gradclip'
+    exp_name = 'chorder_allS_beta2_gradclip_100s'
 
     architecture = 'WAVE_CNN_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
