@@ -487,7 +487,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #So here we will first define layers for encoder network
             self.encoder = nn.Sequential(nn.Linear(16384,2000),
                                         nn.BatchNorm1d(2000),
-                                         F.relu(),
+                                         nn.ReLU(),
                                          nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
                                          F.relu(),
