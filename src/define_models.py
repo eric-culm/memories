@@ -485,6 +485,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             self.variational = variational
             self.dropout = dropout
             self.drop_prob = drop_prob
+            self.latent_dim = latent_dim
 
             #So here we will first define layers for encoder network
             self.encoder = nn.Sequential(nn.Linear(16384,2000),

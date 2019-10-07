@@ -34,7 +34,7 @@ dummy_model = DummyModel(dur=16384, latent_dim=100)
 model_parameters = ['verbose=False', 'model_size=64', 'variational=True',
                     'latent_dim=100',]
 
-VAE = VAE_model(architecture='WAVE_CNN_complete_net', weights_path=MODEL_WEIGHTS_PATH,
+VAE = VAE_model(architecture='WAVE_complete_net', weights_path=MODEL_WEIGHTS_PATH,
                 parameters=model_parameters, device='cpu')
 lop = LatentOperators(VAE.model.latent_dim)
 
@@ -126,7 +126,7 @@ def gen_random_blur(unused_addr, args):
         #z1 = VAE.quantize(VAE.gen_random_z())
         x1 = VAE.decode_int(z1)
         out.append(x1)
-        mul += 0.01
+        mul += 0.5
     allocator.write_local(out, 'random')
     allocator.to_client('random')
 

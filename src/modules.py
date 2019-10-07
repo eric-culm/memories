@@ -381,6 +381,7 @@ class VAE_model:
         weights = torch.load(weights_path,map_location=self.device)
         self.model = locals()['model_class'].to(self.device)
         self.model.load_state_dict(weights, strict=False)
+        self.model.eval()
         self.dim = 16384
         try:
             self.grid_lt = list(np.load(GRID_LT_PATH, allow_pickle=True))
