@@ -34,15 +34,15 @@ except IndexError:
     #IF IN TEST MODE:no xvalidation, results saved as exp0
     #generator: 11865
     #nogenerator
-    dataset = 'ssiege_glitch_waveform'
-    exp_name = 'EXP_0_ssiege_beta2_clip_alls_noCNN_dropout'
+    dataset = 'sc09_complete_waveform'
+    exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_dropout'
 
     architecture = 'WAVE_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=0','offset_bound=0',
+                  'subdataset_bound=1000','offset_bound=0',
                   'features_type="waveform"', 'clip_gradients=1.',
-                  'dropout=True']
+                  'dropout=False', 'regularization_lambda=0']
 
     SAVE_MODEL = '../models/' + exp_name
     results_path = '../results/' + exp_name
