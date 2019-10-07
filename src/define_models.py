@@ -482,8 +482,8 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #So here we will first define layers for encoder network
             self.encoder = nn.Sequential(nn.Linear(16384,2000),
-                                        F.relu(nn.BatchNorm1d(2000)),
-
+                                        nn.BatchNorm1d(2000),
+                                         nn.ReLU(),
                                          nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
                                          nn.ReLU(),
@@ -493,16 +493,16 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                                          )
 
             #These two layers are for getting logvar and mean
-            self.fc1 = F.relu(nn.Linear(2000, 256))
-            self.fc2 = F.relu(nn.Linear(256, 128))
+            self.fc1 = nn.Linear(2000, 256)
+            self.fc2 = nn.Linear(256, 128)
             self.mean = nn.Linear(128, num_latent)
             self.var = nn.Linear(128, num_latent)
 
             #######The decoder part
             #This is the first layer for the decoder part
-            self.expand = F.relu(nn.Linear(num_latent, 128))
-            self.fc3 = F.relu(nn.Linear(128, 256))
-            self.fc4 = F.relu(nn.Linear(256, 2000))
+            self.expand = nn.Linear(num_latent, 128)
+            self.fc3 = nn.Linear(128, 256)
+            self.fc4 = nn.Linear(256, 2000)
             self.decoder = nn.Sequential(nn.Linear(2000,2000),
                                          nn.BatchNorm1d(2000),
                                          nn.ReLU(),
@@ -517,18 +517,19 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             x = x.view([-1, 16384])
             x = self.encoder(x)
             #x = F.dropout2d(self.fc1(x), 0.5)
-            x = self.fc1(x)
-            x = self.fc2(x)
+            x = F.relu(self.fc1(x))
+            x = F.relu(self.fc2(x))
 
-            mean = self.mean(x)
-            logvar = self.var(x)
+            mean = F.sigmoid(self.mean(x))
+            logvar = F.sigmoid(self.var(x))
             return mean, logvar
 
         def dec_func(self, z):
             #here z is the latent variable state
-            z = self.expand(z)
+            z = F.relu(self.expand(z))
             #z = F.dropout2d(self.fc3(z), 0.5)
-            z = self.fc4(z)
+            z = F.relu(self.fc3(z))
+            z = F.relu(self.fc4(z))
 
             out = self.decoder(z)
             #out = out.view([-1, time_dim, features_dim])
@@ -540,15 +541,12 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #state comes from training
             #after a certain period, ad variational inference
             if self.variational:
-                if dyn_variational:
-                    #activated from training
-                    if self.training:
-                        std = torch.exp(0.5*logvar)   #So as to get std
-                        noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
-                        #noise *= warm_value_reparametrize
-                        return noise.mul(std).add_(mu)
-                    else:
-                        return mu
+                #activated from training
+                if self.training:
+                    std = torch.exp(0.5*logvar)   #So as to get std
+                    noise = torch.randn_like(mu)   #So as to get the noise of standard distribution
+                    noise *= warm_value_reparametrize
+                    return noise.mul(std).add_(mu)
                 else:
                     return mu
             else:
