@@ -500,8 +500,6 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #These two layers are for getting logvar and mean
             self.fc1 = nn.Linear(2000, 256)
-            if self.dropout:
-                self.dropout =
             self.fc2 = nn.Linear(256, 128)
             self.mean = nn.Linear(128, latent_dim)
             self.var = nn.Linear(128, latent_dim)
