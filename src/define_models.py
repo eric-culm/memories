@@ -537,7 +537,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             z = F.relu(self.fc3(z))
             z = F.relu(self.fc4(z))
             if self.dropout:
-                x = F.dropout2d(x, self.drop_prob)
+                z = F.dropout2d(z, self.drop_prob)
 
             out = self.decoder(z)
             out = out.view([-1, 1, 16384])
