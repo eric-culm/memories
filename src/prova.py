@@ -79,7 +79,7 @@ def xfade(x1, x2, ramp):
     return np.concatenate((left,center,end), axis=0)
 
 
-def concat_split s(sounds, sr, fade_len, min_len, max_len):
+def concat_split(sounds, sr, fade_len, min_len, max_len):
     max_len_samps = sr * max_len
     all_splits = []
     index = 1
@@ -95,7 +95,10 @@ def concat_split s(sounds, sr, fade_len, min_len, max_len):
     while len_out < max_len_samps:
         random_i = np.random.randint(len(sounds))
         curr_sound = all_splits[random_i]
+
         if len(curr_sound) > min_len:
+
+
             output = xfade(output, all_splits[random_i], fade_len)
         len_out = len(output)
     output = np.array(output)

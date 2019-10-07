@@ -19,6 +19,7 @@ import numpy as np
 import utility_functions as uf
 import configparser
 import loadconfig
+import pyrubberband as rub
 import librosa
 import random
 import scipy
@@ -547,6 +548,7 @@ class Postprocessing:
     def splitter(self, x, min_len=250):
         #segment sound according to changes in the spectral shape
         #uf.wavwrite(x, sr, out_file+'0.wav')
+
         threshold = 4.
         min_len = self.sr*min_len /1000
         onsets = []
@@ -557,6 +559,10 @@ class Postprocessing:
         step = x.shape[0] / onset_env.shape[0]
         onsets = np.multiply(onsets, step)
         filtered_onsets = [0]
+        '''
+        print ('\nfiga')
+        print (filtered_onsets)
+        '''
 
         for i in range(onsets.shape[0]-1):
             if i == 0:
@@ -576,6 +582,8 @@ class Postprocessing:
             for i in range(filtered_onsets.shape[0]-1):
                 output.append(x[filtered_onsets[i]:filtered_onsets[i+1]])
             output.append(x[filtered_onsets[-1]:])
+        else:
+            output = [x]
 
         '''
         index = 1
@@ -584,6 +592,7 @@ class Postprocessing:
             uf.wavwrite(i, sr, out_file+str(index)+'.wav')
             index+=1
         '''
+
         return output
 
     def xfade(self, x1, x2, ramp):
@@ -605,21 +614,22 @@ class Postprocessing:
     def concat_split(self, sounds, out_len, perc_stretched, stretch_f_center=0.7,
                     stretch_f_excursion=0.2, fade_len=30, min_len=250):
         #create long file concatenation splits
-        out_len_samps = self.sr * max_len
+        out_len_samps = self.sr * out_len
         all_splits = []
         index = 1
         print ('analyzing sounds')
         for i in sounds:
-            a = splitter(i, 16000)
+            a = self.splitter(i, 16000)
             for j in a:
                 all_splits.append(j)
             uf.print_bar(index, len(sounds))
             index+=1
         len_out = 0
+
         output = list(all_splits[np.random.randint(len(sounds))])
         while len_out < out_len_samps:
             random_i = np.random.randint(len(sounds))
-            stretch_flag = np.random.sample < perc_stretched
+            stretch_flag = np.random.sample() < perc_stretched
             curr_sound = all_splits[random_i]
 
             if stretch_flag:
@@ -628,9 +638,8 @@ class Postprocessing:
                 curr_sound = self.stretch(curr_sound, stretch_factor)
 
             if len(curr_sound) > min_len:
-                output = xfade(output, all_splits[random_i], fade_len)
+                output = self.xfade(output, all_splits[random_i], fade_len)
             len_out = len(output)
         output = np.array(output)
-        output = post.reverb(output, 'any')
-        uf.wavwrite(output, sr, out_file+'aaa.wav')
-        print ('\nsound built')
+
+        return output
