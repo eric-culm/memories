@@ -528,8 +528,8 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             x = F.relu(self.fc1(x))
             x = F.relu(self.fc2(x))
 
-            mean = F.sigmoid(self.mean(x))
-            logvar = F.sigmoid(self.var(x))
+            mean = torch.sigmoid(self.mean(x))
+            logvar = torch.sigmoid(self.var(x))
             return mean, logvar
 
         def dec_func(self, z):
@@ -542,7 +542,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
 
             out = self.decoder(z)
             out = out.view([-1, 1, 16384])
-            out = F.tanh(out)
+            out = torch.tanh(out)
             return out
 
         def reparametrize(self, mu, logvar, warm_value_reparametrize):
