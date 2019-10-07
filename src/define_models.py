@@ -471,15 +471,20 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
     #default parameters
     p = {
     'verbose':False,
-    'latent_dim':100
+    'latent_dim':100,
+    'dropout': False,
+    'drop_prob': 0.5,
     }
     p = parse_parameters(p, user_parameters)
     flattened_dim = time_dim * features_dim
 
     class Net(nn.Module):
-        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational'],
+                    dropout = p['dropout'], drop_prob=p['drop_prob']):
             super().__init__()
             self.variational = variational
+            self.dropout = dropout
+            self.drop_prob = drop_prob
 
             #So here we will first define layers for encoder network
             self.encoder = nn.Sequential(nn.Linear(16384,2000),
@@ -495,6 +500,8 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #These two layers are for getting logvar and mean
             self.fc1 = nn.Linear(2000, 256)
+            if self.dropout:
+                self.dropout =
             self.fc2 = nn.Linear(256, 128)
             self.mean = nn.Linear(128, latent_dim)
             self.var = nn.Linear(128, latent_dim)
@@ -517,7 +524,8 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #here we will be returning the logvar(log variance) and mean of our network
             x = x.view([-1, 16384])
             x = self.encoder(x)
-            #x = F.dropout2d(self.fc1(x), 0.5)
+            if self.dropout:
+                x = F.dropout2d(x, self.drop_prob)
             x = F.relu(self.fc1(x))
             x = F.relu(self.fc2(x))
 
@@ -528,12 +536,12 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
         def dec_func(self, z):
             #here z is the latent variable state
             z = F.relu(self.expand(z))
-            #z = F.dropout2d(self.fc3(z), 0.5)
             z = F.relu(self.fc3(z))
             z = F.relu(self.fc4(z))
+            if self.dropout:
+                x = F.dropout2d(x, self.drop_prob)
 
             out = self.decoder(z)
-            #out = out.view([-1, time_dim, features_dim])
             out = out.view([-1, 1, 16384])
             out = F.tanh(out)
             return out

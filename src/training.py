@@ -35,13 +35,14 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'ssiege_glitch_waveform'
-    exp_name = 'EXP_0_ssiege_beta2_clip_alls_noCNN'
+    exp_name = 'EXP_0_ssiege_beta2_clip_alls_noCNN_dropout'
 
     architecture = 'WAVE_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
                   'beta=2.', 'warm_up=True', 'latent_dim=100',
                   'subdataset_bound=0','offset_bound=0',
-                  'features_type="waveform"', 'clip_gradients=1.']
+                  'features_type="waveform"', 'clip_gradients=1.',
+                  'dropout=True']
 
     SAVE_MODEL = '../models/' + exp_name
     results_path = '../results/' + exp_name
