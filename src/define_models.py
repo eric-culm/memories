@@ -477,8 +477,9 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
     flattened_dim = time_dim * features_dim
 
     class Net(nn.Module):
-        def __init__(self, num_latent=p['latent_dim']):
+        def __init__(self, latent_dim=p['latent_dim'], variational=p['variational']):
             super().__init__()
+            self.variational = variational
 
             #So here we will first define layers for encoder network
             self.encoder = nn.Sequential(nn.Linear(16384,2000),
@@ -495,8 +496,8 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             #These two layers are for getting logvar and mean
             self.fc1 = nn.Linear(2000, 256)
             self.fc2 = nn.Linear(256, 128)
-            self.mean = nn.Linear(128, num_latent)
-            self.var = nn.Linear(128, num_latent)
+            self.mean = nn.Linear(128, latent_dim)
+            self.var = nn.Linear(128, latent_dim)
 
             #######The decoder part
             #This is the first layer for the decoder part
