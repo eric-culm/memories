@@ -552,9 +552,9 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             else:
                 return mu
 
-        def forward(self, x):
+        def forward(self, x, warm_value_reparametrize):
             mu, logvar = self.enc_func(x)
-            z = self.reparametrize(mean, logvar)
+            z = self.reparametrize(mu, logvar, warm_value_reparametrize)
             out = self.dec_func(z)
             return out, mu, logvar
 
