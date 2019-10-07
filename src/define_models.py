@@ -501,7 +501,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
 
             #######The decoder part
             #This is the first layer for the decoder part
-            self.expand = nn.Linear(num_latent, 128)
+            self.expand = nn.Linear(latent_dim, 128)
             self.fc3 = nn.Linear(128, 256)
             self.fc4 = nn.Linear(256, 2000)
             self.decoder = nn.Sequential(nn.Linear(2000,2000),
