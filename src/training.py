@@ -35,7 +35,7 @@ except IndexError:
     #generator: 11865
     #nogenerator
     dataset = 'sc09_complete_waveform'
-    exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_dropout'
+    exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_AFTER'
 
     architecture = 'WAVE_complete_net'
     parameters = ['verbose=False', 'model_size=64', 'variational=True',
