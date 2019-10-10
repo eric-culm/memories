@@ -492,12 +492,20 @@ class Postprocessing:
     def __init__(self, sr, irs_path):
         self.sr = sr
         self.irs_path = irs_path
+        self.eps = 0.0001
 
 
     def strip_silence(self, samples, threshold=35):
         #strip initial and final silence
         cut = pp.strip_silence(samples, threshold)
         return cut
+
+
+    def gen_silence(self, dur):
+        dur_samps = int(dur * self.sr)
+        noise = (np.random.sample(dur_samps) * 2) - 1
+        noise = noise * self.eps
+        return noise
 
     def paulstretch(self, samples, stretch_factor, winsize, transients_level):
         #extreme time stretching with crazy algo
@@ -612,7 +620,7 @@ class Postprocessing:
         return np.concatenate((left,center,end), axis=0)
 
 
-    def concat_split(self, sounds, out_len, perc_stretched, stretch_f_center=0.7,
+    def concat_split_old(self, sounds, out_len, perc_stretched, stretch_f_center=0.7,
                     stretch_f_excursion=0.2, fade_len=30, min_len=250):
         #create long file concatenation splits
         out_len_samps = self.sr * out_len
@@ -634,12 +642,132 @@ class Postprocessing:
             curr_sound = all_splits[random_i]
 
             if stretch_flag:
-                stretch_factor = np.random.sample() * stretch_f_excursion * 2
+                stretch_factor = (np.random.sample() * stretch_f_excursion * 2) + selp.eps
                 stretch_factor = stretch_factor + (stretch_f_center - stretch_f_excursion)
+                print ('\nculo')
+                print (stretch_factor)
                 curr_sound = self.stretch(curr_sound, stretch_factor)
 
             if len(curr_sound) > min_len:
                 output = self.xfade(output, all_splits[random_i], fade_len)
+            len_out = len(output)
+        output = np.array(output)
+
+        return output
+
+    def distribute_pan_stereo(self, sounds, bounds=[0,1]):
+
+        n_sounds = len(sounds)
+        lens = []
+        for i in sounds:
+            lens.append(len(i))
+        max_len = max(lens)
+        #create ramp
+        ramp = np.arange(n_sounds) / (n_sounds-1)
+        ramp = np.sqrt(ramp)  #better for panning
+        ramp = np.interp(ramp, (0., 1.), (bounds[0], bounds[1]))
+        pans = []
+        #create tuple of multipliers
+        for i in ramp:
+            pans.append((i, 1-i))
+        #create output vector stereo
+        out = np.array([[np.zeros(max_len)],[np.zeros(max_len)]])
+        #append panned sounds
+        index = 0
+        for i in sounds:
+            pad = np.zeros(max_len)
+            pad[:len(i)] = i
+            left = pad * pans[index][0]
+            right = pad * pans[index][1]
+            out[0] = np.add(out[0], left)
+            out[1] = np.add(out[1], right)
+            index += 1
+
+        out = np.divide(out, np.max(out))
+        out = np.multiply(out, 0.8)
+        out = np.squeeze(out)
+        
+        return out
+
+    def concat_split(self, sounds, out_len, sil_perc_curve, sil_len_curve,
+                            stretch_perc_curve, stretch_factor_curve, fade_len=30,
+                            min_len=250., len_curves=100):
+        #create long file concatenation splits
+
+        sil_len_bounds = [0.1, 6]
+        sil_perc_bounds = [0, 1]
+
+        stretch_factor_bound = 8
+        stretch_perc_bounds = [0, 1]
+
+        gaussian_steps = 5
+        gaussian_range = 0.2
+
+        sil_len_curve = sil_len_curve ** 2
+        sil_len_curve =(sil_len_curve * (sil_len_bounds[1]-sil_len_bounds[0])) + sil_len_bounds[0]
+        sil_perc_curve = (sil_perc_curve * (sil_perc_bounds[1]-sil_perc_bounds[0])) + sil_perc_bounds[0]
+
+        stretch_factor_curve = stretch_factor_curve * 2  #from 0-1 to 0-2
+        #stretch_factor_curve = stretch_factor_curve ** np.sqrt(stretch_factor_bound)  #turn to exponential with ~bounds
+        stretch_perc_curve = (stretch_perc_curve * (stretch_perc_bounds[1]-stretch_perc_bounds[0])) + stretch_perc_bounds[0]
+
+        out_len_samps = int(self.sr * out_len)
+        all_splits = []
+        index = 1
+        print ('analyzing sounds')
+        for i in sounds:
+            a = self.splitter(i, 16000)
+            for j in a:
+                all_splits.append(j)
+            uf.print_bar(index, len(sounds))
+            index+=1
+        len_out = 0
+
+        output = self.gen_silence(0.1) #init out buffer with silence
+
+        #re-order list clustering if wanted HERE!!
+
+        print ('\nbuilding output')
+        while len_out < out_len_samps:
+            curr_spot = int(np.round(len_out / out_len_samps * len_curves))  #where you are in the score
+            curr_spot = np.clip(curr_spot, 0, len_curves-1)
+            #random probs
+            silence_flag = np.random.sample() < sil_perc_curve[curr_spot]
+            stretch_flag = np.random.sample() < stretch_perc_curve[curr_spot]
+
+            #gen silence
+            if silence_flag:
+                #compute silence
+                silence_gaussian_std = sil_len_curve[curr_spot] * gaussian_range
+                silence_dur = np.random.normal(sil_len_curve[curr_spot], silence_gaussian_std) #gen random silence duration in secs
+                silence_dur = np.clip(silence_dur, 0.05, 10000)
+                curr_sound = self.gen_silence(silence_dur)
+
+            else:
+                random_i = np.random.randint(len(sounds))  #take random sound
+                curr_sound = all_splits[random_i]
+
+                #not stretching silences
+                if stretch_flag:
+                    #compute std taking random step in the curve
+                    #stretch_gaussian_step = np.random.randint(gaussian_steps*2+1) - gaussian_steps  #random step in the curve
+                    #stretch_gaussian_step = np.clip(stretch_gaussian_step, 0, len_curves-1)  #clip step to curve bounds
+                    #stretch_gaussian_std = stretch_factor_curve[int(np.round(stretch_gaussian_step))]  #take value of std in the curve
+                    stretch_gaussian_std = np.abs(stretch_factor_curve[curr_spot]-1) * gaussian_range
+
+                    stretch_factor = np.random.normal(stretch_factor_curve[curr_spot], stretch_gaussian_std)  #lognormal distribution
+                    if stretch_factor == 0:
+                        stretch_factor = self.eps
+                    stretch_factor = np.abs(stretch_factor)
+                    stretch_factor = np.clip(stretch_factor, stretch_factor_curve[curr_spot]-stretch_gaussian_std, stretch_factor_curve[curr_spot]+stretch_gaussian_std)
+                    stretch_factor = stretch_factor ** np.sqrt(stretch_factor_bound)  #turn to exponential within ~bounds
+                    stretch_factor = np.clip(stretch_factor, 1/stretch_factor_bound, stretch_factor_bound)
+                    curr_sound = self.stretch(curr_sound, stretch_factor)
+
+                uf.print_bar(curr_spot, len_curves)
+
+            if len(curr_sound) > min_len:
+                output = self.xfade(output, curr_sound, fade_len)
             len_out = len(output)
         output = np.array(output)
 
