@@ -701,7 +701,7 @@ class Postprocessing:
         for i in range(len(clusters)):
             label = clusters[i]
             output[label].append(sounds[i])
-            
+
         return output
 
 
@@ -710,6 +710,8 @@ class Postprocessing:
                             stretch_perc_curve, stretch_factor_curve, fade_len=30,
                             min_len=250., len_curves=100):
         #create long file concatenation splits
+        implementare clustering qui!!!!!!
+        ricordarsi che il clustering butta fuori un dict, e non un array
 
         sil_len_bounds = [0.1, 6]
         sil_perc_bounds = [0, 1]
