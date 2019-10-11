@@ -686,8 +686,25 @@ class Postprocessing:
         out = np.divide(out, np.max(out))
         out = np.multiply(out, 0.8)
         out = np.squeeze(out)
-        
+
         return out
+
+    def cluster_data(self, sounds, n_clusters=5):
+        output = {}
+        for i in range(n_clusters):
+            output[i] = []
+        feats = []
+        for i in sounds:
+            feats.append(np.abs(scipy.fftpack.fft(i, 128)[1:64]))
+        clustering = AgglomerativeClustering(n_clusters=n_clusters).fit(feats)
+        clusters = clustering.labels_
+        for i in range(len(clusters)):
+            label = clusters[i]
+            output[label].append(sounds[i])
+            
+        return output
+
+
 
     def concat_split(self, sounds, out_len, sil_perc_curve, sil_len_curve,
                             stretch_perc_curve, stretch_factor_curve, fade_len=30,
