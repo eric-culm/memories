@@ -1,6 +1,8 @@
 import threading
 from pythonosc import dispatcher
 from pythonosc import osc_server
+import matplotlib.pyplot as plt
+import re
 from modules import *
 import numpy as np
 import sys
@@ -49,6 +51,9 @@ filters = {
         0: FilterStream(frequency=1, streaming_object=ins[0], filtering_object=content_filter),
         1: FilterStream(frequency=1, streaming_object=ins[1], filtering_object=content_filter)
         }
+
+post = Postprocessing(16000, '../IRs/revs/divided/')
+
 
 
 
@@ -141,6 +146,47 @@ def gen_random_spike(unused_addr, args, n_spikes):
     allocator.write_local(out, 'random')
     allocator.to_client('random')
 
+def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, sil_prob,
+                    sil_len, stretch_prob, stretch_len, cluster):
+    print ('generating sequence')
+    sil_prob = np.array(sil_prob.split(' '), dtype=np.float32)
+    sil_len = np.array(sil_len.split(' '), dtype=np.float32)
+    stretch_prob = np.array(stretch_prob.split(' '), dtype=np.float32)
+    stretch_len = np.array(stretch_len.split(' '), dtype=np.float32)
+    cluster = np.array(cluster.split(' '), dtype=np.float32)
+
+    file = '/home/eric/Downloads/voice_prova.wav'
+    sounds = post.load_split(file, 16000)
+
+    buffers = []
+    if num_buffers > 1:
+        for i in range(num_buffers):
+            curr_buffer = post.concat_split(sounds, out_len, num_clusters, sil_prob, sil_len,
+                                        stretch_prob, stretch_len, cluster)
+            try:
+                curr_buffer = post.reverb(curr_buffer, 'any')
+            except:
+                pass
+            buffers.append(curr_buffer)
+    else:
+        out = post.concat_split(sounds, out_len, num_clusters, sil_prob, sil_len,
+                                    stretch_prob, stretch_len, cluster)
+
+    out = post.distribute_pan_stereo(buffers)
+
+    allocator.write_local(out, 'sequences')
+    allocator.to_client('sequences')
+
+
+    print ('sequence successfully generated')
+
+
+
+
+
+
+
+
 
 
 
@@ -164,7 +210,8 @@ dispatcher.map("/gen_random", gen_random, 'args')
 dispatcher.map("/gen_random_quant", gen_random_quant, 'args')
 dispatcher.map("/gen_random_blur", gen_random_blur, 'args')
 dispatcher.map("/gen_random_spike", gen_random_spike, 'n_spikes')
-
+dispatcher.map("/gen_sequence", gen_sequence, 'out_len', 'num_buffers', 'num_clusters', 'sil_prob',
+                'sil_len', 'stretch_prob', 'stretch_len', 'cluster')
 
 
 

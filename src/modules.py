@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch import optim
+import warnings
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from audtorch import metrics
@@ -15,6 +16,7 @@ from multiprocessing import Process
 import define_models as choose_model
 import time
 from concurrent.futures import ThreadPoolExecutor
+from sklearn.cluster import DBSCAN, AgglomerativeClustering
 import numpy as np
 import utility_functions as uf
 import configparser
@@ -109,7 +111,8 @@ class Allocator:
         index = 0
         for sound in input_list:
             curr_path = os.path.join(output_path, str(index)+'.wav')
-            uf.wavwrite(sound, self.sr, curr_path)
+            librosa.output.write_wav(curr_path, sound, self.sr)
+            #uf.wavwrite(sound, self.sr, curr_path)
             index += 1
         print ('All sounds written')
 
@@ -704,14 +707,24 @@ class Postprocessing:
 
         return output
 
+    def load_split(self, soundfile, len_slices):
+        sounds = []
+        samples, sr = librosa.core.load(soundfile, self.sr)
+        seg = np.arange(0, len(samples), len_slices)
+        for i in seg:
+            try:
+                sounds.append(samples[i:i+len_slices])
+            except:
+                pass
+
+        return sounds
 
 
-    def concat_split(self, sounds, out_len, sil_perc_curve, sil_len_curve,
-                            stretch_perc_curve, stretch_factor_curve, fade_len=30,
+
+    def concat_split(self, sounds, out_len, num_clusters, sil_perc_curve, sil_len_curve,
+                            stretch_perc_curve, stretch_factor_curve, cluster_curve, fade_len=30,
                             min_len=250., len_curves=100):
         #create long file concatenation splits
-        implementare clustering qui!!!!!!
-        ricordarsi che il clustering butta fuori un dict, e non un array
 
         sil_len_bounds = [0.1, 6]
         sil_perc_bounds = [0, 1]
@@ -742,9 +755,16 @@ class Postprocessing:
             index+=1
         len_out = 0
 
-        output = self.gen_silence(0.1) #init out buffer with silence
+        output = self.gen_silence(0.1) #init out buf    fer with silence
 
         #re-order list clustering if wanted HERE!!
+        if num_clusters == 0:
+            clusters = {0: all_splits}
+        else:
+            clusters = self.cluster_data(all_splits, n_clusters=num_clusters)
+
+        print ('CAZZO')
+        print (clusters.keys())
 
         print ('\nbuilding output')
         while len_out < out_len_samps:
@@ -763,8 +783,18 @@ class Postprocessing:
                 curr_sound = self.gen_silence(silence_dur)
 
             else:
-                random_i = np.random.randint(len(sounds))  #take random sound
-                curr_sound = all_splits[random_i]
+                if num_clusters == 0:
+                    curr_cluster = 0
+                else:
+                    curr_cluster = int(cluster_curve[curr_spot])
+
+                if curr_cluster == 0:
+                    #if curr_cluster is 0 select random cluster
+                    sel_cluster = np.random.randint(num_clusters)
+                else:
+                    sel_cluster = curr_cluster-1
+                random_i = np.random.randint(len(clusters[sel_cluster]))  #take random sound
+                curr_sound = clusters[sel_cluster][random_i]
 
                 #not stretching silences
                 if stretch_flag:
