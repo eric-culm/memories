@@ -17,6 +17,7 @@ cfg = configparser.ConfigParser()
 cfg.read(config)
 DUR = cfg.getint('main', 'dur')
 SR = cfg.getint('sampling', 'sr_target')
+SR_PROCESSING = cfg.getint('main', 'sr_processing')
 TOTAL_IN_CHANNELS = cfg.getint('main', 'total_in_channels')
 SERVER_IP = cfg.get('osc', 'server_ip')
 S2C_PORT = cfg.getint('osc', 's2c_port')
@@ -28,7 +29,7 @@ CLIENT_PATH = cfg.get('osc', 'client_path')
 #create modules instances
 print ('Loading modules')
 memory = Memory(memory_lt_path=MEMORY_LT_PATH, memory_st_path=MEMORY_ST_PATH)
-allocator = Allocator(server_shared_path='../shared',
+allocator = Allocator(server_shared_path='../shared', sr=96000,
                     client_shared_path=os.path.join(CLIENT_PATH, 'shared'))
 content_filter = FilterSound(memory_bag=memory.get_memory_lt(), threshold=0.0, random_prob=0.0, env_length=200)
 dummy_model = DummyModel(dur=16384, latent_dim=100)
@@ -52,7 +53,7 @@ filters = {
         1: FilterStream(frequency=1, streaming_object=ins[1], filtering_object=content_filter)
         }
 
-post = Postprocessing(16000, '../IRs/revs/divided/')
+post = Postprocessing(SR_PROCESSING, '../IRs/revs/divided/')
 
 
 
@@ -155,7 +156,7 @@ def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, sil_prob
     stretch_len = np.array(stretch_len.split(' '), dtype=np.float32)
     cluster = np.array(cluster.split(' '), dtype=np.float32)
 
-    file = '/home/eric/Downloads/voice_prova.wav'
+    file = '/home/eric/Downloads/choir.wav'
     sounds = post.load_split(file, 16000)
 
     buffers = []
@@ -165,6 +166,7 @@ def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, sil_prob
                                         stretch_prob, stretch_len, cluster)
             try:
                 curr_buffer = post.reverb(curr_buffer, 'any')
+                #pass
             except:
                 pass
             buffers.append(curr_buffer)

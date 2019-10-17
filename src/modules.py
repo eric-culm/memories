@@ -3,6 +3,7 @@ from torch import nn
 from torch import optim
 import warnings
 import torch.nn.functional as F
+import soundfile
 import matplotlib.pyplot as plt
 from audtorch import metrics
 from scipy.stats import pearsonr
@@ -93,7 +94,7 @@ class Allocator:
     '''
     manage the shared folder between server and client.
     '''
-    def __init__(self, server_shared_path, client_shared_path, sr=SR,
+    def __init__(self, server_shared_path, client_shared_path, sr,
                 client_ip=CLIENT_IP, client_username='eric'):
         self.sr = sr
         self.client_ip = client_ip
@@ -111,7 +112,9 @@ class Allocator:
         index = 0
         for sound in input_list:
             curr_path = os.path.join(output_path, str(index)+'.wav')
-            librosa.output.write_wav(curr_path, sound, self.sr)
+            swapped_sound = np.swapaxes(sound,0,1)
+            soundfile.write(curr_path, swapped_sound, self.sr, format='WAV', subtype='PCM_24')
+            #librosa.output.write_wav(curr_path, sound, self.sr)
             #uf.wavwrite(sound, self.sr, curr_path)
             index += 1
         print ('All sounds written')
@@ -521,6 +524,10 @@ class Postprocessing:
         stretched = rub.pyrb.time_stretch(samples, self.sr, stretch_factor, {'-c':granularity})
         return stretched
 
+    def pitch_shift(self, samples, semitones, granularity=5):
+        shifted = rub.pyrb.time_stretch(samples, self.sr, semitones, {'-c':granularity})
+        return shifted
+        
     def reverb(self, samples, rev_type):
         #convolution with randomly-selected impulse response
         if rev_type == 'any':
@@ -748,7 +755,7 @@ class Postprocessing:
         index = 1
         print ('analyzing sounds')
         for i in sounds:
-            a = self.splitter(i, 16000)
+            a = self.splitter(i, 250)
             for j in a:
                 all_splits.append(j)
             uf.print_bar(index, len(sounds))
@@ -758,13 +765,11 @@ class Postprocessing:
         output = self.gen_silence(0.1) #init out buf    fer with silence
 
         #re-order list clustering if wanted HERE!!
-        if num_clusters == 0:
+        if num_clusters == 1:
             clusters = {0: all_splits}
         else:
             clusters = self.cluster_data(all_splits, n_clusters=num_clusters)
 
-        print ('CAZZO')
-        print (clusters.keys())
 
         print ('\nbuilding output')
         while len_out < out_len_samps:
