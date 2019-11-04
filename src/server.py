@@ -147,8 +147,8 @@ def gen_random_spike(unused_addr, args, n_spikes):
     allocator.write_local(out, 'random')
     allocator.to_client('random')
 
-def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, sil_prob,
-                    sil_len, stretch_prob, stretch_len, cluster):
+def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, input_sound,
+                max_len, sil_prob, sil_len, stretch_prob, stretch_len, cluster):
     print ('generating sequence')
     sil_prob = np.array(sil_prob.split(' '), dtype=np.float32)
     sil_len = np.array(sil_len.split(' '), dtype=np.float32)
@@ -156,8 +156,10 @@ def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, sil_prob
     stretch_len = np.array(stretch_len.split(' '), dtype=np.float32)
     cluster = np.array(cluster.split(' '), dtype=np.float32)
 
-    file = '/home/eric/Downloads/choir.wav'
-    sounds = post.load_split(file, 16000)
+    in_folder = '/home/eric/Desktop/memories/input_sounds'
+    file = os.path.join(in_folder, input_sound)
+    max_len = max_len * SR_PROCESSING
+    sounds = post.load_split(file, max_len)
 
     buffers = []
     if num_buffers > 1:
@@ -212,7 +214,7 @@ dispatcher.map("/gen_random", gen_random, 'args')
 dispatcher.map("/gen_random_quant", gen_random_quant, 'args')
 dispatcher.map("/gen_random_blur", gen_random_blur, 'args')
 dispatcher.map("/gen_random_spike", gen_random_spike, 'n_spikes')
-dispatcher.map("/gen_sequence", gen_sequence, 'out_len', 'num_buffers', 'num_clusters', 'sil_prob',
+dispatcher.map("/gen_sequence", gen_sequence, 'out_len', 'num_buffers', 'num_clusters', 'input_sound', 'sil_prob',
                 'sil_len', 'stretch_prob', 'stretch_len', 'cluster')
 
 

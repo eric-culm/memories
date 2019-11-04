@@ -527,7 +527,7 @@ class Postprocessing:
     def pitch_shift(self, samples, semitones, granularity=5):
         shifted = rub.pyrb.time_stretch(samples, self.sr, semitones, {'-c':granularity})
         return shifted
-        
+
     def reverb(self, samples, rev_type):
         #convolution with randomly-selected impulse response
         if rev_type == 'any':
@@ -636,7 +636,7 @@ class Postprocessing:
         out_len_samps = self.sr * out_len
         all_splits = []
         index = 1
-        print ('analyzing sounds')
+        print ('\nanalyzing sounds')
         for i in sounds:
             a = self.splitter(i, 16000)
             for j in a:
@@ -674,7 +674,7 @@ class Postprocessing:
         max_len = max(lens)
         #create ramp
         ramp = np.arange(n_sounds) / (n_sounds-1)
-        ramp = np.sqrt(ramp)  #better for panning
+        #ramp = np.sqrt(ramp)  #better for panning
         ramp = np.interp(ramp, (0., 1.), (bounds[0], bounds[1]))
         pans = []
         #create tuple of multipliers
