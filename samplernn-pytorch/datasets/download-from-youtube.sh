@@ -9,12 +9,12 @@ url=$1
 chunk_size=$2
 dataset_path=$3
 
-downloaded="temp"
+downloaded=".temp"
 rm -f $downloaded
 format=$(youtube-dl -F $url | grep audio | sed -r 's|([0-9]+).*|\1|g' | tail -n 1)
 youtube-dl $url -f $format -o $downloaded
 
-converted="temp2.wav"
+converted=".temp2.wav"
 rm -f $converted
 ffmpeg -i $downloaded -ac 1 -ab 16k -ar 16000 $converted
 rm -f $downloaded

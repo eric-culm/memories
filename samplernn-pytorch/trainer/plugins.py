@@ -143,23 +143,18 @@ class GeneratorPlugin(Plugin):
 
     pattern = 'ep{}-s{}.wav'
 
-    def __init__(self, samples_path, n_samples, sample_length, sample_rate, sampling_temperature):
+    def __init__(self, samples_path, n_samples, sample_length, sample_rate):
         super().__init__([(1, 'epoch')])
         self.samples_path = samples_path
         self.n_samples = n_samples
         self.sample_length = sample_length
         self.sample_rate = sample_rate
-        self.sampling_temperature = sampling_temperature
 
     def register(self, trainer):
         self.generate = Generator(trainer.model.model, trainer.cuda)
 
-    # New register to accept model and cuda setting (which tells whether we should use GPU or not) -> audio generation after training
-    def register_generate(self, model, cuda):
-        self.generate = Generator(model, cuda)
-
-    def epoch(self, epoch_index, initial_seq=None):
-        samples = self.generate(self.n_samples, self.sample_length, self.sampling_temperature, initial_seq=initial_seq) \
+    def epoch(self, epoch_index):
+        samples = self.generate(self.n_samples, self.sample_length) \
                       .cpu().float().numpy()
         for i in range(self.n_samples):
             write_wav(

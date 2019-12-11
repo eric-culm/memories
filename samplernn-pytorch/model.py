@@ -57,8 +57,8 @@ class FrameLevelRNN(torch.nn.Module):
             out_channels=dim,
             kernel_size=1
         )
-        init.kaiming_uniform_(self.input_expand.weight)
-        init.constant_(self.input_expand.bias, 0)
+        init.kaiming_uniform(self.input_expand.weight)
+        init.constant(self.input_expand.bias, 0)
         if weight_norm:
             self.input_expand = torch.nn.utils.weight_norm(self.input_expand)
 
@@ -73,23 +73,23 @@ class FrameLevelRNN(torch.nn.Module):
                 getattr(self.rnn, 'weight_ih_l{}'.format(i)),
                 [nn.lecun_uniform, nn.lecun_uniform, nn.lecun_uniform]
             )
-            init.constant_(getattr(self.rnn, 'bias_ih_l{}'.format(i)), 0)
+            init.constant(getattr(self.rnn, 'bias_ih_l{}'.format(i)), 0)
 
             nn.concat_init(
                 getattr(self.rnn, 'weight_hh_l{}'.format(i)),
                 [nn.lecun_uniform, nn.lecun_uniform, init.orthogonal]
             )
-            init.constant_(getattr(self.rnn, 'bias_hh_l{}'.format(i)), 0)
+            init.constant(getattr(self.rnn, 'bias_hh_l{}'.format(i)), 0)
 
         self.upsampling = nn.LearnedUpsampling1d(
             in_channels=dim,
             out_channels=dim,
             kernel_size=frame_size
         )
-        init.uniform_(
+        init.uniform(
             self.upsampling.conv_t.weight, -np.sqrt(6 / dim), np.sqrt(6 / dim)
         )
-        init.constant_(self.upsampling.bias, 0)
+        init.constant(self.upsampling.bias, 0)
         if weight_norm:
             self.upsampling.conv_t = torch.nn.utils.weight_norm(
                 self.upsampling.conv_t
@@ -138,7 +138,7 @@ class SampleLevelMLP(torch.nn.Module):
             kernel_size=frame_size,
             bias=False
         )
-        init.kaiming_uniform_(self.input.weight)
+        init.kaiming_uniform(self.input.weight)
         if weight_norm:
             self.input = torch.nn.utils.weight_norm(self.input)
 
@@ -147,8 +147,8 @@ class SampleLevelMLP(torch.nn.Module):
             out_channels=dim,
             kernel_size=1
         )
-        init.kaiming_uniform_(self.hidden.weight)
-        init.constant_(self.hidden.bias, 0)
+        init.kaiming_uniform(self.hidden.weight)
+        init.constant(self.hidden.bias, 0)
         if weight_norm:
             self.hidden = torch.nn.utils.weight_norm(self.hidden)
 
@@ -158,7 +158,7 @@ class SampleLevelMLP(torch.nn.Module):
             kernel_size=1
         )
         nn.lecun_uniform(self.output.weight)
-        init.constant_(self.output.bias, 0)
+        init.constant(self.output.bias, 0)
         if weight_norm:
             self.output = torch.nn.utils.weight_norm(self.output)
 
@@ -242,7 +242,7 @@ class Generator(Runner):
         super().__init__(model)
         self.cuda = cuda
 
-    def __call__(self, n_seqs, seq_len, sampling_temperature=0.9, initial_seq=None):
+    def __call__(self, n_seqs, seq_len):
         # generation doesn't work with CUDNN for some reason
         torch.backends.cudnn.enabled = False
 
@@ -250,18 +250,10 @@ class Generator(Runner):
 
         bottom_frame_size = self.model.frame_level_rnns[0].n_frame_samples
         sequences = torch.LongTensor(n_seqs, self.model.lookback + seq_len) \
-            .fill_(utils.q_zero(self.model.q_levels))
-        if initial_seq is None:
-            initial_i = self.model.lookback
-            final_i = initial_i + seq_len
-        else:  # CONDITIONAL
-            sequences[:, 0:np.shape(initial_seq)[1]] = initial_seq
-            initial_i = np.shape(initial_seq)[1] - self.model.lookback
-            # initial_i = np.shape(initial_seq)[1] + self.model.lookback
-            final_i = self.model.lookback + seq_len
+                         .fill_(utils.q_zero(self.model.q_levels))
         frame_level_outputs = [None for _ in self.model.frame_level_rnns]
 
-        for i in range(initial_i, final_i):
+        for i in range(self.model.lookback, self.model.lookback + seq_len):
             for (tier_index, rnn) in \
                     reversed(list(enumerate(self.model.frame_level_rnns))):
                 if i % rnn.n_frame_samples != 0:
@@ -274,13 +266,10 @@ class Generator(Runner):
                     ).unsqueeze(1),
                     volatile=True
                 )
-                # print("Tier {}: prev_samples from {} to {}, shape {}: {}".format(tier_index, i - rnn.n_frame_samples, i, np.shape(prev_samples), prev_samples))
                 if self.cuda:
                     prev_samples = prev_samples.cuda()
 
-                l = len(self.model.frame_level_rnns) - 1
-                if tier_index == l:
-                    print("No upper tier conditioning")
+                if tier_index == len(self.model.frame_level_rnns) - 1:
                     upper_tier_conditioning = None
                 else:
                     frame_index = (i // rnn.n_frame_samples) % \
@@ -288,30 +277,24 @@ class Generator(Runner):
                     upper_tier_conditioning = \
                         frame_level_outputs[tier_index + 1][:, frame_index, :] \
                                            .unsqueeze(1)
-                    print("Frame index {}, upper_tier_conditioning shape {}".format(frame_index, np.shape(upper_tier_conditioning)))
 
                 frame_level_outputs[tier_index] = self.run_rnn(
                     rnn, prev_samples, upper_tier_conditioning
                 )
-                print("Tier {} frame level outputs shape {}".format(tier_index, np.shape(frame_level_outputs[tier_index])))
 
-            # print(sequences[:, i - bottom_frame_size : i])
             prev_samples = torch.autograd.Variable(
                 sequences[:, i - bottom_frame_size : i],
                 volatile=True
             )
-            # print("Tier {}: prev_samples from {} to {}, shape {}: {}".format(tier_index, i - bottom_frame_size, i, np.shape(prev_samples), prev_samples))
             if self.cuda:
                 prev_samples = prev_samples.cuda()
             upper_tier_conditioning = \
                 frame_level_outputs[0][:, i % bottom_frame_size, :] \
                                       .unsqueeze(1)
-            sample_dist = self.model.sample_level_mlp(prev_samples, upper_tier_conditioning)
-            sample_dist = sample_dist.div(sampling_temperature).squeeze(1).exp_().data
-            print("Sample dist {}".format(np.shape(sample_dist)))
-            print("Before: {}".format(sequences[:, i]))
+            sample_dist = self.model.sample_level_mlp(
+                prev_samples, upper_tier_conditioning
+            ).squeeze(1).exp_().data
             sequences[:, i] = sample_dist.multinomial(1).squeeze(1)
-            print("After {}".format(sequences[:, i]))
 
         torch.backends.cudnn.enabled = True
 

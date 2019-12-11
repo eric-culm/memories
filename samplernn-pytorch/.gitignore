@@ -1,12 +1,3 @@
-# Pycharm
-.idea/*
-datasets/*
-!download-from-youtube.sh
-results/*
-librosa/*
-*.pyc
-venv*/*
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

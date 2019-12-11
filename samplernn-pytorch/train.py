@@ -44,12 +44,11 @@ default_params = {
     'keep_old_checkpoints': False,
     'datasets_path': 'datasets',
     'results_path': 'results',
-    'epoch_limit': 1000,  # default: 1000
+    'epoch_limit': 1000,
     'resume': True,
     'sample_rate': 16000,
     'n_samples': 1,
-    'sample_length': 8 * 16000,
-    'sampling_temperature': 0.9,
+    'sample_length': 80000,
     'loss_smoothing': 0.99,
     'cuda': True,
     'comet_key': None
@@ -172,11 +171,6 @@ def main(exp, frame_sizes, dataset, **params):
     results_path = setup_results_dir(params)
     tee_stdout(os.path.join(results_path, 'log'))
 
-    # Save samplernn parameters in .json for future audio generation
-    import json
-    with open(os.path.join(results_path, 'sample_rnn_params.json'), 'w') as fp:
-        json.dump(params, fp, sort_keys=True, indent=4)
-
     model = SampleRNN(
         frame_sizes=params['frame_sizes'],
         n_rnn=params['n_rnn'],
@@ -223,7 +217,7 @@ def main(exp, frame_sizes, dataset, **params):
     ))
     trainer.register_plugin(GeneratorPlugin(
         os.path.join(results_path, 'samples'), params['n_samples'],
-        params['sample_length'], params['sample_rate'], params['sampling_temperature']
+        params['sample_length'], params['sample_rate']
     ))
     trainer.register_plugin(
         Logger([
@@ -347,10 +341,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '--sample_length', type=int,
         help='length of each generated sample (in samples)'
-    )
-    parser.add_argument(
-        '--sampling_temperature', type=float,
-        help='"temperature" to control dynamics of sampling and prevent noise'
     )
     parser.add_argument(
         '--loss_smoothing', type=float,
