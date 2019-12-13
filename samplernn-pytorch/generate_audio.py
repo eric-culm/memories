@@ -50,8 +50,9 @@ model.load_state_dict(new_pretrained_state)
 num_samples = 2  # params['n_samples']
 sample_rate = params['sample_rate']
 sample_length = DUR * sample_rate
+sampling_temperature = 0.95
 print("Number samples: {}, sample_length: {}, sample_rate: {}".format(num_samples, sample_length, sample_rate))
-generator = GeneratorPlugin(GENERATED_PATH, num_samples, sample_length, sample_rate)
+generator = GeneratorPlugin(GENERATED_PATH, num_samples, sample_length, sample_rate, sampling_temperature=sampling_temperature)
 
 # Call new register function to accept the trained model and the cuda setting
 generator.register_generate(model.cuda(), params['cuda'])
