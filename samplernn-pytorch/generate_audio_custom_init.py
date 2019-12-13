@@ -87,6 +87,7 @@ if __name__ == '__main__':
     )
 
     # Delete "model." from key names since loading the checkpoint automatically attaches it to the key names
+
     pretrained_state = torch.load(PRETRAINED_PATH)
     new_pretrained_state = OrderedDict()
 
@@ -125,7 +126,8 @@ if __name__ == '__main__':
     generator = GeneratorPlugin(GENERATED_PATH, num_samples, sample_length, sample_rate)
 
     # Overloads register function to accept the trained model and the cuda setting
-    generator.register_generate(model.cuda(), params['cuda'])
+    #generator.register_generate(model.cuda(), params['cuda'])
+    generator.register_generate(model, False)
 
     # Generate new audio
     generator.epoch('Test19_{}'.format(initial_seq_size), initial_seed=initial_seq)

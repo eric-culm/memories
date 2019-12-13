@@ -1,7 +1,7 @@
 from model import SampleRNN
 import torch
 from collections import OrderedDict
-import os
+import os, sys
 import json
 from trainer.plugins import GeneratorPlugin
 
@@ -10,8 +10,9 @@ from trainer.plugins import GeneratorPlugin
 
 
 # Paths
-RESULTS_PATH = 'results/exp:TEST-frame_sizes:16,4-n_rnn:2-dataset:COGNIMUSE_eq_eq_pad/'
-PRETRAINED_PATH = RESULTS_PATH + 'checkpoints/best-ep65-it79430'
+RESULTS_PATH = sys.argv[1]
+PRETRAINED_PATH = sys.argv[2]
+DUR = sys.argv[3]
 # RESULTS_PATH = 'results/exp:TEST-frame_sizes:16,4-n_rnn:2-dataset:piano3/'
 # PRETRAINED_PATH = RESULTS_PATH + 'checkpoints/best-ep21-it29610'
 GENERATED_PATH = RESULTS_PATH + 'generated/'
@@ -47,8 +48,8 @@ model.load_state_dict(new_pretrained_state)
 
 # Generate Plugin
 num_samples = 2  # params['n_samples']
-sample_length = params['sample_length']
 sample_rate = params['sample_rate']
+sample_length = DUR * sample_rate
 print("Number samples: {}, sample_length: {}, sample_rate: {}".format(num_samples, sample_length, sample_rate))
 generator = GeneratorPlugin(GENERATED_PATH, num_samples, sample_length, sample_rate)
 

@@ -7,6 +7,14 @@ from torch.nn import init
 
 import numpy as np
 
+def print_bar(index, total):
+    perc = int(index / total * 20)
+    perc_progress = int(np.round((float(index)/total) * 100))
+    perc_progress_2 = float(index/total) * 100
+
+    inv_perc = int(20 - perc - 1)
+    strings = '[' + '=' * perc + '>' + '.' * inv_perc + ']' + ' Progress: ' + str(perc_progress_2) + '%'
+    print ('\r', strings, end='')
 
 class SampleRNN(torch.nn.Module):
 
@@ -247,6 +255,9 @@ class Generator(Runner):
         torch.backends.cudnn.enabled = False
 
         self.reset_hidden_states()
+        print ("")
+        print ("Generating sound")
+        print ("")
 
         bottom_frame_size = self.model.frame_level_rnns[0].n_frame_samples
         sequences = torch.LongTensor(n_seqs, self.model.lookback + seq_len) \
@@ -261,7 +272,10 @@ class Generator(Runner):
             final_i = self.model.lookback + seq_len
         frame_level_outputs = [None for _ in self.model.frame_level_rnns]
 
+        tot_dur = final_i - initial_i
+
         for i in range(initial_i, final_i):
+            print_bar(i, tot_dur)
             for (tier_index, rnn) in \
                     reversed(list(enumerate(self.model.frame_level_rnns))):
                 if i % rnn.n_frame_samples != 0:
@@ -280,7 +294,7 @@ class Generator(Runner):
 
                 l = len(self.model.frame_level_rnns) - 1
                 if tier_index == l:
-                    print("No upper tier conditioning")
+                    #print("No upper tier conditioning")
                     upper_tier_conditioning = None
                 else:
                     frame_index = (i // rnn.n_frame_samples) % \
@@ -288,12 +302,12 @@ class Generator(Runner):
                     upper_tier_conditioning = \
                         frame_level_outputs[tier_index + 1][:, frame_index, :] \
                                            .unsqueeze(1)
-                    print("Frame index {}, upper_tier_conditioning shape {}".format(frame_index, np.shape(upper_tier_conditioning)))
+                    #print("Frame index {}, upper_tier_conditioning shape {}".format(frame_index, np.shape(upper_tier_conditioning)))
 
                 frame_level_outputs[tier_index] = self.run_rnn(
                     rnn, prev_samples, upper_tier_conditioning
                 )
-                print("Tier {} frame level outputs shape {}".format(tier_index, np.shape(frame_level_outputs[tier_index])))
+                #print("Tier {} frame level outputs shape {}".format(tier_index, np.shape(frame_level_outputs[tier_index])))
 
             # print(sequences[:, i - bottom_frame_size : i])
             prev_samples = torch.autograd.Variable(
@@ -308,10 +322,10 @@ class Generator(Runner):
                                       .unsqueeze(1)
             sample_dist = self.model.sample_level_mlp(prev_samples, upper_tier_conditioning)
             sample_dist = sample_dist.div(sampling_temperature).squeeze(1).exp_().data
-            print("Sample dist {}".format(np.shape(sample_dist)))
-            print("Before: {}".format(sequences[:, i]))
+            #print("Sample dist {}".format(np.shape(sample_dist)))
+            #print("Before: {}".format(sequences[:, i]))
             sequences[:, i] = sample_dist.multinomial(1).squeeze(1)
-            print("After {}".format(sequences[:, i]))
+            #print("After {}".format(sequences[:, i]))
 
         torch.backends.cudnn.enabled = True
 
