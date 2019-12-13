@@ -12,7 +12,7 @@ from trainer.plugins import GeneratorPlugin
 # Paths
 RESULTS_PATH = sys.argv[1]
 PRETRAINED_PATH = sys.argv[2]
-DUR = sys.argv[3]
+DUR = int(sys.argv[3])
 # RESULTS_PATH = 'results/exp:TEST-frame_sizes:16,4-n_rnn:2-dataset:piano3/'
 # PRETRAINED_PATH = RESULTS_PATH + 'checkpoints/best-ep21-it29610'
 GENERATED_PATH = RESULTS_PATH + 'generated/'
