@@ -47,7 +47,7 @@ for k, v in pretrained_state.items():
 model.load_state_dict(new_pretrained_state)
 
 # Generate Plugin
-num_samples = 2  # params['n_samples']
+num_samples = 1  # params['n_samples']
 sample_rate = params['sample_rate']
 sample_length = DUR * sample_rate
 sampling_temperature = 0.95
