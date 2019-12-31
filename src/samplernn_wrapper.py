@@ -59,7 +59,7 @@ def train_srnn(input_dataset, frame_sizes=[16,4], n_rnn=2, batch_size=128, keep_
     command =     ['conda', 'run', '-n', str(env_name),
                    'python', 'train.py',
                    '--exp', str(exp_name),
-                   '--frame_sizes', str(frame_sizes[0]), str(frame_sizes[1])
+                   '--frame_sizes', str(frame_sizes[0]), str(frame_sizes[1]),
                    '--n_rnn', str(n_rnn),
                    '--batch_size', str(batch_size),
                    '--keep_old_checkpoints', str(keep_old_checkpoints),
