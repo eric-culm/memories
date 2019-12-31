@@ -169,6 +169,9 @@ def main(exp, frame_sizes, dataset, **params):
         **params
     )
 
+    for param in params:
+        param = eval(param)
+
     results_path = setup_results_dir(params)
     tee_stdout(os.path.join(results_path, 'log'))
 
