@@ -101,10 +101,10 @@ def train_srnn_copy(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, 
                    ' --n_samples ' + str(n_samples) + \
                    ' --sample_length ' + str(sample_length) + \
                    ' --sampling_temperature ' + str(sampling_temperature) + \
+                   ' --epoch_limit ' + str(epoch_limit) + \
                    ' --dataset ' + str(input_dataset)
-                   #' --epoch_limit ' + str(epoch_limit) + \
     command = conda_string + train_string
     print (command)
-    training = subprocess.call(command, shell=True, cwd=code_path)
-    #training.communicate()
-    #training.wait()
+    training = subprocess.Popen(command, shell=True, cwd=code_path)
+    training.communicate()
+    training.wait()

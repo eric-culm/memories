@@ -332,7 +332,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--results_path', help='path to the directory to save the results to'
     )
-    parser.add_argument('--epoch_limit', help='how many epochs to run')
+    parser.add_argument('--epoch_limit', type=int, help='how many epochs to run')
     parser.add_argument(
         '--resume', type=parse_bool, default=True,
         help='whether to resume training from the last checkpoint'
