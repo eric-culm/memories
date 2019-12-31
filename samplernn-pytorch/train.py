@@ -178,7 +178,7 @@ def main(exp, frame_sizes, dataset, **params):
         json.dump(params, fp, sort_keys=True, indent=4)
 
     model = SampleRNN(
-        frame_sizes=list(map(int, re.findall(r'\d+', params['frame_sizes']))),
+        frame_sizes=params['frame_sizes'],
         n_rnn=params['n_rnn'],
         dim=params['dim'],
         learn_h0=params['learn_h0'],
