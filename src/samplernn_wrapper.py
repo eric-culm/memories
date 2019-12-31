@@ -52,7 +52,7 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
     '''
     exp_name = os.path.basename(input_dataset).split('.')[0]
     sample_length = sample_length * sample_rate
-    conda_string = 'conda run -p ' + str(env_path)
+    conda_string = 'conda run -n ' + str(env_name)
     train_string = ' python train.py' + \
                    ' --exp ' + str(exp_name) + \
                    ' --frame_sizes ' + str(frame_sizes) + \
