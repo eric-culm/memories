@@ -86,7 +86,7 @@ def setup_results_dir(params):
     results_path = os.path.join(results_path, tag)
     if not os.path.exists(results_path):
         os.makedirs(results_path)
-    elif not eval(params['resume']):
+    elif not params['resume']:
         shutil.rmtree(results_path)
         os.makedirs(results_path)
 
@@ -133,12 +133,12 @@ def make_data_loader(overlap_len, params):
     path = os.path.join(params['datasets_path'], params['dataset'])
     def data_loader(split_from, split_to, eval):
         dataset = FolderDataset(
-            path, overlap_len, int(params['q_levels']), split_from, split_to
+            path, overlap_len, params['q_levels'], split_from, split_to
         )
         return DataLoader(
             dataset,
-            batch_size=int(params['batch_size']),
-            seq_len=int(params['seq_len']),
+            batch_size=params['batch_size'],
+            seq_len=params['seq_len'],
             overlap_len=overlap_len,
             shuffle=(not eval),
             drop_last=(not eval)
@@ -178,28 +178,28 @@ def main(exp, frame_sizes, dataset, **params):
         json.dump(params, fp, sort_keys=True, indent=4)
 
     model = SampleRNN(
-        frame_sizes=params['frame_sizes'],
-        n_rnn=int(params['n_rnn']),
-        dim=int(params['dim']),
-        learn_h0=eval(params['learn_h0']),
-        q_levels=int(params['q_levels']),
-        weight_norm=eval(params['weight_norm'])
+        frame_sizes=list(map(int, re.findall(r'\d+', params['frame_sizes']))),
+        n_rnn=params['n_rnn'],
+        dim=params['dim'],
+        learn_h0=params['learn_h0'],
+        q_levels=params['q_levels'],
+        weight_norm=params['weight_norm']
     )
     predictor = Predictor(model)
-    if eval(params['cuda']):
+    if params['cuda']:
         model = model.cuda()
         predictor = predictor.cuda()
 
     optimizer = gradient_clipping(torch.optim.Adam(predictor.parameters()))
 
     data_loader = make_data_loader(model.lookback, params)
-    test_split = 1 - float(params['test_frac'])
-    val_split = test_split - float(params['val_frac'])
+    test_split = 1 - params['test_frac']
+    val_split = test_split - params['val_frac']
 
     trainer = Trainer(
         predictor, sequence_nll_loss_bits, optimizer,
         data_loader(0, val_split, eval=False),
-        cuda=eval(params['cuda'])
+        cuda=params['cuda']
     )
 
     checkpoints_path = os.path.join(results_path, 'checkpoints')
@@ -211,7 +211,7 @@ def main(exp, frame_sizes, dataset, **params):
         predictor.load_state_dict(state_dict)
 
     trainer.register_plugin(TrainingLossMonitor(
-        smoothing=eval(params['loss_smoothing'])
+        smoothing=params['loss_smoothing']
     ))
     trainer.register_plugin(ValidationPlugin(
         data_loader(val_split, test_split, eval=True),
@@ -219,11 +219,11 @@ def main(exp, frame_sizes, dataset, **params):
     ))
     trainer.register_plugin(AbsoluteTimeMonitor())
     trainer.register_plugin(SaverPlugin(
-        checkpoints_path, eval(params['keep_old_checkpoints'])
+        checkpoints_path, params['keep_old_checkpoints']
     ))
     trainer.register_plugin(GeneratorPlugin(
-        os.path.join(results_path, 'samples'), int(params['n_samples']),
-        int(params['sample_length']), int(params['sample_rate']), float(params['sampling_temperature'])
+        os.path.join(results_path, 'samples'), params['n_samples'],
+        params['sample_length'], params['sample_rate'], params['sampling_temperature']
     ))
     trainer.register_plugin(
         Logger([
@@ -261,7 +261,7 @@ def main(exp, frame_sizes, dataset, **params):
 
     init_comet(params, trainer)
 
-    trainer.run(int(params['epoch_limit']))
+    trainer.run(params['epoch_limit'])
 
 
 if __name__ == '__main__':
