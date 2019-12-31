@@ -25,6 +25,9 @@ MODEL_WEIGHTS_PATH = cfg.get('main', 'model_weights_path')
 MEMORY_LT_PATH = cfg.get('main', 'memory_lt_path')
 MEMORY_ST_PATH = cfg.get('main', 'memory_st_path')
 CLIENT_PATH = cfg.get('osc', 'client_path')
+SAMPLERNN_CODE_PATH = cfg.get('samplernn', 'samplernn_code_path')
+SAMPLERNN_ENV_PATH = cfg.get('samplernn', 'samplernn_env_path')
+SAMPLERNN_SR = cfg.getint('samplernn', 'samplernn_sr')
 
 #create modules instances
 print ('Loading modules')
@@ -40,6 +43,7 @@ model_parameters = ['verbose=False', 'model_size=64', 'variational=True',
 VAE = VAE_model(architecture='WAVE_complete_net', weights_path=MODEL_WEIGHTS_PATH,
                 parameters=model_parameters, device='cpu')
 lop = LatentOperators(VAE.model.latent_dim)
+#SRNN = SampleRNN(sr=SAMPLERNN_SR, code_path=SAMPLERNN_CODE_PATH, env_path=SAMPLERNN_ENV_PATH)
 
 
 
@@ -56,7 +60,10 @@ filters = {
 post = Postprocessing(SR_PROCESSING, '../IRs/revs/divided/')
 
 
-
+'''
+SRNN.build_train_string('cazzo', 'culo')
+sys.exit(0)
+'''
 
 def rec(unused_addr, args, channel, flag):
     '''

@@ -130,7 +130,6 @@ class Allocator:
         process.wait()
 
 
-
 class InputChannel:
     '''
     record a sliding buffer from a desired input channel
@@ -149,6 +148,7 @@ class InputChannel:
         '''
         if status:
             print(status)
+
         self.buffer = np.roll(self.buffer, -frames , axis=0)  #shift vector
         self.buffer[-frames:] = indata[:,self.channel] #add new data
 
@@ -165,7 +165,7 @@ class InputChannel:
             self.stream.stop()
 
     def get_buffer(self):
-        return self.buffer
+        return self.buffer.copy()
 
     def meter_continuous(self, flag):
         self.meterflag = flag
@@ -444,7 +444,6 @@ class VAE_model:
         z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
         z = z * max_grid
         z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
-
         return z
 
     def gen_random_peak(self):
@@ -826,3 +825,27 @@ class Postprocessing:
         output = np.array(output)
 
         return output
+
+class SampleRNN:
+    def __init__(self, sr, code_path, env_path):
+        self.sr = sr
+        self.code_path = code_path
+        self.env_path = env_path
+
+    def list_datasets(self):
+        datasets_path = os.path.join(self.code_path, 'datasets')
+        datasets_list = os.listdir(datasets_path)
+        datasets_list = list(filter(lambda x: x[-3:] != '.sh', datasets_list))
+        datasets_list = list(filter(lambda x: 'DS_Store' not in x, datasets_list))
+
+        return datasets_list
+
+    def build_train_string(self, exp_name, dataset_name):
+        train_string = 'python train.py --exp ' + str(exp_name) + \
+                       ' --frame_sizes 16 4 --n_rnn 2 --sample_length=100 --sampling_temperature=0.95 --n_samples=0 --dataset ' + str(dataset_name)
+        conda_string = 'conda run -p ' + str(self.env_path) + 'python '
+        out_string = conda_string + train_string
+        print (out_string)
+
+    def build_generate_string(self, model_path, duration):
+        pass

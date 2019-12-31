@@ -1,16 +1,17 @@
 #!/bin/sh
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 4 ]; then
 echo "Usage: $0 "
 exit
 fi
 
 url=$1
 chunk_size=$2
-dataset_path=$3
+sample_rate=$3
+dataset_path=$4
 
 converted="joint2.wav"
-ffmpeg -i $url -ac 1 -ab 16k -ar 16000 $converted
+ffmpeg -i $url -ac 1 -ab 16k -ar $sample_rate $converted
 
 mkdir $dataset_path
 length=$(ffprobe -i $converted -show_entries format=duration -v quiet -of csv="p=0")
