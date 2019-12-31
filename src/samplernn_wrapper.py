@@ -55,7 +55,7 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
     sample_length = sample_length * sample_rate
     conda_string = 'conda run -n ' + str(env_name)
     train_string = ' python ' + os.path.join(code_path, 'train.py') + \
-                   ' --exp ' + str(exp_name) + \
+                   ' --exp ' + '"' + str(exp_name) + '"' + \
                    ' --frame_sizes ' + str(frame_sizes) + \
                    ' --n_rnn ' + str(n_rnn) + \
                    ' --batch_size ' + str(batch_size) + \
@@ -68,6 +68,7 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
                    ' --sampling_temperature ' + str(sampling_temperature) + \
                    ' --dataset ' + str(input_dataset)
     command = conda_string + train_string
-    training = subprocess.Popen(command, shell=True)
-    training.communicate()
-    training.wait()
+    print (command)
+    #training = subprocess.Popen(command, shell=True)
+    #training.communicate()
+    #training.wait()
