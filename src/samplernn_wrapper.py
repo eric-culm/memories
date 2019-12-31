@@ -56,20 +56,20 @@ def train_srnn(input_dataset, frame_sizes=[16,4], n_rnn=2, batch_size=128, keep_
     #exp_name = os.path.basename(input_dataset).split('.')[0]
     exp_name = input_dataset
     sample_length = sample_length * sample_rate
-    command =     ['conda', 'run', '-n', env_name,
+    command =     ['conda', 'run', '-n', str(env_name),
                    'python', 'train.py',
-                   '--exp', exp_name,
-                   '--frame_sizes', frame_sizes[0], frame_sizes[1],
-                   '--n_rnn', n_rnn,
-                   '--batch_size', batch_size,
-                   '--keep_old_checkpoints', keep_old_checkpoints,
-                   '--epoch_limit', epoch_limit,
-                   '--resume', resume,
-                   '--sample_rate', sample_rate,
-                   '--n_samples', n_samples,
-                   '--sample_length', sample_length,
-                   '--sampling_temperature', sampling_temperature,
-                   '--dataset', input_dataset]
+                   '--exp', str(exp_name),
+                   '--frame_sizes', str(frame_sizes[0]), str(frame_sizes[1])
+                   '--n_rnn', str(n_rnn),
+                   '--batch_size', str(batch_size),
+                   '--keep_old_checkpoints', str(keep_old_checkpoints),
+                   '--epoch_limit', str(epoch_limit),
+                   '--resume', str(resume),
+                   '--sample_rate', str(sample_rate),
+                   '--n_samples', str(n_samples),
+                   '--sample_length', str(sample_length),
+                   '--sampling_temperature', str(sampling_temperature),
+                   '--dataset ', str(input_dataset)]
     #command = conda_string + train_string
     print (command)
     training = subprocess.Popen(command, stdin=subprocess.PIPE, cwd=code_path)
