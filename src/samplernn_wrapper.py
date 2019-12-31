@@ -69,6 +69,6 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
                    ' --dataset ' + str(input_dataset)
     command = conda_string + train_string
     print (command)
-    #training = subprocess.Popen(command, shell=True)
-    #training.communicate()
-    #training.wait()
+    training = subprocess.Popen(command, shell=True)
+    training.communicate()
+    training.wait()
