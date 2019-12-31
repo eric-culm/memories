@@ -12,7 +12,7 @@ SRNN_SR = cfg.getint('samplernn', 'samplernn_sr')
 SRNN_CHUNK_SIZE = cfg.getint('samplernn', 'samplernn_chunk_size')
 SRNN_DATASET_PATH = cfg.get('samplernn', 'samplernn_dataset_path')
 SRNN_CODE_PATH = cfg.get('samplernn', 'samplernn_code_path')
-SRNN_ENV_PATH = cfg.get('samplernn', 'samplernn_env_path')
+SRNN_ENV_NAME = cfg.get('samplernn', 'samplernn_env_name')
 
 def split_audio(input_file, chunk_size=SRNN_CHUNK_SIZE, sr=SRNN_SR):
     '''
@@ -46,7 +46,7 @@ def split_all_files(input_folder, chunk_size=SRNN_CHUNK_SIZE, sr=SRNN_SR):
 
 def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_old_checkpoints=False,
                epoch_limit=1000, resume=True, sample_rate=SRNN_SR, n_samples=1,
-               sample_length=2, sampling_temperature=0.95, env_path=SRNN_ENV_PATH):
+               sample_length=2, sampling_temperature=0.95, env_name=SRNN_ENV_NAME):
     '''
     wrapper for SampleRNN training
     '''
