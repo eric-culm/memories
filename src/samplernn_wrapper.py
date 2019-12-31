@@ -51,7 +51,7 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
     '''
     wrapper for SampleRNN training
     '''
-    exp_name = os.path.basename(input_dataset).split('.')[0]
+    exp_name = input_dataset.split('/')[-1]
     sample_length = sample_length * sample_rate
     conda_string = 'conda run -n ' + str(env_name)
     train_string = ' python ' + os.path.join(code_path, 'train.py') + \
