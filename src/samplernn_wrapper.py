@@ -46,14 +46,15 @@ def split_all_files(input_folder, chunk_size=SRNN_CHUNK_SIZE, sr=SRNN_SR):
 
 def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_old_checkpoints=False,
                epoch_limit=1000, resume=True, sample_rate=SRNN_SR, n_samples=1,
-               sample_length=2, sampling_temperature=0.95, env_name=SRNN_ENV_NAME):
+               sample_length=2, sampling_temperature=0.95, env_name=SRNN_ENV_NAME,
+               code_path=SRNN_CODE_PATH):
     '''
     wrapper for SampleRNN training
     '''
     exp_name = os.path.basename(input_dataset).split('.')[0]
     sample_length = sample_length * sample_rate
     conda_string = 'conda run -n ' + str(env_name)
-    train_string = ' python train.py' + \
+    train_string = ' python ' + os.path.join(code_path, 'train.py') + \
                    ' --exp ' + str(exp_name) + \
                    ' --frame_sizes ' + str(frame_sizes) + \
                    ' --n_rnn ' + str(n_rnn) + \
