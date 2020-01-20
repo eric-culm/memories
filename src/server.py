@@ -163,7 +163,7 @@ def gen_sequence(unused_addr, args, out_len, num_buffers, num_clusters, input_so
     stretch_len = np.array(stretch_len.split(' '), dtype=np.float32)
     cluster = np.array(cluster.split(' '), dtype=np.float32)
 
-    in_folder = '/home/eric/Desktop/memories/input_sounds'
+    in_folder = '/Users/eric/Desktop/memories/input_sounds'
     file = os.path.join(in_folder, input_sound)
     max_len = max_len * SR_PROCESSING
     sounds = post.load_split(file, max_len)
