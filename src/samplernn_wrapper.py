@@ -13,6 +13,11 @@ SRNN_CHUNK_SIZE = cfg.getint('samplernn', 'samplernn_chunk_size')
 SRNN_DATASET_PATH = cfg.get('samplernn', 'samplernn_dataset_path')
 SRNN_CODE_PATH = cfg.get('samplernn', 'samplernn_code_path')
 SRNN_ENV_NAME = cfg.get('samplernn', 'samplernn_env_name')
+SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
+
+
+
+srnn_categories = {}
 
 def split_audio(input_file, chunk_size=SRNN_CHUNK_SIZE, sr=SRNN_SR):
     '''
@@ -75,3 +80,45 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
     training = subprocess.Popen(command, shell=True, cwd=code_path, stdout=subprocess.PIPE)
     training.communicate()
     training.wait()
+
+
+def compute_sounds(category, model, quality=0, dur=1, num_samples=1,
+                   sampling_temperature=0.95, use_cuda=True,
+                   env_name=SRNN_ENV_NAME, code_path=SRNN_CODE_PATH):
+    '''
+    wrapper for SampleRnn sound synthesis
+    '''
+    model_name = str(model) + '_' + str(quality)
+
+    base_path = os.path.join(SRNN_DATA_PATH, category, model)
+    model_path = os.path.join(base_path, 'models', model_name)
+    model_path = os.path.abspath(model_path)
+
+    params_path = os.path.join(base_path, 'models', 'sample_rnn_params.json')
+    params_path = os.path.abspath(params_path)
+
+    output_path = os.path.join(base_path, 'sounds', 'dur_' + str(dur))
+    output_path = os.path.abspath(output_path)
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    #arguments order:
+    #PARAMS_PATH, PRETRAINED_PATH, DUR, NUM_SOUNDS, SAMPLING_TEMPERATURE, GENERATED_PATH, USE_CUDA
+
+    conda_string = 'conda run -n ' + str(env_name)
+
+    gen_string = ' python generate_audio_user.py ' + \
+                 str(params_path) + ' ' + \
+                 str(model_path) + ' ' + \
+                 str(dur) + ' ' + \
+                 str(num_samples) + ' ' + \
+                 str(sampling_temperature) + ' ' + \
+                 str(output_path) + ' ' + \
+                 str(use_cuda)
+
+    command = conda_string + gen_string
+    print (command)
+    synthesis = subprocess.Popen(command, shell=True, cwd=code_path, stdout=subprocess.PIPE)
+    synthesis.communicate()
+    synthesis.wait()
+    print ('sounds generated')
