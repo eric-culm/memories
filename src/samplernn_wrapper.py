@@ -62,7 +62,7 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
     exp_name = input_dataset
     sample_length = sample_length * sample_rate
     conda_string = 'conda run -n ' + str(env_name)
-    #cuda_string = 'CUDA_VISIBLE_DEVICES=' + str(gpu_id) + ' '
+    cuda_string = ' CUDA_VISIBLE_DEVICES=' + str(gpu_id)
     train_string = ' python train.py' + \
                    ' --exp ' + '"' + str(exp_name) + '"' + \
                    ' --frame_sizes ' + str(frame_sizes) + \
@@ -76,11 +76,15 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
                    ' --sampling_temperature ' + str(sampling_temperature) + \
                    ' --epoch_limit ' + str(epoch_limit) + \
                    ' --dataset ' + str(input_dataset)
-    command = conda_string + train_string
+                   
+    command = conda_string + cuda_string + train_string
+
     print (command)
+    '''
     training = subprocess.Popen(command, shell=True, cwd=code_path, stdout=subprocess.PIPE)
     training.communicate()
     training.wait()
+    '''
 
 
 def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
@@ -107,7 +111,7 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     #PARAMS_PATH, PRETRAINED_PATH, DUR, NUM_SOUNDS, SAMPLING_TEMPERATURE, GENERATED_PATH, USE_CUDA
 
     conda_string = 'conda run -n ' + str(env_name)
-    #cuda_string = 'CUDA_VISIBLE_DEVICES=' + str(gpu_id) + ' '
+    cuda_string = ' CUDA_VISIBLE_DEVICES=' + str(gpu_id)
     gen_string = ' python generate_audio_user.py ' + \
                  str(params_path) + ' ' + \
                  str(model_path) + ' ' + \
@@ -117,10 +121,16 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
                  str(output_path) + ' ' + \
                  str(use_cuda)
 
-    command = conda_string + gen_string
+    if use_cuda:
+        command = conda_string + cuda_string + gen_string
+    else:
+        command = conda_string + gen_string
+
 
     print (command)
+    '''
     synthesis = subprocess.Popen(command, shell=True, cwd=code_path, stdout=subprocess.PIPE)
     synthesis.communicate()
     synthesis.wait()
     print ('sounds generated')
+    '''
