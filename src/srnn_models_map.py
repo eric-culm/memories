@@ -49,11 +49,11 @@ models_map['instrumental'] = {
                                                 3:'x',
                                                 4:'x'},
 
-                                'classical2' : {0:'x',
-                                                1:'x',
-                                                2:'x',
-                                                3:'x',
-                                                4:'x'},
+                                'classical2' : {0:21,
+                                                1:34,
+                                                2:11,
+                                                3:4,
+                                                4:9},
 
                                 'guitarAcoustic' : {0:'x',
                                                 1:'x',
@@ -182,7 +182,3 @@ models_map['fieldrec'] = {
 
 
 models_map['voice'] = {}
-
-
-
-print (models_map)

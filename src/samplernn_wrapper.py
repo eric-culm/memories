@@ -1,8 +1,10 @@
-import os
+import os, sys
 import utility_functions as uf
 import subprocess
 import configparser
 import loadconfig
+from srnn_models_map import *
+import shutil
 
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
@@ -133,4 +135,53 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     synthesis.communicate()
     synthesis.wait()
     print ('sounds generated')
-    
+
+def move_selected_models(input_folder, category, model):
+    '''
+    copy selected model epochs to srnn_data_path
+    --selected models are defined in srnn_models_map script
+    '''
+    #model_name = str(model) + '_' + str(quality)
+
+    base_path = os.path.join(SRNN_DATA_PATH, category, model, 'models')
+    params_out = os.path.join(base_path, 'sample_rnn_params.json')
+    params_out = os.path.abspath(params_out)
+    if not os.path.exists(base_path):
+        os.makedirs(base_path)
+
+    #correct folder name
+    contents = os.listdir(input_folder)
+    for folder in contents:
+        if folder != '.DS_Store':
+            name = folder.split(':')[1].split('-')[0]
+            curr_category = name.split('_')[0]
+            curr_model = name.split('_')[1]
+            if category == curr_category and model == curr_model:
+                break
+    folder = os.path.join(input_folder, folder)
+    models_in = os.path.join(input_folder, folder, 'checkpoints')
+    models_in = os.path.abspath(models_in)
+
+    #dict of model names
+    model_names = {}
+    contents = os.listdir(models_in)
+    for i in range(len(contents)):
+        epoch = contents[i].split('-')[-2][2:]
+        model_names[epoch] = contents[i]
+
+
+    #move parameters json
+    params_in = os.path.join(folder, 'sample_rnn_params.json')
+    shutil.copy(params_in, params_out)
+
+    #extract and copy correct epochs
+    selected_epochs = models_map[category][model]
+    for i in range(5):
+        curr_in_model_name = model_names[str(selected_epochs[i])]
+        curr_in_model_name = os.path.join(models_in, curr_in_model_name)
+        curr_in_model_name = os.path.abspath(curr_in_model_name)
+        curr_out_model_name = str(model) + '_' + str(i)
+        curr_out_model_name = os.path.join(base_path, curr_out_model_name)
+        curr_out_model_name = os.path.abspath(curr_out_model_name)
+
+        shutil.copy(curr_in_model_name, curr_out_model_name)
