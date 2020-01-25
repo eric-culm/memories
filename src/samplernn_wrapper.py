@@ -239,10 +239,12 @@ def synthesis_routine(category, model, gpu_id):
             precomputed_sounds = len(precomputed_sounds)  #how many sounds have just been computed
             expected_sounds = durations_map[dur]
             num_samples = expected_sounds - precomputed_sounds
-            if durations_map > 0:  #only if sounds sounds are missing...
+            if num_samples > 0:  #only if sounds sounds are missing...
+                print ('generating: category: ' + str(category) + ' | model: ' + str(model) + \
+                        ' | variant: ' + str(variant) + ' | dur: ' + str(dur) + ' | num_samples: ' + str(num_samples))
                 generate_sounds(category, model, variant, dur, num_samples,
                                 gpu_id=gpu_id)
-                                
+
     print ('ALL REQUESTED SOUNDS GENERATED')
 
 
