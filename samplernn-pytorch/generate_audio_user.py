@@ -2,6 +2,7 @@ from model import SampleRNN
 import torch
 from collections import OrderedDict
 import os, sys
+from datetime import datetime
 import json
 from trainer.plugins import GeneratorPlugin
 
@@ -71,6 +72,9 @@ if USE_CUDA:
 else:
     generator.register_generate(model, False)
 
+#get date
+now = datetime.now()
+dt_string = now.strftime("%d-%m-%Y_%H:%M:%S")
 
 # Generate new audio
-generator.epoch('_generated')
+generator.epoch(dt_string)
