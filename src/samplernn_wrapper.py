@@ -144,14 +144,14 @@ def cazzo(output_path):
         uf.print_bar(index, tot)
 
 
-def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
+def generate_sounds(category, model, variant=0, dur=1, num_samples=1,
                    sampling_temperature=0.95, use_cuda=True, gpu_id=0,
                    env_name=SRNN_ENV_NAME, code_path=SRNN_CODE_PATH):
     '''
     wrapper for SampleRnn sound synthesis
     '''
     time_start = time.clock()
-    model_name = str(model) + '_' + str(quality)
+    model_name = str(model) + '_' + str(variant)
 
     base_path = os.path.join(SRNN_DATA_PATH, category, model)
     model_path = os.path.join(base_path, 'models', model_name)
@@ -160,7 +160,7 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     params_path = os.path.join(base_path, 'models', 'sample_rnn_params.json')
     params_path = os.path.abspath(params_path)
 
-    output_path = os.path.join(base_path, 'sounds', 'dur_' + str(dur) , 'model_' + str(quality))
+    output_path = os.path.join(base_path, 'sounds', 'dur_' + str(dur) , 'model_' + str(variant))
     output_path = os.path.abspath(output_path)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -205,19 +205,53 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
         prepare_sound(curr_sound)
         index +=1
         uf.print_bar(index, tot)
-    #print ('sounds generated')
+    print ('sounds generated')
+    '''
     time_elapsed = (time.clock() - time_start)
     string = 'Generated ' + str(num_samples) + ' of ' + str(dur) + ' seconds in ' + str(time_elapsed) + ' seconds'
     print ('')
     print (string)
     info = resource.getrusage(resource.RUSAGE_CHILDREN)
     print (info)
+    '''
+
+def synthesis_routine(category, model, gpu_id):
+    '''
+    compute all sounds for a model
+    '''
+    #get available models
+    models_path = os.path.join(SRNN_DATA_PATH, category, model, 'models')
+    models_path = os.path.abspath(models_path)
+    available_models = os.listdir(models_path)
+    available_models = list(filter(lambda x: '.json' not in x, available_models))
+
+    for variant in range(len(available_models)):  #iterate model's variants
+        for dur in durations_map.keys():  #iterate durations
+            #create_folder if not exists
+            curr_path = os.path.join(SRNN_DATA_PATH, category, model,
+                                    'sounds', 'dur_' + str(dur), 'model_' + str(variant))
+            curr_path = os.path.abspath(curr_path)
+            if not os.path.exists(curr_path):
+                os.makedirs(curr_path)
+            #check if sounds have just been computed
+            precomputed_sounds = os.listdir(curr_path)
+            precomputed_sounds = list(filter(lambda x: '.wav' in x, precomputed_sounds))
+            precomputed_sounds = len(precomputed_sounds)  #how many sounds have just been computed
+            expected_sounds = durations_map[dur]
+            num_samples = expected_sounds - precomputed_sounds
+            if durations_map > 0:  #only if sounds sounds are missing...
+                generate_sounds(category, model, variant, dur, num_samples,
+                                gpu_id=gpu_id)
+                                
+    print ('ALL REQUESTED SOUNDS GENERATED')
+
+
 def move_selected_models(input_folder, category, model):
     '''
     copy selected model epochs to srnn_data_path
     --selected models are defined in srnn_models_map script
     '''
-    #model_name = str(model) + '_' + str(quality)
+    #model_name = str(model) + '_' + str(variant)
 
     base_path = os.path.join(SRNN_DATA_PATH, category, model, 'models')
     params_out = os.path.join(base_path, 'sample_rnn_params.json')

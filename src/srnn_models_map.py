@@ -7,12 +7,12 @@ models_map = which epochs are selected in the training of each model
 samples_map = how many samples of each duration are generated
 '''
 
-samples_map = {
-                1: 300,
+durations_map = {
                 3: 200,
+                5: 200,
                 10: 100,
-                30: 60,
-                60: 60
+                30: 100,
+                60: 80
 }
 
 #macro categories
