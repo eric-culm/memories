@@ -1,0 +1,13 @@
+Install 2 separate conda environments
+
+
+1st is for the general memories environment
+  -It can have any name
+  -you must install:
+
+-2nd is for samplernn:
+  -you must call is 'samplernn'
+  -you must install:  librosa==0.5.1
+                      matplotlib==2.1.0
+                      natsort==5.1.0
+                      torch==0.4.1
