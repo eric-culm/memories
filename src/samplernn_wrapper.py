@@ -205,7 +205,8 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     #print ('sounds generated')
     time_elapsed = (time.clock() - time_start)
     string = 'Generated ' + str(num_samples) + ' of ' + str(dur) + ' seconds in ' + str(time_elapsed) + ' seconds'
-
+    print ('')
+    print (string)
 def move_selected_models(input_folder, category, model):
     '''
     copy selected model epochs to srnn_data_path
