@@ -160,7 +160,7 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     params_path = os.path.join(base_path, 'models', 'sample_rnn_params.json')
     params_path = os.path.abspath(params_path)
 
-    output_path = os.path.join(base_path, 'sounds', 'dur_' + str(dur) + 'model_' + str(quality))
+    output_path = os.path.join(base_path, 'sounds', 'dur_' + str(dur) , 'model_' + str(quality))
     output_path = os.path.abspath(output_path)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
