@@ -5,6 +5,13 @@ import configparser
 import loadconfig
 from srnn_models_map import *
 import shutil
+import librosa
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import signal
+import soundfile
+import time
+
 
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
@@ -16,6 +23,7 @@ SRNN_DATASET_PATH = cfg.get('samplernn', 'samplernn_dataset_path')
 SRNN_CODE_PATH = cfg.get('samplernn', 'samplernn_code_path')
 SRNN_ENV_NAME = cfg.get('samplernn', 'samplernn_env_name')
 SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
+MAIN_SR = cfg.getint('main', 'sr_processing')
 
 
 
@@ -89,12 +97,57 @@ def train_srnn(input_dataset, frame_sizes='16 4', n_rnn=2, batch_size=128, keep_
 
 
 
+def prepare_sound(input_sound):
+    '''
+    -remove DC
+    -apply in and out fades
+    -normalize
+    -convert to mono wav pcm 44100 16bit
+    '''
+    #remove dc
+    samples, dummy = librosa.core.load(input_sound, sr=MAIN_SR)
+    samples = signal.detrend(samples)
+    sos = signal.butter(10, 15, 'hp', fs=MAIN_SR, output='sos')
+    samples = signal.sosfilt(sos, samples)
+
+    #apply fades
+    in_ade_length = 10
+    out_fade_length = in_ade_length * 10
+    mask = np.ones(len(samples))
+    ramp1 = np.arange(in_ade_length) / in_ade_length
+    ramp2 = np.arange(out_fade_length) / (out_fade_length)
+    ramp2 = np.array(np.flip(ramp2))
+    mask[:in_ade_length] = ramp1
+    mask[-out_fade_length:] = ramp2
+    faded = samples * mask
+
+    #normalize
+    samples = samples / np.max(samples)
+    samples = samples * 0.8
+
+    #write file
+    soundfile.write(input_sound, samples, 44100, format='WAV', subtype='PCM_16')
+
+def cazzo(output_path):
+    print ('converting...')
+    contents = os.listdir(output_path)
+    contents = list(filter(lambda x: '.wav' in x, contents))
+    tot = len(contents)
+    index = 0
+    for i in contents:
+        curr_sound = os.path.abspath(os.path.join(output_path, i))
+        prepare_sound(curr_sound)
+        index +=1
+        uf.print_bar(index, tot)
+
+
 def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
                    sampling_temperature=0.95, use_cuda=True, gpu_id=0,
                    env_name=SRNN_ENV_NAME, code_path=SRNN_CODE_PATH):
     '''
     wrapper for SampleRnn sound synthesis
     '''
+    time_start = time.clock()
     model_name = str(model) + '_' + str(quality)
 
     base_path = os.path.join(SRNN_DATA_PATH, category, model)
@@ -130,11 +183,28 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
 
 
     print (command)
+    print ('')
+    print ('generating sounds with sampleRNN...')
 
     synthesis = subprocess.Popen(command, shell=True, cwd=code_path, stdout=subprocess.PIPE)
     synthesis.communicate()
     synthesis.wait()
-    print ('sounds generated')
+
+    #prepare sound
+    time.sleep(1)
+    print ('converting...')
+    contents = os.listdir(output_path)
+    contents = list(filter(lambda x: '.wav' in x, contents))
+    tot = len(contents)
+    index = 0
+    for i in contents:
+        curr_sound = os.path.abspath(os.path.join(output_path, i))
+        prepare_sound(curr_sound)
+        index +=1
+        uf.print_bar(index, tot)
+    #print ('sounds generated')
+    time_elapsed = (time.clock() - time_start)
+    string = 'Generated ' + str(num_samples) + ' of ' + str(dur) + ' seconds in ' str(time_elapsed) + ' seconds'
 
 def move_selected_models(input_folder, category, model):
     '''
@@ -176,12 +246,14 @@ def move_selected_models(input_folder, category, model):
 
     #extract and copy correct epochs
     selected_epochs = models_map[category][model]
-    for i in range(5):
+    for i in selected_epochs.keys():
         curr_in_model_name = model_names[str(selected_epochs[i])]
         curr_in_model_name = os.path.join(models_in, curr_in_model_name)
         curr_in_model_name = os.path.abspath(curr_in_model_name)
         curr_out_model_name = str(model) + '_' + str(i)
         curr_out_model_name = os.path.join(base_path, curr_out_model_name)
         curr_out_model_name = os.path.abspath(curr_out_model_name)
-
+        string = 'transferring: ' + str(curr_in_model_name.split('/')[-1]) + ' as ' + str(curr_out_model_name.split('/')[-1])
+        print (string)
         shutil.copy(curr_in_model_name, curr_out_model_name)
+    print ('transfer completed')

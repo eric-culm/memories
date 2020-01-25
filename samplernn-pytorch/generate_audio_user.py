@@ -73,4 +73,4 @@ else:
 
 
 # Generate new audio
-generator.epoch('Test2')
+generator.epoch('_generated')
