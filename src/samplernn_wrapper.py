@@ -185,7 +185,7 @@ def generate_sounds(category, model, variant=0, dur=1, num_samples=1,
         command = conda_string + gen_string
 
 
-    print (command)
+    #print (command)
     print ('')
     print ('generating sounds with sampleRNN...')
 
