@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 import soundfile
+from timeit import timeit
 import time
+import resource
+
 
 
 config = loadconfig.load()
@@ -207,6 +210,8 @@ def generate_sounds(category, model, quality=0, dur=1, num_samples=1,
     string = 'Generated ' + str(num_samples) + ' of ' + str(dur) + ' seconds in ' + str(time_elapsed) + ' seconds'
     print ('')
     print (string)
+    info = resource.getrusage(resource.RUSAGE_CHILDREN)
+    print (info)
 def move_selected_models(input_folder, category, model):
     '''
     copy selected model epochs to srnn_data_path
