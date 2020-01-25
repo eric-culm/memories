@@ -1,1 +1,1 @@
-end-to-end VAE for audio synthesis
+This repository contains the code of the audio installation 'memories'
