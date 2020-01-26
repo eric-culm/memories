@@ -14,7 +14,6 @@ from audtorch import metrics
 import sounddevice as sd
 import subprocess
 from multiprocessing import Process
-import define_models as choose_model
 import time
 from concurrent.futures import ThreadPoolExecutor
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
@@ -26,7 +25,12 @@ import pyrubberband as rub
 import librosa
 import random
 import scipy
-import os
+import os,sys,inspect
+# insert at 1, 0 is the script path (or '' in REPL)
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, currentdir)
+import vae_pytorch.define_models as choose_model
 
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
@@ -36,6 +40,8 @@ MAIN_SR = cfg.getint('main', 'main_sr')
 CLIENT_IP = cfg.get('osc', 'client_ip')
 GRID_LT_PATH = cfg.get('main', 'grid_lt_path')
 GRID_ST_PATH = cfg.get('main', 'grid_st_path')
+SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
+
 
 
 class Memory:
@@ -598,8 +604,9 @@ class Scene:
         self.main_dur = main_dur  #scene duration in secs
         self.time_resolution = time_resolution  #in secs
         self.sr=sr
+        self.post = Postprocessing(sr, '../IRs/revs/divided/')
 
-    def build_onset(self, dur, volume, position):
+    def build_onset_score(self, dur, volume, position):
         #SINGLE SOUND ONSET
         #array with zeros filled vith values (vol) like CV-GATE
         #only in the onset time of a sound
@@ -614,6 +621,15 @@ class Scene:
         score[offset:offset+len(onset)] = onset  #fill score with the onset
 
         return score
+
+    def get_sound(self, category, model, variation, dur):
+        sounds_path = os.path.join(SRNN_DATA_PATH, category, model,
+                                   'sounds', 'dur_' + str(dur), 'model_' + str(variation))
+        sounds_path = os.path.abspath(sounds_path)
+        print (sounds_path)
+
+
+
 
 
 
