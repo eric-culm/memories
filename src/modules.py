@@ -5,6 +5,7 @@ import warnings
 import torch.nn.functional as F
 import soundfile
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from audtorch import metrics
 from scipy.stats import pearsonr
 from scipy.signal import hilbert, resample
@@ -41,6 +42,7 @@ CLIENT_IP = cfg.get('osc', 'client_ip')
 GRID_LT_PATH = cfg.get('main', 'grid_lt_path')
 GRID_ST_PATH = cfg.get('main', 'grid_st_path')
 SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
+IRS_PATH = cfg.get('main', 'irs_path')
 
 
 
@@ -327,21 +329,19 @@ class Postprocessing:
         return stretched
 
     def pitch_shift(self, samples, semitones, granularity=5):
-        shifted = rub.pyrb.time_stretch(samples, self.sr, semitones, {'-c':granularity})
+        shifted = rub.pyrb.pitch_shift(samples, self.sr, semitones, {'-c':granularity})
         return shifted
 
-    def reverb(self, samples, rev_type):
+    def reverb(self, samples, rev_length):
         #convolution with randomly-selected impulse response
-        if rev_type == 'any':
-            contents = os.listdir(self.irs_path)
-            rev_type_sel = random.choice(contents)
-        else:
-            rev_type_sel = rev_type
+        #rev_length: int [1-4]
+        analysis_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
+        ir_analysis = np.load(analysis_path, allow_pickle=True).item()
+        if rev_length == 'any':
+            rev_length = np.random.randint(5)
+        chosen_irs = ir_analysis[rev_length]
+        random_rev = random.choice(chosen_irs)
 
-        folder = os.path.join(self.irs_path, rev_type_sel)
-        irs = os.listdir(folder)
-        random_rev = random.choice(irs)
-        random_rev = os.path.join(folder, random_rev)
         rev_amount = np.random.rand() * 0.7 + 0.3
 
         IR, sr = librosa.core.load(random_rev, mono=False, sr=self.sr)
@@ -364,6 +364,124 @@ class Postprocessing:
         out = out / max(out)
         out = out * 0.9
         return out
+
+    def apply_fades(self, samples, in_fade_length, out_fade_length, exp=1):
+        '''
+        apply in and out fades to an input sound
+        with exponential, log or linear curve (default linear)
+        fade_lengths are in msecs
+        '''
+        in_fade_length = int(self.sr * in_fade_length / 1000)  #convert to samps
+        out_fade_length = int(self.sr * out_fade_length / 1000)
+        in_fade_length = np.clip(in_fade_length, 0, len(samples))
+        out_fade_length = np.clip(out_fade_length, 0, len(samples))
+        mask = np.ones(len(samples))
+        ramp1 = np.arange(in_fade_length) / in_fade_length
+        ramp2 = np.arange(out_fade_length) / (out_fade_length)
+        ramp2 = np.array(np.flip(ramp2))
+        ramp1 = ramp1 ** exp
+        ramp2 = ramp2 ** exp
+        mask[:in_fade_length] = ramp1
+        mask[-out_fade_length:] = ramp2
+        faded = samples * mask
+
+        return faded
+
+    def notch_filter(self, band, cutoff, ripple, rs, order=2, filter_type='cheby2'):
+        #creates chebyshev polynomials for a notch filter with given parameters
+        sr = self.sr
+        nyq  = sr/2.0
+        low  = cutoff - band/2.0
+        high = cutoff + band/2.0
+        low  = low/nyq
+        high = high/nyq
+        w0 = cutoff/(sr/2)
+        a, b = iirfilter(order, [low, high], rp=ripple, rs=rs, btype='bandstop', analog=False, ftype=filter_type)
+
+        return a, b
+
+    def random_eq(self, vector_signal):
+        #applies random filtering to an input vetor using chebyshev notch filters
+        sr = self.sr
+        num_filters = np.random.randint(1,4)
+        #transition bands for cheby2 filter order
+        low_edge = 80
+        hi_edge = 8000
+        cross1 = 200
+        cross2 = 1000
+        cross3 = 3000
+
+        #deifine random parameters for 4 notch filters
+        cutoff1 = np.random.randint(low_edge, hi_edge)
+        band1 = np.random.randint(cutoff1/2+10, cutoff1-10)
+        if cutoff1 >= low_edge and cutoff1<cross1:
+            order1 = np.random.randint(2,3)
+        elif cutoff1 >= cross1 and cutoff1<cross2:
+            order1 = np.random.randint(2,4)
+        elif cutoff1 >= cross2 and cutoff1<cross3:
+            order1 = np.random.randint(2,5)
+        elif cutoff1 >= cross1 and cutoff1<=hi_edge:
+            order1 = np.random.randint(2,7)
+
+        cutoff2 = np.random.randint(low_edge, hi_edge)
+        band2 = np.random.randint(cutoff2/2+10, cutoff2-10)
+        if cutoff2 >= low_edge and cutoff2<cross1:
+            order2 = np.random.randint(2,3)
+        elif cutoff2 >= cross1 and cutoff2<cross2:
+            order2 = np.random.randint(2,4)
+        elif cutoff2 >= cross2 and cutoff2<cross3:
+            order2 = np.random.randint(2,5)
+        elif cutoff2 >= cross1 and cutoff2<=hi_edge:
+            order2 = np.random.randint(2,7)
+
+        cutoff3 = np.random.randint(low_edge, hi_edge)
+        band3 = np.random.randint(cutoff3/2+10, cutoff3-10)
+        if cutoff3 >= low_edge and cutoff3<cross1:
+            order3 = np.random.randint(2,3)
+        elif cutoff3 >= cross1 and cutoff3<cross2:
+            order3 = np.random.randint(2,4)
+        elif cutoff3 >= cross2 and cutoff3<cross3:
+            order3 = np.random.randint(2,5)
+        elif cutoff3 >= cross1 and cutoff3<=hi_edge:
+            order3 = np.random.randint(2,7)
+
+        cutoff4 = np.random.randint(low_edge, hi_edge)
+        band4 = np.random.randint(cutoff4/2+10, cutoff4-10)
+        if cutoff4 >= low_edge and cutoff4<cross1:
+            order4 = np.random.randint(2,3)
+        elif cutoff4 >= cross1 and cutoff4<cross2:
+            order4 = np.random.randint(2,4)
+        elif cutoff4 >= cross2 and cutoff4<cross3:
+            order4 = np.random.randint(2,5)
+        elif cutoff4 >= cross1 and cutoff4<=hi_edge:
+            order4 = np.random.randint(2,7)
+
+        ripple = 10
+        rs = 10
+
+        #construct chebyshev notch filters
+        a, b = self.notch_filter(band1,cutoff1,ripple, rs, order=order1)
+        c, d = self.notch_filter(band2,cutoff2,ripple, rs, order=order2)
+        e, f = self.notch_filter(band3,cutoff3,ripple, rs, order=order3)
+        g, h = self.notch_filter(band4,cutoff4,ripple, rs, order=order4)
+
+        #randomly concatenate 1,2,3 or 4 filters
+        if num_filters == 1:
+            filtered_data = lfilter(a, b, vector_signal)
+        elif num_filters == 2:
+            filtered_data = lfilter(a, b, vector_signal)
+            filtered_data = lfilter(c, d, filtered_data)
+        elif num_filters == 3:
+            filtered_data = lfilter(a, b, vector_signal)
+            filtered_data = lfilter(c, d, filtered_data)
+            filtered_data = lfilter(e, f, filtered_data)
+        elif num_filters == 4:
+            filtered_data = lfilter(a, b, vector_signal)
+            filtered_data = lfilter(c, d, filtered_data)
+            filtered_data = lfilter(e, f, filtered_data)
+            filtered_data = lfilter(g, h, filtered_data)
+
+        return filtered_data
 
 
     def splitter(self, x, min_len=250):
@@ -598,22 +716,132 @@ class Postprocessing:
 
 class Scene:
     '''
-    dream scene
+    dream scene.
+    Global score contains all sounds
     '''
-    def __init__(self, main_dur, sr=MAIN_SR, time_resolution=0.1):
+    def __init__(self, main_dur, sr=MAIN_SR, score_resolution=0.1):
         self.main_dur = main_dur  #scene duration in secs
-        self.time_resolution = time_resolution  #in secs
+        self.score_resolution = score_resolution  #in secs
+        self.score_length = 1000
+        self.global_score = {}  #all scores
         self.sr=sr
         self.post = Postprocessing(sr, '../IRs/revs/divided/')
 
-    def build_onset_score(self, dur, volume, position):
-        #SINGLE SOUND ONSET
-        #array with zeros filled vith values (vol) like CV-GATE
-        #only in the onset time of a sound
-        #dur, volume in seconds, position is in percentage of the buffer
-        num_steps = int(self.main_dur/self.time_resolution)  #total steps (length of entire scene)
+    def append_to_global_score(self, item, type, id):
+        if id not in self.global_score.keys():  #create item if not exists
+            self.global_score[id] = {}
+        self.global_score[id][type] = item
+
+    def plot_score(self, score_type='envelopes', dimensions=1):
+        '''
+        visualize score in 1,2 or 3 dimensions
+        '''
+        scores = []
+        pans = []
+        keys = self.global_score.keys()
+        for i in keys:
+            if score_type == 'envelopes':
+                curr_sound = self.global_score[i]['samples']
+                curr_score = np.clip(resample(np.abs(hilbert(curr_sound)), self.score_length), 0,1)
+            elif score_type == 'squeres':
+                curr_SCORE = self.global_score[i]['score']
+            curr_pan = self.global_score[i]['pan'][0]
+            scores.append(curr_score)
+            pans.append(curr_pan)
+        if dimensions == 1:
+            for i in scores:
+                plt.plot(i)
+        if dimensions == 2:
+            plt.pcolormesh(scores)
+        if dimensions == 3:
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            z=10
+            ind = 0
+            for ys in scores:
+                xs = np.arange(len(ys))
+                p = pans[ind]
+                ax.bar(xs, ys, zs=p, zdir='y')
+                z += 10
+                ind += 1
+
+            ax.set_xlabel('Time')
+            ax.set_ylabel('Stereo')
+            ax.set_zlabel('Volume')
+            ax.set_ylim((-1,1))
+
+        plt.show()
+
+    def resolve_score_stereo(self, fade_in=0, fade_out=0):
+        '''
+        takes avery file in the score and produces a stereo mix
+        '''
+        dur_samps = self.sr * self.main_dur
+        mix_left = np.zeros(dur_samps)
+        mix_right = np.zeros(dur_samps)
+
+        for sound in self.global_score.keys(): #iterate all sounds in score
+            pan = self.global_score[sound]['pan'][0]
+            samples = self.global_score[sound]['samples']
+            angle = np.interp(pan, (-1,1), (-45,45))
+            angle = np.radians(angle)
+            left = np.sqrt(2)/2.0 * (np.cos(angle) - np.sin(angle)) * samples
+            right = np.sqrt(2)/2.0 * (np.cos(angle) + np.sin(angle)) * samples
+            mix_left = np.add(mix_left, left)
+            mix_right = np.add(mix_right, right)
+        mix_left = self.post.apply_fades(mix_left, fade_in, fade_out, exp=1.3)  #apply fades
+        mix_right = self.post.apply_fades(mix_right, fade_in, fade_out, exp=1.3)  #apply fades
+
+        mix = np.array([[mix_left,mix_right]])
+        mix = np.squeeze(mix)
+
+        return mix
+
+    def resolve_score_quad(self):
+        #TO BE TESTED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        '''
+        takes avery file in the score and produces a stereo mix
+        '''
+        dur_samps = self.sr * self.main_dur
+        mix_fl = np.zeros(dur_samps)
+        mix_fr = np.zeros(dur_samps)
+        mix_bl = np.zeros(dur_samps)
+        mix_br = np.zeros(dur_samps)
+
+        for sound in self.global_score.keys(): #iterate all sounds in score
+            pan_x = self.global_score[sound]['pan'][0]
+            pan_y = self.global_score[sound]['pan'][1]
+            samples = self.global_score[sound]['samples']
+            angle_x = np.interp(pan_x, (-1,1), (-45,45))
+            angle_y = np.interp(pan_y, (-1,1), (-45,45))
+            angle_x = np.radians(angle_x)
+            angle_y = np.radians(angle_y)
+
+            left = np.sqrt(2)/2.0 * (np.cos(angle_x) - np.sin(angle_x)) * samples
+            right = np.sqrt(2)/2.0 * (np.cos(angle_x) + np.sin(angle_x)) * samples
+
+            fl = np.sqrt(2)/2.0 * (np.cos(angle_y) - np.sin(angle_y)) * left
+            bl = np.sqrt(2)/2.0 * (np.cos(angle_y) + np.sin(angle_y)) * left
+            fr = np.sqrt(2)/2.0 * (np.cos(angle_y) - np.sin(angle_y)) * right
+            br = np.sqrt(2)/2.0 * (np.cos(angle_y) + np.sin(angle_y)) * right
+
+            mix_fl = np.add(mix_fl, fl)
+            mix_fr = np.add(mix_fr, fr)
+            mix_bl = np.add(mix_bl, bl)
+            mix_br = np.add(mix_br, br)
+        mix = np.dstack((mix_fl,mix_fr,mix_bl,mix_br))[0]
+
+        return mix
+
+    def gen_onset_score(self, dur, volume, position):
+        '''
+        SINGLE SOUND ONSET SCORE
+        array with zeros filled vith values (vol) like CV-GATE only in the onset time of a sound
+        dur, volume in seconds, position is in percentage of the buffer
+        '''
+        num_steps = int(self.main_dur/self.score_resolution)  #total steps (length of entire scene)
         score = np.zeros(num_steps)  #empty score
-        onset = np.ones(int(dur/self.time_resolution)) * volume  #onset segment
+        onset = np.ones(int(dur/self.score_resolution)) * volume  #onset segment
         offset = int(num_steps * position)
         if offset+len(onset) >= num_steps:  #cut onset if exceeding length
             cut_len = (num_steps - offset)
@@ -622,20 +850,89 @@ class Scene:
 
         return score
 
-    def get_sound(self, category, model, variation, dur):
+    def get_random_sound(self, category, model, variation, dur):
+        '''
+        get a random sound within in the specified folder
+        '''
         sounds_path = os.path.join(SRNN_DATA_PATH, category, model,
                                    'sounds', 'dur_' + str(dur), 'model_' + str(variation))
         sounds_path = os.path.abspath(sounds_path)
-        print (sounds_path)
+        sounds = os.listdir(sounds_path)
+        sounds = list(filter(lambda x: '.wav' in x, sounds))
+        chosen = random.choice(sounds)
+        chosen_path = os.path.abspath(os.path.join(sounds_path, chosen))
+        samples, sr = librosa.core.load(chosen_path, sr=self.sr)
+
+        return samples
+
+
+    def get_scored_sound(self, sound,  dur, volume, position, pan,
+                        eq=False, rev=False, rev_length=4, segment=False,
+                        stretch=1, shift=0, fade_in=20, fade_out=100, id=0):
+        '''
+        compute sound and apply all processings. Append to global score
+        dur: float, seconds
+        volume: float [0-1]
+        position: (time_position) float[0-1], percentage of all time
+        pan = tuple, floats[-1-1], first is horizontal, second is diagonal
+        eq: bool, apply random eq
+        rev: bool, aplly random rev
+        rev_type: string, reverb type
+        segment: bool, extract 1 clustered segment
+        stretch: float, stretch factor, apply time_stretching
+        shift:float, semitones, apply pitch_shift
+        fade in/out: int, milliseconds
+        id: int, sound id for the global score
+        '''
+        pad = np.zeros(self.sr * self.main_dur) #inital pad, long as the whole score
+        num_samps = len(pad)
+        offset = int(num_samps * position)
+        dur_samps = int(dur * self.sr)
+        sound = sound / np.max(sound)  * volume #normalize and rescale sound
+        #apply eventual processing
+        if segment:  #clustering-based segmentation
+            sound_list = self.post.splitter(sound)
+            sound = random.choice(sounds_list)
+            sound = self.post.apply_fades(sound, 20, 50, exp=1.3)
+        if stretch != 1:
+            sound = self.post.stretch(sound, stretch)
+        if shift != 0:
+            sound = self.post.pitch_shift(sound, shift)
+        if eq:
+            sound = self.post.random_eq(sound)
+
+
+
+        if rev:
+            sound = self.post.reverb(sound, rev_length)
+
+        if len(sound) < dur_samps:  #shorten score length is sample is too short
+            dur_samps = int(len(sound))
+        else:
+            sound = sound[:dur_samps]  #cut sound if too long
+
+        if offset+dur_samps >= num_samps:  #cut onset if exceeding length
+            dur_samps = (num_samps - offset)
+            sound = sound[:dur_samps]
+        sound = self.post.apply_fades(sound, fade_in, fade_out, exp=1.3)  #apply fades
+
+
+        pad[offset:offset+dur_samps] = sound
+        sound = pad
+        score = self.gen_onset_score(dur_samps/self.sr, volume, position)
+
+        self.append_to_global_score(score, 'score', id)
+        self.append_to_global_score(pan, 'pan', id)
+        self.append_to_global_score(sound, 'samples', id)
+
+
+        return sound
 
 
 
 
 
 
-
-a = Scene(60)
-a.build_onset(10, 0.2, 0.9)
 
 class SampleRNN:
     def __init__(self, sr, code_path, env_path):

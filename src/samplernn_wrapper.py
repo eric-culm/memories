@@ -114,13 +114,13 @@ def prepare_sound(input_sound):
     samples = signal.sosfilt(sos, samples)
 
     #apply fades
-    in_ade_length = 10
-    out_fade_length = in_ade_length * 10
+    in_fade_length = 10
+    out_fade_length = in_fade_length * 10
     mask = np.ones(len(samples))
-    ramp1 = np.arange(in_ade_length) / in_ade_length
+    ramp1 = np.arange(in_fade_length) / in_fade_length
     ramp2 = np.arange(out_fade_length) / (out_fade_length)
     ramp2 = np.array(np.flip(ramp2))
-    mask[:in_ade_length] = ramp1
+    mask[:in_fade_length] = ramp1
     mask[-out_fade_length:] = ramp2
     faded = samples * mask
 
