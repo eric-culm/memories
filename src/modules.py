@@ -299,9 +299,12 @@ class FilterStream:
         return self.bag
 
 class Postprocessing:
-    def __init__(self, sr, irs_path):
-        self.sr = sr
-        self.irs_path = irs_path
+    def __init__(self, sr=0):
+        if sr == 0:
+            self.sr = MAIN_SR
+        else:
+            self.sr = sr
+        self.irs_path = IRS_PATH
         self.eps = 0.0001
 
 
@@ -537,6 +540,29 @@ class Postprocessing:
 
         return output
 
+    def sel_good_segment(self, sound, dur, sr, perc=0.2):
+        '''
+        select a segment with duration similar to dur
+        random chosing among the best candidates (perc%)
+        '''
+        clusters = self.splitter(sound)
+        dists = []
+        index = 0
+        for i in clusters:
+            cluster_len = len(i) / sr
+            distance = np.abs(dur-cluster_len)
+            dists.append((distance, index))
+            index += 1
+
+        sorted_by_dist = sorted(dists, key=lambda x: x[0])
+        sorted_indexes = list(map(lambda x: x[1], sorted_by_dist))
+        num_choices = int(np.ceil(len(sorted_indexes) * perc))
+        choices = sorted_indexes[:num_choices]
+        random_choice = random.choice(choices)
+        random_sound = clusters[random_choice]
+
+        return random_sound
+
     def xfade(self, x1, x2, ramp):
         #simple linear crossfade and concatenation
         out = []
@@ -725,7 +751,7 @@ class Scene:
         self.score_length = 1000
         self.global_score = {}  #all scores
         self.sr=sr
-        self.post = Postprocessing(sr, '../IRs/revs/divided/')
+        self.post = Postprocessing(sr)
 
     def append_to_global_score(self, item, type, id):
         if id not in self.global_score.keys():  #create item if not exists
@@ -866,7 +892,7 @@ class Scene:
         return samples
 
 
-    def get_scored_sound(self, sound,  dur, volume, position, pan,
+    def gen_scored_sound(self, sound,  dur, volume, position, pan,
                         eq=False, rev=False, rev_length=4, segment=False,
                         stretch=1, shift=0, fade_in=20, fade_out=100, id=0):
         '''
@@ -891,8 +917,9 @@ class Scene:
         sound = sound / np.max(sound)  * volume #normalize and rescale sound
         #apply eventual processing
         if segment:  #clustering-based segmentation
-            sound_list = self.post.splitter(sound)
-            sound = random.choice(sounds_list)
+            #select the segment with the most similar duration to the
+            #score
+            sound = self.post.sel_good_segment(sound, dur, self.sr, perc=0.2)
             sound = self.post.apply_fades(sound, 20, 50, exp=1.3)
         if stretch != 1:
             sound = self.post.stretch(sound, stretch)
@@ -900,9 +927,6 @@ class Scene:
             sound = self.post.pitch_shift(sound, shift)
         if eq:
             sound = self.post.random_eq(sound)
-
-
-
         if rev:
             sound = self.post.reverb(sound, rev_length)
 
@@ -911,15 +935,16 @@ class Scene:
         else:
             sound = sound[:dur_samps]  #cut sound if too long
 
-        if offset+dur_samps >= num_samps:  #cut onset if exceeding length
+        if offset+dur_samps >= num_samps:  #cut offset if exceeding length
             dur_samps = (num_samps - offset)
             sound = sound[:dur_samps]
+
         sound = self.post.apply_fades(sound, fade_in, fade_out, exp=1.3)  #apply fades
 
+        pad[offset:offset+len(sound)] = sound
 
-        pad[offset:offset+dur_samps] = sound
         sound = pad
-        score = self.gen_onset_score(dur_samps/self.sr, volume, position)
+        score = self.gen_onset_score(len(sound), volume, position)
 
         self.append_to_global_score(score, 'score', id)
         self.append_to_global_score(pan, 'pan', id)
@@ -927,9 +952,6 @@ class Scene:
 
 
         return sound
-
-
-
 
 
 
