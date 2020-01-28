@@ -27,6 +27,7 @@ import librosa
 import random
 import scipy
 import os,sys,inspect
+from srnn_models_map import *
 # insert at 1, 0 is the script path (or '' in REPL)
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -357,14 +358,41 @@ class Postprocessing:
         IR = IR * rev_amount
 
         out = scipy.signal.convolve(samples, IR)
-        out = out / max(out)
-        out = out * 0.9
+        #out = out / max(abs(out))
+        #out = out * 0.9
         return out
+
+    def reverb_stereo(self, samples_left, samples_right, rev_length='any'):
+        #convolution with randomly-selected impulse response
+        #rev_length: int [1-4]
+        analysis_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
+        ir_analysis = np.load(analysis_path, allow_pickle=True).item()
+        if rev_length == 'any':
+            rev_length = np.random.randint(5)
+        chosen_irs = ir_analysis[rev_length]
+        random_rev = random.choice(chosen_irs)
+
+        rev_amount = np.random.rand() * 0.7 + 0.3
+
+        IR, sr = librosa.core.load(random_rev, mono=False, sr=self.sr)
+
+        if len(IR.shape) == 2 and IR.shape[0] == 2:
+            IR_final = IR
+        else:
+            IR_final = [IR,IR]
+
+        IR_final = IR_final * rev_amount
+
+        out_left = scipy.signal.convolve(samples_left, IR_final[0])
+        out_right = scipy.signal.convolve(samples_right, IR_final[1])
+        #out = out / max(abs(out))
+        #out = out * 0.9
+        return out_left, out_right
 
     def convolve(self, samples1, samples2):
         #convolve 2 signals
         out = scipy.signal.convolve(samples1, samples2)
-        out = out / max(out)
+        out = out / max(abs(out))
         out = out * 0.9
         return out
 
@@ -606,7 +634,7 @@ class Postprocessing:
             out[1] = np.add(out[1], right)
             index += 1
 
-        out = np.divide(out, np.max(out))
+        out = np.divide(out, np.max(np.abs(out)))
         out = np.multiply(out, 0.8)
         out = np.squeeze(out)
 
@@ -762,6 +790,7 @@ class Scene:
         '''
         visualize score in 1,2 or 3 dimensions
         '''
+        print ('plotting score')
         scores = []
         pans = []
         keys = self.global_score.keys()
@@ -798,7 +827,7 @@ class Scene:
 
         plt.show()
 
-    def resolve_score_stereo(self, fade_in=0, fade_out=0):
+    def resolve_score_stereo(self, global_volume=1., fade_in=0, fade_out=0, global_rev=False, rev_length=4):
         '''
         takes avery file in the score and produces a stereo mix
         '''
@@ -806,6 +835,7 @@ class Scene:
         mix_left = np.zeros(dur_samps)
         mix_right = np.zeros(dur_samps)
 
+        #apply panning
         for sound in self.global_score.keys(): #iterate all sounds in score
             pan = self.global_score[sound]['pan'][0]
             samples = self.global_score[sound]['samples']
@@ -815,9 +845,27 @@ class Scene:
             right = np.sqrt(2)/2.0 * (np.cos(angle) + np.sin(angle)) * samples
             mix_left = np.add(mix_left, left)
             mix_right = np.add(mix_right, right)
+
+        #apply reverb
+        if global_rev:
+            mix_left, mix_right = self.post.reverb_stereo(mix_left, mix_right, rev_length)
+
+        #normalize and rescale amplitude
+        max_vol = max(max(abs(mix_left)),max(abs(mix_right)))
+        mix_left = np.divide(mix_left, max_vol)
+        mix_right = np.divide(mix_left, max_vol)
+        if global_volume == 1.:
+            mix_left = np.multiply(mix_left, 0.95)
+            mix_right = np.multiply(mix_right, 0.95)
+        else:
+            mix_left = np.multiply(mix_left, global_volume)
+            mix_right = np.multiply(mix_right, global_volume)
+
+        #apply fades
         mix_left = self.post.apply_fades(mix_left, fade_in, fade_out, exp=1.3)  #apply fades
         mix_right = self.post.apply_fades(mix_right, fade_in, fade_out, exp=1.3)  #apply fades
 
+        #concatenate channels
         mix = np.array([[mix_left,mix_right]])
         mix = np.squeeze(mix)
 
@@ -876,7 +924,7 @@ class Scene:
 
         return score
 
-    def get_random_sound(self, category, model, variation, dur):
+    def get_sound(self, category, model, variation, dur):
         '''
         get a random sound within in the specified folder
         '''
@@ -950,11 +998,264 @@ class Scene:
         self.append_to_global_score(pan, 'pan', id)
         self.append_to_global_score(sound, 'samples', id)
 
-
         return sound
 
+    def gen_random_parameters(self, constrains='None'):
+        '''
+        generate random parameters to build a scene
+        everything is based on uniform random choice within a list of parameters
+        'constrains' modify the lists to bias decisions
+        '''
+        #macro categories of parameters
+        parameters = {'sound':{},
+                      'score':{}
+                      }
+
+        parameters['sound'] = {'category': [],
+                               'model': [],
+                               'variation': [],
+                               'dur': []
+                               }
+
+        parameters['score'] = {'dur': [],
+                               'volume': [],
+                               'position': [],
+                               'pan': [],
+                               'eq': [],
+                               'rev': [],
+                               'rev_length': [],
+                               'segment': [],
+                               'stretch': [],
+                               'shift': [],
+                               'fade_in': [],
+                               'fade_out': [],
+                               }
+
+        #SOUND PARAMETERS
+        #category
+        categories = list(models_map.keys())
+        try:
+            categories = constrains['sound']['category'](categories)
+            print ('constrain for sound, category: ' + str(constrains['sound']['category']))
+        except:
+            print ('no constrain for sound, category')
+        sel_category = np.random.choice(categories)
+        parameters['sound']['category'] = sel_category
+
+        #model
+        models = list(models_map[sel_category].keys())
+        try:
+            models = constrains['sound']['model'](models)
+            print ('constrain for sound, model: ' + str(constrains['sound']['model']))
+        except:
+            print ('no constrain for sound, model')
+        sel_model = np.random.choice(models)
+        parameters['sound']['model'] = sel_model
+
+        #variation
+        variations = np.arange(len(models_map[sel_category][sel_model]))
+        try:
+            variations = constrains['sound']['variation'](variations)
+            print ('constrain for sound, variation: ' + str(constrains['sound']['variation']))
+        except:
+            print ('no constrain for sound, variation')
+        sel_variation = np.random.choice(variations)
+        parameters['sound']['variation'] = sel_variation
+
+        #dur
+        durations = list(durations_map.keys())
+        try:
+            durations = constrains['sound']['dur'](durations)
+            print ('constrain for sound, dur: ' + str(constrains['sound']['dur']))
+        except:
+            print ('no constrain for sound, dur')
+        sel_dur = np.random.choice(durations)
+        parameters['sound']['dur'] = sel_dur
+
+        #SCORE PARAMETERS
+        #score_duration
+        score_durations = np.arange(0, self.main_dur, 0.01)  #10 ms resolution
+        try:
+            score_durations = constrains['score']['dur'](score_durations)
+            print ('constrain for score, dur: ' + str(constrains['score']['dur']))
+        except:
+            print ('no constrain for score, dur')
+        sel_score_dur = np.random.choice(score_durations)
+        parameters['score']['dur'] = sel_score_dur
+
+        #volume
+        volumes = np.arange(0., 1., 0.01)  #10 ms resolution
+        try:
+            volumes = constrains['score']['volume'](volumes)
+            print ('constrain for score, volume: ' + str(constrains['score']['volume']))
+        except:
+            print ('no constrain for score, volume')
+        sel_volume = np.random.choice(volumes)
+        parameters['score']['volume'] = sel_volume
+
+        #position
+        positions = np.arange(0, 1, 0.01)  #10 ms resolution
+        try:
+            positions = constrains['score']['position'](positions)
+            print ('constrain for score, position: ' + str(constrains['score']['position']))
+        except:
+            print ('no constrain for score, position')
+        sel_position = np.random.choice(positions)
+        parameters['score']['position'] = sel_position
+
+        #pan
+        pans = np.arange(-1, 1, 0.01)  #10 ms resolution
+        try:
+            pans = constrains['score']['pan'](pans)
+            print ('constrain for score, pan: ' + str(constrains['score']['pan']))
+        except:
+            print ('no constrain for score, pan')
+        sel_pan = np.random.choice(pans)
+        parameters['score']['pan'] = sel_pan
+
+        #eq
+        eqs = [True, False]  #10 ms resolution
+        try:
+            eqs = constrains['score']['eq'](eqs)
+            print ('constrain for score, eq: ' + str(constrains['score']['eq']))
+        except:
+            print ('no constrain for score, eq')
+        sel_eq = np.random.choice(eqs)
+        parameters['score']['eq'] = sel_eq
+
+        #rev
+        revs = [True, False]  #10 ms resolution
+        try:
+            revs = constrains['score']['rev'](revs)
+            print ('constrain for score, rev: ' + str(constrains['score']['rev']))
+        except:
+            print ('no constrain for score, rev')
+        sel_rev = np.random.choice(revs)
+        parameters['score']['rev'] = sel_rev
+
+        #rev_length
+        analysis_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
+        rev_analysis_file = np.load(analysis_path, allow_pickle=True).item()
+        num_lengths = len(list(rev_analysis_file.keys()))
+        rev_lengths = np.arange(num_lengths)  #10 ms resolution
+        try:
+            rev_lengths = constrains['score']['rev_length'](rev_lengths)
+            print ('constrain for score, rev_length: ' + str(constrains['score']['rev_length']))
+        except:
+            print ('no constrain for score, rev_length')
+        sel_rev_length = np.random.choice(rev_lengths)
+        parameters['score']['rev_length'] = sel_rev_length
+
+        #segment
+        segments = [True, False]  #10 ms resolution
+        try:
+            segments = constrains['score']['segment'](segments)
+            print ('constrain for score, segment: ' + str(constrains['score']['segment']))
+        except:
+            print ('no constrain for score, segment')
+        sel_segment = np.random.choice(segments)
+        parameters['score']['segment'] = sel_segment
+
+        #stretch
+        stretches1 = np.arange(0.1, 1, 0.01) ** 2
+        stretches2 = np.arange(1, 3, 0.02) ** 2
+        stretches = np.concatenate((stretches1, stretches2))
+        try:
+            stretches = constrains['score']['stretch'](stretches)
+            print ('constrain for score, stretch: ' + str(constrains['score']['stretch']))
+        except:
+            print ('no constrain for score, stretch')
+        sel_stretch = np.random.choice(stretches)
+        parameters['score']['stretch'] = sel_stretch
+
+        #shift
+        shifts = np.arange(-48, 24, 0.1)
+        try:
+            shifts = constrains['score']['shift'](shifts)
+            print ('constrain for score, shift: ' + str(constrains['score']['shift']))
+        except:
+            print ('no constrain for score, shift')
+        sel_shift = np.random.choice(shifts)
+        parameters['score']['shift'] = sel_shift
+
+        #fade_in
+        fade_ins = np.arange(0, sel_score_dur*1000/2,1)
+        try:
+            fade_ins = constrains['score']['fade_in'](fade_ins)
+            print ('constrain for score, fade_in: ' + str(constrains['score']['fade_in']))
+        except:
+            print ('no constrain for score, fade_in')
+        sel_fade_in = np.random.choice(fade_ins)
+        parameters['score']['fade_in'] = sel_fade_in
+
+        #fade_out
+        fade_outs = np.arange(0, sel_score_dur*1000/2,1)
+        try:
+            fade_out = constrains['score']['fade_out'](fade_outs)
+            print ('constrain for score, fade_out: ' + str(constrains['score']['fade_out']))
+        except:
+            print ('no constrain for score, fade_out')
+        sel_fade_out = np.random.choice(fade_outs)
+        parameters['score']['fade_out'] = sel_fade_out
+
+        return parameters
+
+class Constrains():
+    '''
+    constrains for random generation of a scene
+    every function is a constrain for a specific parameter
+    every function takes as input a list of parameters and returns a modified
+    list to impose a constrain in the random choice
+    '''
+    def __init__(self):
+        '''
+        initialize constrain dict with same structure as parameters dict
+        '''
+        self.constrains_dict = {'sound':{},
+                      'score':{}
+                      }
+
+        self.constrains_dict['sound'] = {'category': [],
+                               'model': [],
+                               'variation': [],
+                               'dur': []
+                               }
+
+        self.constrains_dict['score'] = {'dur': [],
+                               'volume': [],
+                               'position': [],
+                               'pan': [],
+                               'eq': [],
+                               'rev': [],
+                               'rev_length': [],
+                               'segment': [],
+                               'stretch': [],
+                               'shift': [],
+                               'fade_in': [],
+                               'fade_out': [],
+                               }
 
 
+
+    #SOUND SELECTION CONSTRAINS
+    #category
+    def only_instrumental(self, input):
+        return ['instrumental']
+
+    #models
+    def only_available(self, input):
+        return ['buchla', 'classical', 'classical2', 'jazz', 'guitarAcoustic']#provisional
+
+    #variation
+    def more_hq(self, input):
+        num_var = len(input)
+        for i in range(num_var):
+            input.append(0)
+        return np.random.shuffle(input)
+
+    #duration
+    def only_long(self, input):
+        return [60, 30]
 
 class SampleRNN:
     def __init__(self, sr, code_path, env_path):

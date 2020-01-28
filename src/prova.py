@@ -19,6 +19,6 @@ scene.gen_scored_sound(sound4, 10, 0.6, 0.23, pan=[-.2,-.2], id=3, rev=True, str
 scene.gen_scored_sound(sound5, 40, 0.2, 0., pan=[-.7,-.2], id=4, rev=True, fade_in=4000, fade_out=5000, shift=-36, segment=True)
 
 
-mix = scene.resolve_score_stereo(0,4000)
+mix = scene.resolve_score_stereo(global_rev=True,fade_in=0,fade_out=4000)
 allocator.write_local(mix, '2')
 scene.plot_score(dimensions=3)

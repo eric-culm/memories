@@ -164,7 +164,6 @@ models_map['fieldrec'] = {
                                                 2:'x'}
 
 
-
                             }
 
 

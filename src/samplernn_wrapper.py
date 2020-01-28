@@ -125,7 +125,7 @@ def prepare_sound(input_sound):
     faded = samples * mask
 
     #normalize
-    samples = samples / np.max(samples)
+    samples = samples / np.max(np.abs(samples))
     samples = samples * 0.8
 
     #write file
