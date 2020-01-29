@@ -168,6 +168,58 @@ def rmm(in_list):
 always_mid_rev = constrains_dict.copy()
 always_short_rev['score']['rev'] = rmm
 
+#segment always on
+always_segment = constrains_dict.copy()
+always_segment['score']['segment'] = lambda x: [True]
+
+#more probable segment
+more_segment = constrains_dict.copy()
+more_segment['score']['segment'] = lambda x: [True, True, False]
+
+#segment always on
+never_segment = constrains_dict.copy()
+never_segment['score']['segment'] = lambda x: [False]
+
+#more probable not segment
+less_segment = constrains_dict.copy()
+less_segment['score']['segment'] = lambda x: [False, True, False]
+
+#stretch long
+stretch_long = constrains_dict.copy()
+stretch_long['score']['stretch'] = lambda x: x > 4.
+
+#stretch short
+stretch_short = constrains_dict.copy()
+stretch_short['score']['stretch'] = lambda x: x < 0.3
+
+#stretch long
+stretch_long = constrains_dict.copy()
+stretch_long['score']['stretch'] = lambda x: x > 4.
+
+#stretch mid
+stretch_mid = constrains_dict.copy()
+stretch_mid['score']['stretch'] = lambda x: x > 0.5 and x < 2
+
+#no stretch
+no_stretch = constrains_dict.copy()
+no_stretch['score']['stretch'] = lambda x: [1]
+
+#shift lo
+shift_low = constrains_dict.copy()
+shift_low['score']['shift'] = lambda x: x < -30
+
+#shift hi
+shift_hi = constrains_dict.copy()
+shift_hi['score']['shift'] = lambda x: x > 12
+
+#shift mid
+shift_mid = constrains_dict.copy()
+shift_mid['score']['shift'] = lambda x: x > -10 and x < 10
+
+
+
+
+
 
 
 
