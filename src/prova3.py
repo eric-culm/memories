@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from modules import *
-import scene_presets as sp
+import scene_constrains as sc
 import random
 
 scene = Scene(main_dur=40)
@@ -10,7 +10,7 @@ allocator = Allocator(server_shared_path='../shared', sr=44100,
 post = Postprocessing()
 
 constrains = only_available
-constrains = sp.get_constrains(['only_available', 'prefer_hq'])
+constrains = sc.get_constrains(['only_available', 'prefer_hq'])
 print(constrains)
 p = scene.gen_random_parameters(constrains)
 scene.gen_sound_from_parameters(p, 0)
