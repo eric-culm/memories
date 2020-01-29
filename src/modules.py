@@ -10,6 +10,8 @@ from audtorch import metrics
 from scipy.stats import pearsonr
 from scipy.signal import hilbert, resample
 from scipy.fftpack import fft
+from scipy import signal
+from scipy.signal import iirfilter, lfilter, convolve
 from threading import Thread
 from audtorch import metrics
 import sounddevice as sd
@@ -28,6 +30,7 @@ import random
 import scipy
 import os,sys,inspect
 from srnn_models_map import *
+from scene_presets import *
 # insert at 1, 0 is the script path (or '' in REPL)
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -939,6 +942,26 @@ class Scene:
 
         return samples
 
+    def gen_sound_from_parameters(self, parameters, id):
+        p = parameters
+        sound = self.get_sound(category=p['sound']['category'],
+                               model=p['sound']['model'],
+                               variation=p['sound']['variation'],
+                               dur=p['sound']['dur'])
+        self.gen_scored_sound(sound=sound,
+                         dur=p['score']['dur'],
+                         volume=p['score']['volume'],
+                         position=p['score']['position'],
+                         pan=p['score']['pan'],
+                         eq=p['score']['eq'],
+                         rev=p['score']['rev'],
+                         rev_length=p['score']['rev_length'],
+                         segment=p['score']['segment'],
+                         stretch=p['score']['stretch'],
+                         shift=p['score']['shift'],
+                         fade_in=p['score']['fade_in'],
+                         fade_out=p['score']['fade_out'])
+
 
     def gen_scored_sound(self, sound,  dur, volume, position, pan,
                         eq=False, rev=False, rev_length=4, segment=False,
@@ -1041,6 +1064,7 @@ class Scene:
             print ('no constrain for sound, category')
         sel_category = np.random.choice(categories)
         parameters['sound']['category'] = sel_category
+        print ('chosen parameter for sound, category: ' + str(sel_category))
 
         #model
         models = list(models_map[sel_category].keys())
@@ -1051,6 +1075,7 @@ class Scene:
             print ('no constrain for sound, model')
         sel_model = np.random.choice(models)
         parameters['sound']['model'] = sel_model
+        print ('chosen parameter for sound, model: ' + str(sel_model))
 
         #variation
         variations = np.arange(len(models_map[sel_category][sel_model]))
@@ -1061,6 +1086,7 @@ class Scene:
             print ('no constrain for sound, variation')
         sel_variation = np.random.choice(variations)
         parameters['sound']['variation'] = sel_variation
+        print ('chosen parameter for sound, variation: ' + str(sel_variation))
 
         #dur
         durations = list(durations_map.keys())
@@ -1071,6 +1097,7 @@ class Scene:
             print ('no constrain for sound, dur')
         sel_dur = np.random.choice(durations)
         parameters['sound']['dur'] = sel_dur
+        print ('chosen parameter for sound, dur: ' + str(sel_dur))
 
         #SCORE PARAMETERS
         #score_duration
@@ -1082,6 +1109,8 @@ class Scene:
             print ('no constrain for score, dur')
         sel_score_dur = np.random.choice(score_durations)
         parameters['score']['dur'] = sel_score_dur
+        print ('chosen parameter for score, dur: ' + str(sel_score_dur))
+
 
         #volume
         volumes = np.arange(0., 1., 0.01)  #10 ms resolution
@@ -1092,6 +1121,7 @@ class Scene:
             print ('no constrain for score, volume')
         sel_volume = np.random.choice(volumes)
         parameters['score']['volume'] = sel_volume
+        print ('chosen parameter for score, volume: ' + str(sel_volume))
 
         #position
         positions = np.arange(0, 1, 0.01)  #10 ms resolution
@@ -1102,8 +1132,9 @@ class Scene:
             print ('no constrain for score, position')
         sel_position = np.random.choice(positions)
         parameters['score']['position'] = sel_position
+        print ('chosen parameter for score, position: ' + str(sel_position))
 
-        #pan
+        #pan  only stereo for now
         pans = np.arange(-1, 1, 0.01)  #10 ms resolution
         try:
             pans = constrains['score']['pan'](pans)
@@ -1111,7 +1142,8 @@ class Scene:
         except:
             print ('no constrain for score, pan')
         sel_pan = np.random.choice(pans)
-        parameters['score']['pan'] = sel_pan
+        parameters['score']['pan'] = [sel_pan, sel_pan]
+        print ('chosen parameter for score, pasn: ' + str(sel_pan))
 
         #eq
         eqs = [True, False]  #10 ms resolution
@@ -1122,6 +1154,7 @@ class Scene:
             print ('no constrain for score, eq')
         sel_eq = np.random.choice(eqs)
         parameters['score']['eq'] = sel_eq
+        print ('chosen parameter for score, eq: ' + str(sel_eq))
 
         #rev
         revs = [True, False]  #10 ms resolution
@@ -1132,6 +1165,7 @@ class Scene:
             print ('no constrain for score, rev')
         sel_rev = np.random.choice(revs)
         parameters['score']['rev'] = sel_rev
+        print ('chosen parameter for score, rev: ' + str(sel_rev))
 
         #rev_length
         analysis_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
@@ -1145,6 +1179,7 @@ class Scene:
             print ('no constrain for score, rev_length')
         sel_rev_length = np.random.choice(rev_lengths)
         parameters['score']['rev_length'] = sel_rev_length
+        print ('chosen parameter for score, rev_length: ' + str(sel_rev_length))
 
         #segment
         segments = [True, False]  #10 ms resolution
@@ -1155,6 +1190,7 @@ class Scene:
             print ('no constrain for score, segment')
         sel_segment = np.random.choice(segments)
         parameters['score']['segment'] = sel_segment
+        print ('chosen parameter for score, segment: ' + str(sel_segment))
 
         #stretch
         stretches1 = np.arange(0.1, 1, 0.01) ** 2
@@ -1167,6 +1203,7 @@ class Scene:
             print ('no constrain for score, stretch')
         sel_stretch = np.random.choice(stretches)
         parameters['score']['stretch'] = sel_stretch
+        print ('chosen parameter for score, stretch: ' + str(sel_stretch))
 
         #shift
         shifts = np.arange(-48, 24, 0.1)
@@ -1177,6 +1214,7 @@ class Scene:
             print ('no constrain for score, shift')
         sel_shift = np.random.choice(shifts)
         parameters['score']['shift'] = sel_shift
+        print ('chosen parameter for score, shift: ' + str(sel_shift))
 
         #fade_in
         fade_ins = np.arange(0, sel_score_dur*1000/2,1)
@@ -1187,6 +1225,7 @@ class Scene:
             print ('no constrain for score, fade_in')
         sel_fade_in = np.random.choice(fade_ins)
         parameters['score']['fade_in'] = sel_fade_in
+        print ('chosen parameter for score, fade_in: ' + str(sel_fade_in))
 
         #fade_out
         fade_outs = np.arange(0, sel_score_dur*1000/2,1)
@@ -1197,86 +1236,6 @@ class Scene:
             print ('no constrain for score, fade_out')
         sel_fade_out = np.random.choice(fade_outs)
         parameters['score']['fade_out'] = sel_fade_out
+        print ('chosen parameter for score, fade_out: ' + str(sel_fade_out))
 
         return parameters
-
-class Constrains():
-    '''
-    constrains for random generation of a scene
-    every function is a constrain for a specific parameter
-    every function takes as input a list of parameters and returns a modified
-    list to impose a constrain in the random choice
-    '''
-    def __init__(self):
-        '''
-        initialize constrain dict with same structure as parameters dict
-        '''
-        self.constrains_dict = {'sound':{},
-                      'score':{}
-                      }
-
-        self.constrains_dict['sound'] = {'category': [],
-                               'model': [],
-                               'variation': [],
-                               'dur': []
-                               }
-
-        self.constrains_dict['score'] = {'dur': [],
-                               'volume': [],
-                               'position': [],
-                               'pan': [],
-                               'eq': [],
-                               'rev': [],
-                               'rev_length': [],
-                               'segment': [],
-                               'stretch': [],
-                               'shift': [],
-                               'fade_in': [],
-                               'fade_out': [],
-                               }
-
-
-
-    #SOUND SELECTION CONSTRAINS
-    #category
-    def only_instrumental(self, input):
-        return ['instrumental']
-
-    #models
-    def only_available(self, input):
-        return ['buchla', 'classical', 'classical2', 'jazz', 'guitarAcoustic']#provisional
-
-    #variation
-    def more_hq(self, input):
-        num_var = len(input)
-        for i in range(num_var):
-            input.append(0)
-        return np.random.shuffle(input)
-
-    #duration
-    def only_long(self, input):
-        return [60, 30]
-
-class SampleRNN:
-    def __init__(self, sr, code_path, env_path):
-        self.sr = sr
-        self.code_path = code_path
-        self.env_path = env_path
-
-    def list_datasets(self):
-        datasets_path = os.path.join(self.code_path, 'datasets')
-        datasets_list = os.listdir(datasets_path)
-        datasets_list = list(filter(lambda x: x[-3:] != '.sh', datasets_list))
-        datasets_list = list(filter(lambda x: 'DS_Store' not in x, datasets_list))
-
-        return datasets_list
-
-    def build_train_string(self, exp_name, dataset_name):
-        train_string = 'python train.py --exp ' + str(exp_name) + \
-                       ' --frame_sizes 16 4 --n_rnn 2 --sample_length=100 --sampling_temperature=0.95 --n_samples=0 --dataset ' + str(dataset_name)
-        conda_string = 'conda run -p ' + str(self.env_path) + 'python '
-        out_string = conda_string + train_string
-        print (out_string)
-
-    def build_generate_string(self, model_path, duration):
-        pass
