@@ -114,6 +114,22 @@ volume_mid['score']['volume'] = lambda x: np.arange(0.3,0.7,0.01)
 volume_low = copy.deepcopy(constrains_dict)
 volume_low['score']['volume'] = lambda x: np.arange(0.1,0.3,0.01)
 
+#position beginning
+at_beginning = copy.deepcopy(constrains_dict)
+at_beginning['score']['position'] = lambda x: [0]
+
+#position beginning
+pos_initial = copy.deepcopy(constrains_dict)
+pos_initial['score']['position'] = lambda x: np.arange(0,0.3,0.01)
+
+#position mid
+pos_mid = copy.deepcopy(constrains_dict)
+pos_mid['score']['position'] = lambda x: np.arange(0.3,0.7,0.01)
+
+#position ending
+pos_ending = copy.deepcopy(constrains_dict)
+pos_ending['score']['position'] = lambda x: np.arange(0.7,1.,0.01)
+
 #around center
 pan_around_center = copy.deepcopy(constrains_dict)
 pan_around_center['score']['pan'] = lambda x: np.arange(-0.2,0.2,0.01)
@@ -236,32 +252,44 @@ no_shift['score']['shift'] = lambda x: [1]
 
 #short fade in
 fade_in_short = copy.deepcopy(constrains_dict)
-fade_in_short['score']['fade_in'] = lambda x: [y for y in x if y < 50]
+fade_in_short['score']['fade_in'] = lambda x: np.arange(0,50,0.1)
 
 #short fade out
 fade_out_short = copy.deepcopy(constrains_dict)
-fade_out_short['score']['fade_out'] = lambda x: [y for y in x if y < 50]
+fade_out_short['score']['fade_out'] = lambda x: np.arange(0,50,0.1)
 
 #long fade in
 fade_in_long = copy.deepcopy(constrains_dict)
-fade_in_long['score']['fade_in'] = lambda x: [y for y in x if y > max(x)*0.7]
+fade_in_long['score']['fade_in'] = lambda x: np.arange(max(x)*0.7, max(x), 0.1)
 
 #long fade out
 fade_out_long = copy.deepcopy(constrains_dict)
-fade_out_long['score']['fade_out'] = lambda x: [y for y in x if y > max(x)*0.7]
+fade_out_long['score']['fade_out'] = lambda x: np.arange(max(x)*0.7, max(x), 0.1)
 
 #mid fade in
 fade_in_mid = copy.deepcopy(constrains_dict)
-fade_in_mid['score']['fade_in'] = lambda x: [y for y in x if y<max(x)*0.7 and y>max(x)*0.3]
+fade_in_mid['score']['fade_in'] = lambda x: np.arange(max(x)*0.3, max(x)*0.7, 0.1)
 
 #mid fade out
 fade_out_mid = copy.deepcopy(constrains_dict)
-fade_out_mid['score']['fade_out'] = lambda x: [y for y in x if y<max(x)*0.7 and y>max(x)*0.3]
+fade_out_mid['score']['fade_out'] = lambda x: np.arange(max(x)*0.3, max(x)*0.7, 0.1)
+
+
+
 #MACROS
 #combinations of constrains
-#sound particel
+
+#sound particle
 particle = copy.deepcopy(constrains_dict)
 particle_features = ['only_short_selected', 'very_short_scored', 'volume_hi',
                      'less_eq', 'no_stretch', 'fade_in_short',
                      'fade_out_mid']
 particel = get_constrains(particle_features)
+
+
+#sound particle
+long_low = copy.deepcopy(constrains_dict)
+long_low_features = ['only_long_selected', 'very_long_scored', 'volume_mid',
+                     'less_eq', 'shift_low', 'fade_in_long',
+                     'fade_out_long']
+long_low = get_constrains(long_low_features)

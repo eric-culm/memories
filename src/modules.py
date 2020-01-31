@@ -947,7 +947,7 @@ class Scene:
 
         return samples
 
-    def gen_sound_from_parameters(self, parameters, id):
+    def gen_sound_from_parameters(self, parameters, id, verbose=False):
         p = parameters
         sound = self.get_sound(category=p['sound']['category'],
                                model=p['sound']['model'],
@@ -966,12 +966,14 @@ class Scene:
                          shift=p['score']['shift'],
                          fade_in=p['score']['fade_in'],
                          fade_out=p['score']['fade_out'],
-                         id=id)
+                         id=id,
+                         verbose=verbose)
 
 
     def gen_scored_sound(self, sound,  dur, volume, position, pan,
                         eq=False, rev=False, rev_length=4, segment=False,
-                        stretch=1, shift=0, fade_in=20, fade_out=100, id=0):
+                        stretch=1, shift=0, fade_in=20, fade_out=100, id=0,
+                        verbose=False):
         '''
         compute sound and apply all processings. Append to global score
         dur: float, seconds
@@ -987,12 +989,16 @@ class Scene:
         fade in/out: int, milliseconds
         id: int, sound id for the global score
         '''
+        if verbose:
+            print('loading')
         pad = np.zeros(self.sr * self.main_dur) #inital pad, long as the whole score
         num_samps = len(pad)
         offset = int(num_samps * position)
         dur_samps = int(dur * self.sr)
         sound = sound / np.max(sound)  * volume #normalize and rescale sound
 
+        if verbose:
+            print('segmentation')
         #apply eventual processing
         if segment:  #clustering-based segmentation
             #select the segment with the most similar duration to the
@@ -1000,15 +1006,23 @@ class Scene:
             sound = self.post.sel_good_segment(sound, dur, self.sr, perc=0.2)
             sound = self.post.apply_fades(sound, 20, 50, exp=1.3)
 
+        if verbose:
+            print('stretching')
         if stretch != 1:
             sound = self.post.stretch(sound, stretch)
 
+        if verbose:
+            print('eqing')
         if eq:
             sound = self.post.random_eq(sound)
 
+        if verbose:
+            print('reverberation')
         if rev:
             sound = self.post.reverb(sound, rev_length)
 
+        if verbose:
+            print('cutting')
         if len(sound) < dur_samps:  #shorten score length is sample is too short
             dur_samps = int(len(sound))
         else:
@@ -1018,9 +1032,13 @@ class Scene:
             dur_samps = (num_samps - offset)
             sound = sound[:dur_samps]
 
+        if verbose:
+            print('shifting')
         if shift != 0:
             sound = self.post.pitch_shift(sound, shift)
 
+        if verbose:
+            print('fading')
         sound = self.post.apply_fades(sound, fade_in, fade_out, exp=1.3)  #apply fades
 
         pad[offset:offset+len(sound)] = sound
@@ -1265,6 +1283,7 @@ class Scene:
 
         #fade_in
         fade_ins = np.arange(0, sel_score_dur*1000/2,1)
+        print ('culo', len(fade_ins))
         if 'fade_in' in constrains['score'].keys():
             fade_ins = constrains['score']['fade_in'](fade_ins)
             #print ('constrain for score, fade_in: ' + str(constrains['score']['fade_in']))
@@ -1288,5 +1307,6 @@ class Scene:
         parameters['score']['fade_out'] = sel_fade_out
         if verbose:
             print ('chosen parameter for score, fade_out: ' + str(sel_fade_out))
+
 
         return parameters

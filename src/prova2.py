@@ -11,4 +11,3 @@ post = Postprocessing()
 sound1 = scene.get_random_sound('instrumental', 'buchla', 0, 60)
 
 scene.gen_random_parameters()
-scene.plot_score()
