@@ -28,6 +28,7 @@ import pyrubberband as rub
 import librosa
 import random
 import scipy
+import threading
 import os,sys,inspect
 from srnn_models_map import *
 from scene_constrains import *
@@ -947,12 +948,34 @@ class Scene:
 
         return samples
 
-    def gen_sound_from_parameters(self, parameters, id, verbose=False):
-        p = parameters
+    def gen_sound_from_parameters(self, parameters, overwrite=False, verbose=False):
+        '''
+        select sound from parameters dict
+        '''
+        #if an overwrite dict is supplied, overwrite only the contained keys
+        if isinstance(overwrite, dict):
+            p = get_constrains([parameters, overwrite])
+        else:
+            p = parameters
+
+
         sound = self.get_sound(category=p['sound']['category'],
                                model=p['sound']['model'],
                                variation=p['sound']['variation'],
                                dur=p['sound']['dur'])
+
+        return sound
+
+    def score_sound_from_parameters(self, sound, parameters, id, overwrite=False, verbose=False):
+        '''
+        build sound from parameters dict
+        '''
+        #if an overwrite dict is supplied, overwrite only the contained keys
+        if isinstance(overwrite, dict):
+            p = get_constrains([parameters, overwrite])
+        else:
+            p = parameters
+
         self.gen_scored_sound(sound=sound,
                          dur=p['score']['dur'],
                          volume=p['score']['volume'],
@@ -1053,6 +1076,11 @@ class Scene:
 
         return sound
 
+    def gen_macro(self, verbose=False):
+        constrains_dict = gen_random_macro(verbose=verbose)
+
+        return constrains_dict
+
     def gen_random_parameters(self, constrains='None', verbose=False):
         '''
         generate random parameters to build a scene
@@ -1092,7 +1120,9 @@ class Scene:
 
         #SOUND PARAMETERS
         #category
-        categories = list(models_map.keys())
+        availables = check_available_models()
+        categories = list(availables.keys())
+
         if 'category' in constrains['sound'].keys():
             categories = constrains['sound']['category'](categories)
             #print ('constrain for sound, category: ' + str(constrains['sound']['category']))
@@ -1105,7 +1135,7 @@ class Scene:
             print ('chosen parameter for sound, category: ' + str(sel_category))
 
         #model
-        models = list(models_map[sel_category].keys())
+        models = list(availables[sel_category])
         if 'model' in constrains['sound'].keys():
             models = constrains['sound']['model'](models)
             #print ('constrain for sound, model: ' + str(constrains['sound']['model']))
@@ -1195,7 +1225,7 @@ class Scene:
         sel_pan = np.random.choice(pans)
         parameters['score']['pan'] = [sel_pan, sel_pan]
         if verbose:
-            print ('chosen parameter for score, pasn: ' + str(sel_pan))
+            print ('chosen parameter for score, pan: ' + str(sel_pan))
 
         #eq
         eqs = [True, False]  #10 ms resolution
@@ -1211,8 +1241,10 @@ class Scene:
             print ('chosen parameter for score, eq: ' + str(sel_eq))
 
         #rev
+
         revs = [True, False]  #10 ms resolution
         ass = lambda x: [False, True, False]
+
         if 'rev' in constrains['score'].keys():
             revs = constrains['score']['rev'](revs)
             #print ('constrain for score, rev: ' + str(constrains['score']['rev']))
@@ -1283,7 +1315,6 @@ class Scene:
 
         #fade_in
         fade_ins = np.arange(0, sel_score_dur*1000/2,1)
-        print ('culo', len(fade_ins))
         if 'fade_in' in constrains['score'].keys():
             fade_ins = constrains['score']['fade_in'](fade_ins)
             #print ('constrain for score, fade_in: ' + str(constrains['score']['fade_in']))
@@ -1310,3 +1341,70 @@ class Scene:
 
 
         return parameters
+
+
+
+class BuildScene:
+    '''
+    build dream scene.
+    Global score contains all sounds
+    '''
+    def __init__(self, max_dur=60, max_num_sounds = 100, sr=MAIN_SR):
+        self.max_num_sounds = max_num_sounds
+        self.max_dur = 60
+        self.score_resolution = 0.1  #in secs
+        self.score_length = 1000
+        self.sr=sr
+
+    def build(self, length, density, sel_diversity, score_diversity, verbose=False):
+        '''
+        generate scene from macroparameters
+        '''
+        #scale variables by macroparameters
+        scene_dur = int(self.max_dur * length)
+        num_sounds = int(self.max_num_sounds * density)
+        different_sounds = int(num_sounds * sel_diversity)
+        different_scores = int(num_sounds * score_diversity)
+        scene = Scene(main_dur=scene_dur, sr=self.sr)
+        sound_macros = {}
+        score_macros = {}
+
+        #compute sound and scene macros
+        if verbose:
+            print ('sound macros:')
+
+        for i in range(different_sounds):
+            curr_macro = scene.gen_macro(verbose=False)
+            sound_macros[i] = curr_macro
+        if verbose:
+            print ('scene macros:')
+
+        for i in range(different_scores):
+            curr_macro = scene.gen_macro(verbose=False)
+            score_macros[i] = curr_macro
+
+        #build_scene
+        for i in range(num_sounds):
+            #choose random macro (dict of constrains) from the available ones
+            rand_sound_macro = random.choice(list(sound_macros.keys()))
+            rand_score_macro = random.choice(list(score_macros.keys()))
+            curr_sound_macro = sound_macros[rand_sound_macro]
+            curr_score_macro = score_macros[rand_score_macro]
+
+            #generate random prameters with chosen constrains
+            curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro, verbose=True)
+            curr_score_parameters = scene.gen_random_parameters(curr_score_macro)
+
+            #p = scene.gen_random_parameters(constrains, verbose=True)
+
+
+
+
+
+
+
+
+
+
+
+        print ('fottiti')

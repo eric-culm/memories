@@ -1,8 +1,17 @@
 import numpy as np
-import sys
+import sys, os
 import copy
 import pprint
 import random
+import configparser
+import loadconfig
+
+config = loadconfig.load()
+cfg = configparser.ConfigParser()
+cfg.read(config)
+
+SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
+
 
 constrains_dict = {'sound':{},'score':{}}
 parameters = {}
@@ -31,7 +40,8 @@ constrains_dict['score'] = {'dur': [],
 
 def get_constrains(constrains_list):
     '''
-    join all requested constrains in one dict
+    join all requested constrains in one dict.
+    constrains_list is a list of dicts
     '''
     output_dict = copy.deepcopy(constrains_dict)
     for curr_constrain in constrains_list:
@@ -54,7 +64,7 @@ def printTree(t,s):
                     printTree(t[key],s+1)
                     a += 1
 
-def gen_random_macro():
+def gen_random_macro(verbose=False):
     p_list = []
     tot_params = len(list(parameters.keys())) - 1  #-1 subtracts the macro category
     min_params = 4
@@ -63,40 +73,60 @@ def gen_random_macro():
     keys = list(parameters.keys())
     random.shuffle(keys)
 
-    print ('random constrains:')
+    if verbose:
+        print ('random constrains:')
+
     for i in range(num_params):
         curr_key = parameters[keys[i]]
+        #print (parameters[keys[i]].keys())
         options = list(parameters[keys[i]].keys())
         sel_option = np.random.choice(options)
         p_list.append(parameters[keys[i]][sel_option])
-        print (str(keys[i]) + ': ' + str(sel_option))
+        if verbose:
+            print (str(keys[i]) + ': ' + str(sel_option))
 
     output_dict = get_constrains(p_list)
 
     return output_dict
 
+def check_available_models(models_folder=SRNN_DATA_PATH):
+    available = {}
+    contents = os.listdir(models_folder)
+    contents = list(filter(lambda x: '.DS_Store' not in x, contents))
+    #check is a model folder contains the precomputed sounds
+    for cat in contents:
+        available[cat] = []
+        category_path = os.path.join(models_folder, cat)
+        models = os.listdir(category_path)
+        models = list(filter(lambda x: '.DS_Store' not in x, models))
+        for mod in models:
+            mod_path = os.path.join(category_path, mod)
+            ins = os.listdir(mod_path)
+            if 'sounds' in ins:
+                available[cat].append(mod)
+    #cut empty categories
+    empties = []
+    for cat in available:
+        if available[cat] == []:
+            empties.append(cat)
+    for e in empties:
+        del available[e]
+
+    return available
+
+
 
 
 
 #SOUND SELECTION CONSTRAINS
-parameters['selection_availability'] = {}
 parameters['selection_type'] = {}
 parameters['selection_length'] = {}
-
-
-#only available
-#only_available = constrains_dict.copy()
-parameters['selection_availability']['only_available'] = copy.deepcopy(constrains_dict)
-parameters['selection_availability']['only_available']['sound']['category'] = lambda x: ['instrumental']
-parameters['selection_availability']['only_available']['sound']['model'] = lambda x: ['africanPercs', 'ambient1', 'buchla',
-                                            'buchla2', 'classical', 'classical2',
-                                            'guitarAcoustic', 'jazz', 'organ', 'percsWar',
-                                            'percussions', 'pianoChill']
 
 
 #prefer highest quality
 parameters['selection_type']['more_hq'] = copy.deepcopy(constrains_dict)
 def phq(in_list):
+    in_list = list(in_list)
     for i in range(len(in_list)):
         in_list.append(0)
     return in_list
@@ -105,6 +135,7 @@ parameters['selection_type']['more_hq']['sound']['variation'] = phq
 #prefer lowest quality
 parameters['selection_type']['more_lq'] = copy.deepcopy(constrains_dict)
 def plq(in_list):
+    in_list = list(in_list)
     for i in range(len(in_list)):
         list.append(max(in_list))
     return in_list
@@ -113,6 +144,7 @@ parameters['selection_type']['more_lq']['sound']['variation'] = phq
 #prefer mid quality
 parameters['selection_type']['more_mq'] = copy.deepcopy(constrains_dict)
 def phmq(in_list):
+    in_list = list(in_list)
     to_append = in_list.copy()
     to_append.remove(max(to_append))
     to_append.remove(min(to_append))
@@ -188,7 +220,7 @@ parameters['pan']['around_center']['score']['pan'] = lambda x: np.arange(-0.2,0.
 
 #towards left
 parameters['pan']['towards_left'] = copy.deepcopy(constrains_dict)
-parameters['pan']['towards_left']['score']['pan'] = lambda x: np.arange(-0.2,-1,0.01)
+parameters['pan']['towards_left']['score']['pan'] = lambda x: np.arange(-1,0.2,0.01)
 
 #towards right
 parameters['pan']['towards_right'] = copy.deepcopy(constrains_dict)
@@ -238,24 +270,25 @@ parameters['rev_prob']['never']['score']['rev'] = lambda x: [False]
 
 #more probable not rev
 parameters['rev_prob']['less'] = copy.deepcopy(constrains_dict)
-parameters['rev_prob']['less']['score']['rev'] = lambda x: [False, True, False]
+parameters['rev_prob']['less']['score']['rev_length'] = lambda x: [False, True, False]
 
 #always long rev
 parameters['rev_length'] = {}
 parameters['rev_length']['long'] = copy.deepcopy(constrains_dict)
-parameters['rev_length']['long']['score']['rev'] = lambda x: sorted(x)[-2:]
+parameters['rev_length']['long']['score']['rev_length'] = lambda x: sorted(x)[-2:]
 
 #always short rev
 parameters['rev_length']['short'] = copy.deepcopy(constrains_dict)
-parameters['rev_length']['short']['score']['rev'] = lambda x: sorted(x)[:2]
+parameters['rev_length']['short']['score']['rev_length'] = lambda x: sorted(x)[:2]
 
 #always mid reverb length
 def rmm(in_list):
+    in_list = list(in_list)
     in_list.remove(min(in_list))
     in_list.remove(max(in_list))
     return in_list
 parameters['rev_length']['mid'] = copy.deepcopy(constrains_dict)
-parameters['rev_length']['mid']['score']['rev'] = rmm
+parameters['rev_length']['mid']['score']['rev_length'] = rmm
 
 #SEGMENT
 parameters['segment'] = {}
@@ -360,4 +393,4 @@ long_low_features = [p['selection_length']['long'], p['length']['very_long'],
                     p['fade_in']['long'], p['fade_out']['long']]
 parameters['macro']['long_low'] = get_constrains(long_low_features)
 
-gen_random_macro()
+print (parameters.keys())
