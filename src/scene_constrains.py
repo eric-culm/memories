@@ -389,6 +389,7 @@ parameters['macro']['particle'] = get_constrains(particle_features)
 #sound particle
 parameters['macro']['long_low'] = copy.deepcopy(constrains_dict)
 long_low_features = [p['selection_length']['long'], p['length']['very_long'],
+                    p['position']['at_beginning'],
                     p['volume']['mid'], p['eq']['less'],p['shift']['low'],
                     p['fade_in']['long'], p['fade_out']['long']]
 parameters['macro']['long_low'] = get_constrains(long_low_features)

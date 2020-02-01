@@ -16,6 +16,7 @@ from threading import Thread
 from audtorch import metrics
 import sounddevice as sd
 import subprocess
+import copy
 from multiprocessing import Process
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,8 @@ import scipy
 import threading
 import os,sys,inspect
 from srnn_models_map import *
-from scene_constrains import *
+import scene_constrains as sc
+
 # insert at 1, 0 is the script path (or '' in REPL)
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -954,7 +956,7 @@ class Scene:
         '''
         #if an overwrite dict is supplied, overwrite only the contained keys
         if isinstance(overwrite, dict):
-            p = get_constrains([parameters, overwrite])
+            p = sc.get_constrains([parameters, overwrite])
         else:
             p = parameters
 
@@ -978,7 +980,7 @@ class Scene:
         '''
         #if an overwrite dict is supplied, overwrite only the contained keys
         if isinstance(overwrite, dict):
-            p = get_constrains([parameters, overwrite])
+            p = sc.get_constrains([parameters, overwrite])
         else:
             p = parameters
 
@@ -1083,7 +1085,7 @@ class Scene:
         return sound
 
     def gen_macro(self, verbose=False):
-        constrains_dict = gen_random_macro(verbose=verbose)
+        constrains_dict = sc.gen_random_macro(verbose=verbose)
 
         return constrains_dict
 
@@ -1127,7 +1129,7 @@ class Scene:
 
         #SOUND PARAMETERS
         #category
-        availables = check_available_models()
+        availables = sc.check_available_models()
 
         if fixed_category:
             sel_category = fixed_category
@@ -1370,13 +1372,15 @@ class BuildScene:
         self.sr=sr
 
     def build(self, length, density, score_diversity, sel_diversity, single_model=False,
-              fixed_category='rand', fixed_model='rand',verbose=False):
+              fixed_category='rand', fixed_model='rand', fast=True, carpet=True, verbose=False):
         '''
         generate scene from macroparameters
-        fixed_model is a tuple
+        fast= no shift, no stretch
+        carpet = 1 or 2 long sounds starting from the berginning
         '''
         #scale variables by macroparameters
         random_diversity_flag = random.choice([True, False])  #50% choice
+        carpet_num = random.choice([1,2])
         print (random_diversity_flag)
         scene_dur = int(np.ceil(self.max_dur * length))
         num_sounds = int(np.ceil(self.max_num_sounds * density))
@@ -1400,6 +1404,7 @@ class BuildScene:
             curr_macro = scene.gen_macro(verbose=False)
             score_macros[i] = curr_macro
 
+        #dealing with sound selection
         if single_model:
             ava = check_available_models()
             if fixed_category == 'rand':
@@ -1415,7 +1420,7 @@ class BuildScene:
 
         if not single_model and random_diversity_flag:
             print ('vaffanculo')
-            ava = check_available_models()
+            ava = sc.check_available_models()
             possible_categories = []
             possible_models = []
             for i in range(different_sounds):
@@ -1424,6 +1429,13 @@ class BuildScene:
                 ch_model = random.choice(ava[ch_category])
                 possible_categories.append(ch_category)
                 possible_models.append(ch_model)
+
+        #building dictionary of fixed options
+        options = copy.deepcopy(sc.constrains_dict)
+
+        if fast:
+            options['score']['shift'] = 0
+            options['score']['stretch'] = 1
 
 
         #build_scene
@@ -1438,19 +1450,16 @@ class BuildScene:
 
             #generate random prameters with chosen constrains
             #if not single sound 50% times section diversity choses also the number of sounds
-
             if single_model:
                 #sound is fixed
                 curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
                                                                     fixed_model=ch_model)
             else:
                 if random_diversity_flag:
-                    print ('stocazzo')
                     #number of possible models is connected to sel_diversity
                     random_sel = np.random.randint(len(possible_categories))
                     ch_category = possible_categories[random_sel]
                     ch_model = possible_models[random_sel]
-                    print (ch_category, ch_model)
                     curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
                                                                         fixed_model=ch_model)
                 else:
@@ -1460,24 +1469,23 @@ class BuildScene:
             curr_score_parameters = scene.gen_random_parameters(curr_score_macro)
 
 
+            if carpet:
+                if i <= carpet_num:
+                    options = se.get_constrains(options, 'long_')  vaffanculo
+                    options['score']['length'] = 1
 
 
 
             #compute sound
-
-
-
-
-            #curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=overwrite_dict, verbose=True)
-            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, verbose=False)
+            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options, verbose=False)
 
             #post processing and put sound into score
-            '''
             scene.score_sound_from_parameters(curr_sound, curr_score_parameters, i,
-                                              verbose=False)
+                                               overwrite=options, verbose=False)
+
             uf.print_bar(index, num_sounds)
             index += 1
-            '''
+
 
 
 
