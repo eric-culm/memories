@@ -958,6 +958,12 @@ class Scene:
         else:
             p = parameters
 
+        if verbose:
+            print ('category: ' + str(p['sound']['category']))
+            print ('model: ' + str(p['sound']['model']))
+            print ('variation: ' + str(p['sound']['variation']))
+            print ('dur: ' + str(p['sound']['dur']))
+
 
         sound = self.get_sound(category=p['sound']['category'],
                                model=p['sound']['model'],
@@ -1081,7 +1087,8 @@ class Scene:
 
         return constrains_dict
 
-    def gen_random_parameters(self, constrains='None', verbose=False):
+    def gen_random_parameters(self, constrains='None', fixed_category=False,
+                              fixed_model=False, verbose=False):
         '''
         generate random parameters to build a scene
         everything is based on uniform random choice within a list of parameters
@@ -1121,34 +1128,40 @@ class Scene:
         #SOUND PARAMETERS
         #category
         availables = check_available_models()
-        categories = list(availables.keys())
 
-        if 'category' in constrains['sound'].keys():
-            categories = constrains['sound']['category'](categories)
-            #print ('constrain for sound, category: ' + str(constrains['sound']['category']))
+        if fixed_category:
+            sel_category = fixed_category
         else:
-            pass
-            #print ('no constrain for sound, category')
-        sel_category = np.random.choice(categories)
+            categories = list(availables.keys())
+            if 'category' in constrains['sound'].keys():
+                categories = constrains['sound']['category'](categories)
+                #print ('constrain for sound, category: ' + str(constrains['sound']['category']))
+            else:
+                pass
+                #print ('no constrain for sound, category')
+            sel_category = np.random.choice(categories)
         parameters['sound']['category'] = sel_category
         if verbose:
             print ('chosen parameter for sound, category: ' + str(sel_category))
 
         #model
-        models = list(availables[sel_category])
-        if 'model' in constrains['sound'].keys():
-            models = constrains['sound']['model'](models)
-            #print ('constrain for sound, model: ' + str(constrains['sound']['model']))
+        if fixed_model:
+            sel_model = fixed_model
         else:
-            pass
-            #print ('no constrain for sound, model')
-        sel_model = np.random.choice(models)
+            models = list(availables[sel_category])
+            if 'model' in constrains['sound'].keys():
+                models = constrains['sound']['model'](models)
+                #print ('constrain for sound, model: ' + str(constrains['sound']['model']))
+            else:
+                pass
+                #print ('no constrain for sound, model')
+            sel_model = np.random.choice(models)
         parameters['sound']['model'] = sel_model
         if verbose:
             print ('chosen parameter for sound, model: ' + str(sel_model))
 
         #variation
-        variations = np.arange(len(models_map[sel_category][sel_model]))
+        variations = list(models_map[sel_category][sel_model].keys())
         if 'variation' in constrains['sound'].keys():
             variations = constrains['sound']['variation'](variations)
             #print ('constrain for sound, variation: ' + str(constrains['sound']['variation']))
@@ -1356,15 +1369,19 @@ class BuildScene:
         self.score_length = 1000
         self.sr=sr
 
-    def build(self, length, density, sel_diversity, score_diversity, verbose=False):
+    def build(self, length, density, score_diversity, sel_diversity, single_model=False,
+              fixed_category='rand', fixed_model='rand',verbose=False):
         '''
         generate scene from macroparameters
+        fixed_model is a tuple
         '''
         #scale variables by macroparameters
-        scene_dur = int(self.max_dur * length)
-        num_sounds = int(self.max_num_sounds * density)
-        different_sounds = int(num_sounds * sel_diversity)
-        different_scores = int(num_sounds * score_diversity)
+        random_diversity_flag = random.choice([True, False])  #50% choice
+        print (random_diversity_flag)
+        scene_dur = int(np.ceil(self.max_dur * length))
+        num_sounds = int(np.ceil(self.max_num_sounds * density))
+        different_sounds = int(np.ceil(num_sounds * sel_diversity))
+        different_scores = int(np.ceil(num_sounds * score_diversity))
         scene = Scene(main_dur=scene_dur, sr=self.sr)
         sound_macros = {}
         score_macros = {}
@@ -1383,7 +1400,35 @@ class BuildScene:
             curr_macro = scene.gen_macro(verbose=False)
             score_macros[i] = curr_macro
 
+        if single_model:
+            ava = check_available_models()
+            if fixed_category == 'rand':
+                cats = list(ava.keys())
+                ch_category = random.choice(cats)
+            else:
+                ch_category = fixed_category
+
+            if fixed_model == 'rand':
+                ch_model = random.choice(ava[ch_category])
+            else:
+                ch_model = fixed_model
+
+        if not single_model and random_diversity_flag:
+            print ('vaffanculo')
+            ava = check_available_models()
+            possible_categories = []
+            possible_models = []
+            for i in range(different_sounds):
+                cats = list(ava.keys())
+                ch_category = random.choice(cats)
+                ch_model = random.choice(ava[ch_category])
+                possible_categories.append(ch_category)
+                possible_models.append(ch_model)
+
+
         #build_scene
+        print ('building scene')
+        index = 0
         for i in range(num_sounds):
             #choose random macro (dict of constrains) from the available ones
             rand_sound_macro = random.choice(list(sound_macros.keys()))
@@ -1392,12 +1437,47 @@ class BuildScene:
             curr_score_macro = score_macros[rand_score_macro]
 
             #generate random prameters with chosen constrains
-            curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro, verbose=True)
+            #if not single sound 50% times section diversity choses also the number of sounds
+
+            if single_model:
+                #sound is fixed
+                curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
+                                                                    fixed_model=ch_model)
+            else:
+                if random_diversity_flag:
+                    print ('stocazzo')
+                    #number of possible models is connected to sel_diversity
+                    random_sel = np.random.randint(len(possible_categories))
+                    ch_category = possible_categories[random_sel]
+                    ch_model = possible_models[random_sel]
+                    print (ch_category, ch_model)
+                    curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
+                                                                        fixed_model=ch_model)
+                else:
+                    #model selection is completely random
+                    curr_sound_parameters = scene.gen_random_parameters()
+
             curr_score_parameters = scene.gen_random_parameters(curr_score_macro)
 
-            #p = scene.gen_random_parameters(constrains, verbose=True)
 
 
+
+
+            #compute sound
+
+
+
+
+            #curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=overwrite_dict, verbose=True)
+            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, verbose=False)
+
+            #post processing and put sound into score
+            '''
+            scene.score_sound_from_parameters(curr_sound, curr_score_parameters, i,
+                                              verbose=False)
+            uf.print_bar(index, num_sounds)
+            index += 1
+            '''
 
 
 

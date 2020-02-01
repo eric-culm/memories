@@ -392,5 +392,3 @@ long_low_features = [p['selection_length']['long'], p['length']['very_long'],
                     p['volume']['mid'], p['eq']['less'],p['shift']['low'],
                     p['fade_in']['long'], p['fade_out']['long']]
 parameters['macro']['long_low'] = get_constrains(long_low_features)
-
-print (parameters.keys())
