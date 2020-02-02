@@ -20,24 +20,25 @@ post = Postprocessing()
 '''
 scene.gen_macro()
 build = BuildScene()
-mix = build.build(length=0.9,
-                  density=0.1,
+mix, score = build.build(length=0.2,
+                  density=0.3,
                   score_diversity=0.4,
                   sel_diversity=0.5,
                   single_model=False,
                   fixed_category='none',
                   fixed_model='none',
-                  fast=False,
-                  carpet=False,
-                  perc_particles=0,
+                  fast=True,
+                  carpet=True,
+                  perc_particles=0.65,
                   enhance_random=False,
                   complete_random=False,
-                  globsl_rev=False,
+                  global_rev=True,
                   global_stretch_dir=0,
-                  global_stretch=1,
+                  global_stretch=-40,
                   global_shift_dir=0,
                   global_shift=0,
                   verbose=False)
 
 allocator.write_local(mix, 'coglione')
+scene.load_score(score)
 scene.plot_score(dimensions=3)

@@ -787,6 +787,10 @@ class Scene:
         self.sr=sr
         self.post = Postprocessing(sr)
 
+
+    def load_score(self, score):
+        self.global_score = score
+
     def append_to_global_score(self, item, type, id):
         if id not in self.global_score.keys():  #create item if not exists
             self.global_score[id] = {}
@@ -803,7 +807,10 @@ class Scene:
         for i in keys:
             if score_type == 'envelopes':
                 curr_sound = self.global_score[i]['samples']
-                curr_score = np.clip(resample(np.abs(hilbert(curr_sound)), self.score_length), 0,1)
+                env = resample(np.abs(hilbert(curr_sound)), self.score_length)
+                if np.max(np.abs(env)) > 1:
+                    env = env / np.max(np.abs(env)) * 0.9
+                curr_score = np.clip(env, 0,1)
             elif score_type == 'squeres':
                 curr_SCORE = self.global_score[i]['score']
             curr_pan = self.global_score[i]['pan'][0]
@@ -849,6 +856,8 @@ class Scene:
             pan = self.global_score[sound]['pan'][0]
 
             samples = self.global_score[sound]['samples']
+            if np.max(np.abs(samples)) > 1.:  #normalize if too hot
+                samples = samples / np.max(np.abs(samples)) * 0.9
             angle = np.interp(pan, (-1,1), (-45,45))
             angle = np.radians(angle)
             left = np.sqrt(2)/2.0 * (np.cos(angle) - np.sin(angle)) * samples
@@ -946,6 +955,7 @@ class Scene:
         score[offset:offset+len(onset)] = onset  #fill score with the onset
 
         return score
+
 
     def get_sound(self, category, model, variation, dur):
         '''
@@ -1386,8 +1396,8 @@ class BuildScene:
     def build(self, length, density, score_diversity, sel_diversity, single_model=False,
               fixed_category='rand', fixed_model='rand', fast=True, carpet=False,
               perc_particles=0, enhance_random=False, complete_random=False,
-              global_rev=False, global_stretch_dir=0, global_stretch=0.6,
-              global_shift_dir=0, global_shift=0.7, verbose=False):
+              global_rev=False, global_stretch_dir=0, global_stretch=1,
+              global_shift_dir=0, global_shift=0, verbose=False):
         '''
         generate scene from macroparameters
         fast= no shift, no stretch
@@ -1400,8 +1410,8 @@ class BuildScene:
         different_sounds = int(np.ceil(num_sounds * sel_diversity))
         different_scores = int(np.ceil(num_sounds * score_diversity))
         scene = Scene(main_dur=scene_dur, sr=self.sr)
-        carpet_num = int(np.round(random.uniform(1, different_sounds/3)))
-        num_particles = int(different_sounds * perc_particles)
+        carpet_num = int(np.round(random.uniform(1, num_sounds/3)))
+        num_particles = int(num_sounds * perc_particles)
 
         global_stretch = global_stretch ** 2 #exp pots
         global_shift = global_shift ** 2
@@ -1501,7 +1511,6 @@ class BuildScene:
             if not complete_random:  #not apply restrictions if complete random
                 enhance_flag = random.choice([True, False])  #or if random is enhanced 50% times
                 if enhance_flag:
-
                     if carpet:  #put 1 or 2 long sounds starting from the beginning
                         if i <= carpet_num:
                             options_updated['score']['length'] = random.uniform(0.8,1)
@@ -1514,13 +1523,13 @@ class BuildScene:
                             else:
                                 options_updated['score']['shift'] = 0
 
-                    if not carpet or (carpet and i > carpet_num):
-                        if num_particles > 0:
-                            if i < num_particles:
-                                options_updated['sound']['dur'] = random.choice([3,5])
-                                options_updated['score']['dur'] = random.choice(np.arange(0.1,1,0.01))
-                                options_updated['score']['fade_in'] = random.choice(np.arange(10,50))
-                                options_updated['score']['fade_out'] = random.choice(np.arange(options_updated['score']['dur']/20,options_updated['score']['dur']/5))
+                if not carpet or (carpet and i > carpet_num):
+                    if num_particles > 0:
+                        if i < num_particles:
+                            options_updated['sound']['dur'] = random.choice([3,5])
+                            options_updated['score']['dur'] = random.choice(np.arange(0.1,1,0.01))
+                            options_updated['score']['fade_in'] = random.choice(np.arange(10,50))
+                            options_updated['score']['fade_out'] = random.choice(np.arange(options_updated['score']['dur']/20,options_updated['score']['dur']/5))
 
 
             if fast:  #independent from complete/enhance random
@@ -1533,7 +1542,7 @@ class BuildScene:
             curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options_updated, verbose=False)
 
             #post processing and put sound into score
-            scene.score_sound_from_parameters(curr_sound, curr_score_parameters, i,
+            scene.score_sound_from_parameters(curr_sound, curr_score_parameters, id=i,
                                                overwrite=options_updated, verbose=False)
 
             index += 1
@@ -1545,7 +1554,8 @@ class BuildScene:
         mix = scene.resolve_score_stereo(global_rev=global_rev, global_shift=global_shift,
                                    global_stretch=global_stretch)
 
-        return mix
+
+        return mix, scene.global_score
 
 
 
