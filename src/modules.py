@@ -361,14 +361,19 @@ class Postprocessing:
         except:
             pass
 
-        IR = IR * rev_amount
+        #IR = IR * rev_amount
 
-        out = scipy.signal.convolve(samples, IR)
-        #out = out / max(abs(out))
-        #out = out * 0.9
+        wet = scipy.signal.convolve(samples, IR) * rev_amount
+        dry = samples * (1-rev_amount)
+        drypad = np.zeros(len(wet))
+        drypad[:len(dry)] = dry
+
+        out = np.add(drypad, wet)
+
+
         return out
 
-    def reverb_stereo(self, samples_left, samples_right, rev_length='any'):
+    def reverb_stereo(self, samples_left, samples_right, rev_length='any', amount='any'):
         #convolution with randomly-selected impulse response
         #rev_length: int [1-4]
         analysis_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
@@ -378,7 +383,10 @@ class Postprocessing:
         chosen_irs = ir_analysis[rev_length]
         random_rev = random.choice(chosen_irs)
 
-        rev_amount = np.random.rand() * 0.7 + 0.3
+        if amount == 'any':
+            rev_amount = np.random.rand() * 0.7 + 0.3
+        else:
+            rev_amount = amount ** 2
 
         IR, sr = librosa.core.load(random_rev, mono=False, sr=self.sr)
 
@@ -389,10 +397,19 @@ class Postprocessing:
 
         IR_final = IR_final * rev_amount
 
-        out_left = scipy.signal.convolve(samples_left, IR_final[0])
-        out_right = scipy.signal.convolve(samples_right, IR_final[1])
-        #out = out / max(abs(out))
-        #out = out * 0.9
+        #wet signals
+        out_left_dry = samples_left * (1-rev_amount)
+        out_right_dry = samples_right * (1-rev_amount)
+        out_left_wet = scipy.signal.convolve(samples_left, IR_final[0]) * rev_amount
+        out_right_wet = scipy.signal.convolve(samples_right, IR_final[1]) * rev_amount
+        out_left_wet = out_left_wet[:len(out_left_dry)]
+        out_right_wet = out_right_wet[:len(out_right_dry)]
+
+        #combine dry and wet
+        out_left = np.add(out_left_dry, out_left_wet)
+        out_right = np.add(out_right_dry, out_right_wet)
+
+
         return out_left, out_right
 
     def convolve(self, samples1, samples2):
@@ -841,8 +858,8 @@ class Scene:
         plt.show()
 
     def resolve_score_stereo(self, global_volume=1., fade_in=5, fade_out=5,
-                             global_rev=False, rev_length=4, global_shift=0,
-                             global_stretch=1):
+                             global_rev=False, rev_length=4, rev_amount='any',
+                             global_shift=0, global_stretch=1):
         '''
         takes avery file in the score and produces a stereo mix
         '''
@@ -878,7 +895,7 @@ class Scene:
 
         #apply reverb
         if global_rev:
-            mix_left, mix_right = self.post.reverb_stereo(mix_left, mix_right, rev_length)
+            mix_left, mix_right = self.post.reverb_stereo(mix_left, mix_right, rev_length, rev_amount)
 
         #normalize and rescale amplitude
         max_vol = max(max(abs(mix_left)),max(abs(mix_right)))
@@ -1364,7 +1381,7 @@ class Scene:
             print ('chosen parameter for score, fade_in: ' + str(sel_fade_in))
 
         #fade_out
-        fade_outs = np.arange(0, sel_score_dur*1000/2,1)
+        fade_outs = np.arange(sel_score_dur*1000/4, sel_score_dur*1000/2,1)
         if 'fade_out' in constrains['score'].keys():
             fade_out = constrains['score']['fade_out'](fade_outs)
             #print ('constrain for score, fade_out: ' + str(constrains['score']['fade_out']))
@@ -1396,8 +1413,8 @@ class BuildScene:
     def build(self, length, density, score_diversity, sel_diversity, single_model=False,
               fixed_category='rand', fixed_model='rand', fast=True, carpet=False,
               perc_particles=0, enhance_random=False, complete_random=False,
-              global_rev=False, global_stretch_dir=0, global_stretch=1,
-              global_shift_dir=0, global_shift=0, verbose=False):
+              global_rev=False, global_rev_amount=0.3, global_stretch_dir=0,
+              global_stretch=1, global_shift_dir=0, global_shift=0, verbose=False):
         '''
         generate scene from macroparameters
         fast= no shift, no stretch
@@ -1430,14 +1447,9 @@ class BuildScene:
         score_macros = {}
 
         #compute sound and scene macros
-        if verbose:
-            print ('sound macros:')
-
         for i in range(different_sounds):
             curr_macro = scene.gen_macro(verbose=False)
             sound_macros[i] = curr_macro
-        if verbose:
-            print ('scene macros:')
 
         for i in range(different_scores):
             curr_macro = scene.gen_macro(verbose=False)
@@ -1445,7 +1457,7 @@ class BuildScene:
 
         #dealing with sound selection
         if single_model:
-            ava = check_available_models()
+            ava = sc.check_available_models()
             if fixed_category == 'rand':
                 cats = list(ava.keys())
                 ch_category = random.choice(cats)
@@ -1488,7 +1500,7 @@ class BuildScene:
             if single_model:
                 #sound is fixed
                 curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
-                                                                    fixed_model=ch_model)
+                                                                    fixed_model=ch_model, verbose=verbose)
             else:
                 if random_diversity_flag:
                     #number of possible models is connected to sel_diversity
@@ -1496,16 +1508,16 @@ class BuildScene:
                     ch_category = possible_categories[random_sel]
                     ch_model = possible_models[random_sel]
                     curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
-                                                                        fixed_model=ch_model)
+                                                                        fixed_model=ch_model, verbose=verbose)
                 else:
                     #model selection is completely random
-                    curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro)
+                    curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro, verbose=verbose)
 
-            curr_score_parameters = scene.gen_random_parameters(curr_score_macro)
+            curr_score_parameters = scene.gen_random_parameters(curr_score_macro, verbose=verbose)
 
             if complete_random or enhance_random:
-                curr_sound_parameters = scene.gen_random_parameters()
-                curr_score_parameters = scene.gen_random_parameters()
+                curr_sound_parameters = scene.gen_random_parameters(verbose=verbose)
+                curr_score_parameters = scene.gen_random_parameters(verbose=verbose)
 
 
             if not complete_random:  #not apply restrictions if complete random
@@ -1529,7 +1541,7 @@ class BuildScene:
                             options_updated['sound']['dur'] = random.choice([3,5])
                             options_updated['score']['dur'] = random.choice(np.arange(0.1,1,0.01))
                             options_updated['score']['fade_in'] = random.choice(np.arange(10,50))
-                            options_updated['score']['fade_out'] = random.choice(np.arange(options_updated['score']['dur']/20,options_updated['score']['dur']/5))
+                            options_updated['score']['fade_out'] = random.choice(np.arange(options_updated['score']['dur']*1000/4,options_updated['score']['dur']*1000/2))
 
 
             if fast:  #independent from complete/enhance random
@@ -1539,11 +1551,11 @@ class BuildScene:
 
 
             #compute sound
-            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options_updated, verbose=False)
+            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options_updated, verbose=verbose)
 
             #post processing and put sound into score
             scene.score_sound_from_parameters(curr_sound, curr_score_parameters, id=i,
-                                               overwrite=options_updated, verbose=False)
+                                               overwrite=options_updated, verbose=verbose)
 
             index += 1
             uf.print_bar(index, num_sounds)
@@ -1551,8 +1563,8 @@ class BuildScene:
             #end of for
 
         print ('\napplying global post-processing')
-        mix = scene.resolve_score_stereo(global_rev=global_rev, global_shift=global_shift,
-                                   global_stretch=global_stretch)
+        mix = scene.resolve_score_stereo(global_rev=global_rev, rev_amount=global_rev_amount,
+                        global_shift=global_shift, global_stretch=global_stretch)
 
 
         return mix, scene.global_score
