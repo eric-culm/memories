@@ -349,11 +349,11 @@ parameters['fade_in'] = {}
 parameters['fade_out'] = {}
 #short fade in
 parameters['fade_in']['short'] = copy.deepcopy(constrains_dict)
-parameters['fade_in']['short']['score']['fade_in'] = lambda x: np.arange(0,50,0.1)
+parameters['fade_in']['short']['score']['fade_in'] = lambda x: np.arange(5,50,0.1)
 
 #short fade out
 parameters['fade_out']['short'] = copy.deepcopy(constrains_dict)
-parameters['fade_out']['short']['score']['fade_out'] = lambda x: np.arange(0,50,0.1)
+parameters['fade_out']['short']['score']['fade_out'] = lambda x: np.arange(5,50,0.1)
 
 #long fade in
 parameters['fade_in']['long'] = copy.deepcopy(constrains_dict)

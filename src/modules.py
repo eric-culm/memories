@@ -410,8 +410,8 @@ class Postprocessing:
         '''
         in_fade_length = int(self.sr * in_fade_length / 1000)  #convert to samps
         out_fade_length = int(self.sr * out_fade_length / 1000)
-        in_fade_length = np.clip(in_fade_length, 0, len(samples))
-        out_fade_length = np.clip(out_fade_length, 0, len(samples))
+        in_fade_length = np.clip(in_fade_length, 20, len(samples)) #min fade is 20 samps
+        out_fade_length = np.clip(out_fade_length, 20, len(samples))
         mask = np.ones(len(samples))
         ramp1 = np.arange(in_fade_length) / in_fade_length
         ramp2 = np.arange(out_fade_length) / (out_fade_length)
@@ -833,7 +833,9 @@ class Scene:
 
         plt.show()
 
-    def resolve_score_stereo(self, global_volume=1., fade_in=0, fade_out=0, global_rev=False, rev_length=4):
+    def resolve_score_stereo(self, global_volume=1., fade_in=5, fade_out=5,
+                             global_rev=False, rev_length=4, global_shift=0,
+                             global_stretch=1):
         '''
         takes avery file in the score and produces a stereo mix
         '''
@@ -854,6 +856,16 @@ class Scene:
             mix_left = np.add(mix_left, left)
             mix_right = np.add(mix_right, right)
 
+
+        #apply stretch
+        if global_stretch != 1:
+            mix_left = self.post.stretch(mix_left, global_stretch)
+            mix_right = self.post.stretch(mix_right, global_stretch)
+
+        #apply shift
+        if global_shift != 0:
+            mix_left = self.post.pitch_shift(mix_left, global_shift)
+            mix_right = self.post.pitch_shift(mix_right, global_shift)
 
         #apply reverb
         if global_rev:
@@ -1372,7 +1384,10 @@ class BuildScene:
         self.sr=sr
 
     def build(self, length, density, score_diversity, sel_diversity, single_model=False,
-              fixed_category='rand', fixed_model='rand', fast=True, carpet=True, verbose=False):
+              fixed_category='rand', fixed_model='rand', fast=True, carpet=False,
+              perc_particles=0, enhance_random=False, complete_random=False,
+              global_rev=False, global_stretch_dir=0, global_stretch=0.6,
+              global_shift_dir=0, global_shift=0.7, verbose=False):
         '''
         generate scene from macroparameters
         fast= no shift, no stretch
@@ -1380,13 +1395,27 @@ class BuildScene:
         '''
         #scale variables by macroparameters
         random_diversity_flag = random.choice([True, False])  #50% choice
-        carpet_num = random.choice([1,2])
-        print (random_diversity_flag)
         scene_dur = int(np.ceil(self.max_dur * length))
         num_sounds = int(np.ceil(self.max_num_sounds * density))
         different_sounds = int(np.ceil(num_sounds * sel_diversity))
         different_scores = int(np.ceil(num_sounds * score_diversity))
         scene = Scene(main_dur=scene_dur, sr=self.sr)
+        carpet_num = int(np.round(random.uniform(1, different_sounds/3)))
+        num_particles = int(different_sounds * perc_particles)
+
+        global_stretch = global_stretch ** 2 #exp pots
+        global_shift = global_shift ** 2
+        if global_stretch_dir == 0: #stretching short
+            global_stretch = np.interp(global_stretch, (0.,1.), (1, 1/8.))
+        elif global_stretch_dir == 1:
+            global_stretch = np.interp(global_stretch, (0.,1.), (1,8.))
+
+        if global_shift_dir == 0: #stretching short
+            global_shift = np.interp(global_shift, (0.,1.), (0, -48))
+        elif global_shift_dir == 1:
+            global_shift = np.interp(global_shift, (0.,1.), (0,48))
+
+
         sound_macros = {}
         score_macros = {}
 
@@ -1433,15 +1462,11 @@ class BuildScene:
         #building dictionary of fixed options
         options = copy.deepcopy(sc.constrains_dict)
 
-        if fast:
-            options['score']['shift'] = 0
-            options['score']['stretch'] = 1
-
-
         #build_scene
         print ('building scene')
         index = 0
         for i in range(num_sounds):
+            options_updated = copy.deepcopy(options)
             #choose random macro (dict of constrains) from the available ones
             rand_sound_macro = random.choice(list(sound_macros.keys()))
             rand_score_macro = random.choice(list(score_macros.keys()))
@@ -1452,7 +1477,7 @@ class BuildScene:
             #if not single sound 50% times section diversity choses also the number of sounds
             if single_model:
                 #sound is fixed
-                curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
+                curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
                                                                     fixed_model=ch_model)
             else:
                 if random_diversity_flag:
@@ -1460,31 +1485,65 @@ class BuildScene:
                     random_sel = np.random.randint(len(possible_categories))
                     ch_category = possible_categories[random_sel]
                     ch_model = possible_models[random_sel]
-                    curr_sound_parameters = scene.gen_random_parameters(fixed_category=ch_category,
+                    curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
                                                                         fixed_model=ch_model)
                 else:
                     #model selection is completely random
-                    curr_sound_parameters = scene.gen_random_parameters()
+                    curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro)
 
             curr_score_parameters = scene.gen_random_parameters(curr_score_macro)
 
+            if complete_random or enhance_random:
+                curr_sound_parameters = scene.gen_random_parameters()
+                curr_score_parameters = scene.gen_random_parameters()
 
-            if carpet:
-                if i <= carpet_num:
-                    options = se.get_constrains(options, 'long_')  vaffanculo
-                    options['score']['length'] = 1
+
+            if not complete_random:  #not apply restrictions if complete random
+                enhance_flag = random.choice([True, False])  #or if random is enhanced 50% times
+                if enhance_flag:
+
+                    if carpet:  #put 1 or 2 long sounds starting from the beginning
+                        if i <= carpet_num:
+                            options_updated['score']['length'] = random.uniform(0.8,1)
+                            options_updated['score']['position'] = 0
+                            options_updated['score']['fade_in'] = int(random.uniform(scene_dur/60*1000, scene_dur/6*1000))
+                            options_updated['score']['fade_out'] = int(random.uniform(scene_dur/60*1000, scene_dur/6*1000))
+                            shift_option = random.choice([True, False])
+                            if shift_option:
+                                options_updated['score']['shift'] = int(random.uniform(-48,-24))
+                            else:
+                                options_updated['score']['shift'] = 0
+
+                    if not carpet or (carpet and i > carpet_num):
+                        if num_particles > 0:
+                            if i < num_particles:
+                                options_updated['sound']['dur'] = random.choice([3,5])
+                                options_updated['score']['dur'] = random.choice(np.arange(0.1,1,0.01))
+                                options_updated['score']['fade_in'] = random.choice(np.arange(10,50))
+                                options_updated['score']['fade_out'] = random.choice(np.arange(options_updated['score']['dur']/20,options_updated['score']['dur']/5))
+
+
+            if fast:  #independent from complete/enhance random
+                options_updated['score']['shift'] = 0
+                options_updated['score']['stretch'] = 1
 
 
 
             #compute sound
-            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options, verbose=False)
+            curr_sound = scene.gen_sound_from_parameters(curr_sound_parameters, overwrite=options_updated, verbose=False)
 
             #post processing and put sound into score
             scene.score_sound_from_parameters(curr_sound, curr_score_parameters, i,
-                                               overwrite=options, verbose=False)
+                                               overwrite=options_updated, verbose=False)
 
-            uf.print_bar(index, num_sounds)
             index += 1
+            uf.print_bar(index, num_sounds)
+
+            #end of for
+
+        print ('\napplying global post-processing')
+        scene.resolve_score_stereo(global_rev=global_rev, global_shift=global_shift,
+                                   global_stretch=global_stretch)
 
 
 
