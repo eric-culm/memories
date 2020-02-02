@@ -1542,8 +1542,10 @@ class BuildScene:
             #end of for
 
         print ('\napplying global post-processing')
-        scene.resolve_score_stereo(global_rev=global_rev, global_shift=global_shift,
+        mix = scene.resolve_score_stereo(global_rev=global_rev, global_shift=global_shift,
                                    global_stretch=global_stretch)
+
+        return mix
 
 
 
