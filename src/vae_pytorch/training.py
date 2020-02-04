@@ -16,242 +16,79 @@ import define_models as choose_model
 import utility_functions as uf
 import training_utils
 
-dataset = 'sc09_complete_waveform'
-exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_AFTER2'
 
-architecture = 'WAVE_complete_net'
-parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=1000','offset_bound=0',
-                  'features_type="waveform"', 'clip_gradients=1.',
-                  'dropout=False', 'regularization_lambda=0']
-
-SAVE_MODEL = '../models/' + exp_name
-results_path = '../results/' + exp_name
-training_dict_path = '../results/' + exp_name + '_training_dict.npy'
-parameters_path = results_path + '/parameters'
-SAVE_RESULTS = results_path
-num_fold = 0
-num_experiment = 0
-num_run = 0
-num_folds = 1
-gpu_ID = 0
-
-
-print ('test mode: I/O from config.ini file')
-print ('')
-print ('dataset: ' + dataset)
-print ('')
-print ('saving results at: ' + SAVE_RESULTS)
-print ('')
-print ('saving model at: ' + SAVE_MODEL)
-print ('')
-
-
-#import preprocessing_DAIC as pre
-
-#np.random.seed(0)
-#torch.manual_seed(0)
-print('')
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
+#global parameters from config file
+dataset = cfg.get('vae', 'train_input_dataset')
+experiment_name = cfg.get('vae', 'exp_name')
+architecture = cfg.get('vae', 'architecture')
+output_models_path = cfg.get('vae', 'output_models_path')
+load_pretrained = eval(cfg.get('vae', 'load_pretrained'))
+pretrained_path = cfg.get('vae', 'pretrained_path')
+gpu_ID = cfg.getint('vae', 'gpu_id')
+
+SAVE_MODEL = os.path.join(output_models_path, experiment_name)
 
 #default training parameters
-train_split = cfg.getfloat('training_defaults', 'train_split')
-validation_split = cfg.getfloat('training_defaults', 'validation_split')
-test_split = cfg.getfloat('training_defaults', 'test_split')
-shuffle_training_data = eval(cfg.get('training_defaults', 'shuffle_training_data'))
-patience = cfg.getint('training_defaults', 'patience')
-batch_size = cfg.getint('training_defaults', 'batch_size')
-num_epochs = cfg.getint('training_defaults', 'num_epochs')
-learning_rate = cfg.getfloat('training_defaults', 'learning_rate')
-regularization_lambda = cfg.getfloat('training_defaults', 'regularization_lambda')
-optimizer = cfg.get('training_defaults', 'optimizer')
-recompute_matrices = eval(cfg.get('training_defaults', 'recompute_matrices'))
-convergence_threshold = cfg.getfloat('training_defaults', 'convergence_threshold')
-load_pretrained = eval(cfg.get('training_defaults', 'load_pretrained'))
-pretrained_path = cfg.get('training_defaults', 'pretrained_path')
+#globals
+verbose = False
+model_size = 64
+variational = True
+beta = 2.
+latent_dim = 10
+clip_gradients = 1.
+dropout = False
+patience = 10
+batch_size = 500
+num_epochs = 800000
+learning_rate = 0.0001
+regularization_lambda = 0.
+optimizer = 'adam'
 
+#dataset division
+train_split = 0.8
+validation_split = 0.1
+test_split = 0.1
+subdataset_bound = 0
+offset_bound = 0
+shuffle_training_data = True
 
-save_best_only = eval(cfg.get('training_defaults', 'save_best_only'))
-save_model_xepochs = eval(cfg.get('training_defaults', 'save_model_xepochs'))
-save_model_nepochs = eval(cfg.get('training_defaults', 'save_model_nepochs'))
-save_model_freq = eval(cfg.get('training_defaults', 'save_model_freq'))
-save_model_epochs = cfg.getint('training_defaults', 'save_model_epochs')
-save_sounds = eval(cfg.get('training_defaults', 'save_sounds'))
-save_figs = eval(cfg.get('training_defaults', 'save_figs'))
-save_items_epochs = cfg.getint('training_defaults', 'save_items_epochs')
-save_items_n = cfg.getint('training_defaults', 'save_items_n')
-save_latent_distribution = eval(cfg.get('training_defaults', 'save_latent_distribution'))
-save_distribution_epochs_n = cfg.getint('training_defaults', 'save_distribution_epochs_n')
+#saving
+save_best_only = False
+save_model_xepochs = True
+save_model_nepochs = 100
+save_latent_distribution = True
+save_distribution_epochs_n = 100
 
-kld_holes = eval(cfg.get('training_defaults', 'kld_holes'))
-kld_epochs_n = cfg.getint('training_defaults', 'kld_epochs_n')
-warm_up_after_convergence = eval(cfg.get('training_defaults', 'warm_up_after_convergence'))
-warm_up_kld = eval(cfg.get('training_defaults', 'warm_up_kld'))
-warm_up_reparametrize = eval(cfg.get('training_defaults', 'warm_up_reparametrize'))
-kld_ramp_delay = cfg.getint('training_defaults', 'kld_ramp_delay')
-kld_ramp_epochs = cfg.getint('training_defaults', 'kld_ramp_epochs')
-reparametrize_ramp_delay = cfg.getint('training_defaults', 'reparametrize_ramp_delay')
-reparametrize_ramp_epochs = cfg.getint('training_defaults', 'reparametrize_ramp_epochs')
+#warm ups
+convergence_threshold = 0.1
+warm_up = True
+kld_holes = True
+kld_epochs_n = 3
+warm_up_after_convergence = False
+warm_up_kld = False
+warm_up_reparametrize = False
+kld_ramp_delay = 30
+kld_ramp_epochs = 1500
+reparametrize_ramp_delay = 30
+reparametrize_ramp_epochs = 1500
 
 percs = [train_split, validation_split, test_split]
 
-#OVERWRITE DEFAULT PARAMETERS IF IN XVAL MODE
-try:
-    a = sys.argv[5]
-    parameters = parameters.split('/')
-except IndexError:
-    pass
+#overwrite parameters
 for param in parameters:
     exec(param)
 
-#load folder parameters from config.ini
-DATASET_FOLDER = cfg.get('preprocessing', 'output_folder')
-SR = cfg.getint('sampling', 'sr_target')
-predictors_name = dataset + '_predictors.npy'
-target_name = dataset + '_target.npy'
-PREDICTORS_LOAD = os.path.join(DATASET_FOLDER, predictors_name)
-TARGET_LOAD = os.path.join(DATASET_FOLDER, target_name)
+
 
 device = torch.device('cuda:' + str(gpu_ID))
 
-#build dict with all UPDATED training parameters
-training_parameters = {'train_split': train_split,
-    'validation_split': validation_split,
-    'test_split': test_split,
-    'shuffle_training_data': shuffle_training_data,
-    'patience': patience,
-    'batch_size': batch_size,
-    'num_epochs': num_epochs,
-    'learning_rate': learning_rate,
-    'regularization_lambda': regularization_lambda,
-    'optimizer': optimizer,
-    'warm_up_kld': warm_up_kld,
-    'warm_up_reparametrize': warm_up_reparametrize,
-    'kld_ramp_delay': kld_ramp_delay,
-    'kld_ramp_epochs': kld_ramp_epochs,
-    'reparametrize_ramp_delay': reparametrize_ramp_delay,
-    'reparametrize_ramp_epochs': reparametrize_ramp_epochs,
-    'save_model_freq': save_model_freq,
-    'warm_up_after_convergence': warm_up_after_convergence,
-    'recompute_matrices': recompute_matrices,
-    'convergence_threshold': convergence_threshold,
-    'load_pretrained': load_pretrained,
-    'pretrained_path': pretrained_path,
-    'kld_epochs_n': kld_epochs_n,
-    'kld_holes': kld_holes
-    }
-
 
 def main():
-    #CREATE DATASET
-    #load numpy data
-    print('\n loading dataset...')
-
-    folds_dataset_path = '../dataset/matrices'
-    curr_fold_string = dataset + '_test_target_fold_' + str(num_fold) + '.npy'
-    curr_fold_path = os.path.join(folds_dataset_path, curr_fold_string)
-
-    train_pred_path = dataset + '_training_predictors_fold_' + str(num_fold) + '.npy'
-    train_pred_path = os.path.join(folds_dataset_path, train_pred_path)
-    val_pred_path = dataset + '_validation_predictors_fold_' + str(num_fold) + '.npy'
-    val_pred_path = os.path.join(folds_dataset_path, val_pred_path)
-    test_pred_path = dataset + '_test_predictors_fold_' + str(num_fold) + '.npy'
-    test_pred_path = os.path.join(folds_dataset_path, test_pred_path)
-
-    train_target_path = dataset + '_training_target_fold_' + str(num_fold) + '.npy'
-    train_target_path = os.path.join(folds_dataset_path, train_target_path)
-    val_target_path = dataset + '_validation_target_fold_' + str(num_fold) + '.npy'
-    val_target_path = os.path.join(folds_dataset_path, val_target_path)
-    test_target_path = dataset + '_test_target_fold_' + str(num_fold) + '.npy'
-    test_target_path = os.path.join(folds_dataset_path, test_target_path)
-
-
-    '''
-    training_predictors, validation_predictors, test_predictors = uf.get_dataset_matrices(
-                data_path=PREDICTORS_LOAD, num_folds=num_folds, num_fold=num_fold,
-                percs=percs, train_path=train_pred_path, val_path=val_pred_path,
-                test_path=test_pred_path, recompute_matrices=recompute_matrices)
-    '''
-
-    #compute which actors put in train, val, test for current fold
-    dummy = np.load(TARGET_LOAD,allow_pickle=True)
-    dummy = dummy.item()
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #JUST WRITE A FUNCTION TO RE-ORDER foldable_list TO SPLIT
-    #TRAIN/VAL/TEST IN A BALANCED WAY
-    foldable_list = list(dummy.keys())
-    fold_actors_list = uf.folds_generator(num_folds, foldable_list, percs)
-    train_list = fold_actors_list[int(num_fold)]['train']
-    val_list = fold_actors_list[int(num_fold)]['val']
-    test_list = fold_actors_list[int(num_fold)]['test']
-    del dummy
-
-    #if tensors of current fold has not been computed:
-    if recompute_matrices:
-        predictors_merged = np.load(PREDICTORS_LOAD,allow_pickle=True)
-        target_merged = np.load(TARGET_LOAD,allow_pickle=True)
-        predictors_merged = predictors_merged.item()
-        target_merged = target_merged.item()
-
-        print ('\n building dataset for current fold')
-        print ('\n training:')
-        training_predictors, training_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, train_list)
-        print ('\n validation:')
-
-        validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, val_list)
-        print ('\n test:')
-        test_predictors, test_target = uf.build_matrix_dataset(predictors_merged,
-                                                            target_merged, test_list)
-
-        np.save(train_pred_path, training_predictors)
-        np.save(train_target_path, training_target)
-        np.save(val_pred_path, validation_predictors)
-        np.save(val_target_path, validation_target)
-        np.save(test_pred_path, test_predictors)
-        np.save(test_target_path, test_target)
-
-    if not recompute_matrices:
-        if not os.path.exists(test_target_path):
-            #load merged dataset, compute and save current tensors
-            predictors_merged = np.load(PREDICTORS_LOAD,allow_pickle=True)
-            target_merged = np.load(TARGET_LOAD,allow_pickle=True)
-            predictors_merged = predictors_merged.item()
-            target_merged = target_merged.item()
-
-            print ('\n building dataset for current fold')
-            print ('\n training:')
-            training_predictors, training_target = uf.build_matrix_dataset(predictors_merged,
-                                                                target_merged, train_list)
-            print ('\n validation:')
-
-            validation_predictors, validation_target = uf.build_matrix_dataset(predictors_merged,
-                                                                target_merged, val_list)
-            print ('\n test:')
-            test_predictors, test_target = uf.build_matrix_dataset(predictors_merged,
-                                                                target_merged, test_list)
-
-            np.save(train_pred_path, training_predictors)
-            np.save(train_target_path, training_target)
-            np.save(val_pred_path, validation_predictors)
-            np.save(val_target_path, validation_target)
-            np.save(test_pred_path, test_predictors)
-            np.save(test_target_path, test_target)
-
-        else:
-            #load pre-computed tensors
-            training_predictors = np.load(train_pred_path,allow_pickle=True)
-            training_target = np.load(train_target_path,allow_pickle=True)
-            validation_predictors = np.load(val_pred_path,allow_pickle=True)
-            validation_target = np.load(val_target_path,allow_pickle=True)
-            test_predictors = np.load(test_pred_path,allow_pickle=True)
-            test_target = np.load(test_target_path,allow_pickle=True)
-
+    #load data and split into train, validation and test
 
     #normalize to 0-1
     tr_max = np.max(training_predictors)

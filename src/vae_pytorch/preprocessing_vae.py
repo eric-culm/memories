@@ -7,16 +7,16 @@ import librosa
 import os, sys
 from modules import *
 import utility_functions as uf
-config = loadconfig.load()
 
+config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
 SRNN_DATA_PATH = os.path.abspath(cfg.get('samplernn', 'samplernn_data_path'))
 SR = cfg.getint('main', 'main_sr')
-ENV_LENGTH = cfg.getint('preprocessing_vae', 'env_length_preprocessing')
-OUTPUT_FOLDER = cfg.get('preprocessing_vae', 'output_folder_preprocessing')
-SEQUENCE_LENGTH = cfg.getint('preprocessing_vae', 'sequence_length')
+ENV_LENGTH = cfg.getint('vae', 'env_length_preprocessing')
+OUTPUT_FOLDER = cfg.get('vae', 'output_folder_preprocessing')
+SEQUENCE_LENGTH = cfg.getint('vae', 'sequence_length_preprocessing')
 
 features_extractor = Preprocessing(sr=SR, env_length=ENV_LENGTH)
 
