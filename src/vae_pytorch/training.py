@@ -112,6 +112,8 @@ def main():
     gen_sounds_path = gen_figs_path
     #load data and split into train, validation and test
     data = np.load(dataset, allow_pickle=True)
+    np.random.shuffle(data) #shuffle order
+    np.random.shuffle(data)
     num_data = data.shape[0]
     tr_bound = int(num_data * train_split)
     val_bound = int(num_data * (train_split + validation_split))
