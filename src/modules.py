@@ -201,71 +201,28 @@ class InputChannel:
         print (meter_string)
 
 
-class FilterSound:
+class Preprocessing:
     '''
     Compare amplitude and spectral envelopes of one input sound to all sounds present in the
     memory bag. If the input sound is enough similar, it passes through, else is discarded.
     '''
-    def __init__(self, memory_bag, threshold, random_prob, env_length=100):
-        self.memory_bag = memory_bag
-        self.memory_bag_env = []
-        self.memory_bag_spenv = []
-        self.threshold = threshold
-        self.random_prob = random_prob
-        self.env_length = env_length  #low = higher similarities: downsamples envelopes
-        #compute envelope of memory_bag sounds
-        #compute amp envelope
-        #env = resample(np.abs(hilbert(i)), self.env_length)
-        #compute spectral envelope
-        #spenv = resample(np.abs(fft(i)[0:len(i)//4]), self.env_length)
-        for i in self.memory_bag:
-            self.memory_bag_env.append(resample(np.abs(hilbert(i)), self.env_length))
-            self.memory_bag_spenv.append(resample(np.abs(fft(i)[0:len(i)//4]), self.env_length))
+    def __init__(self, sr, env_length=1000):
+        self.env_length = env_length
+        self.sr = sr
 
-    def get_similarity_env(self, in_sound):
-        #compute similarity between amplitude envelopes of input_sound
-        #with all memory_bag sounds
-        #RETURN THE FIRST SIMILARITY ABOVE THRESHOLD
-        output = 0
-        in_env = resample(np.abs(hilbert(in_sound)), self.env_length)
-        for ref_env in self.memory_bag_env:
-            similarity, p = pearsonr(ref_env, in_env)
-            if similarity >= self.threshold:
-                #print (similarity)
-                break
-        return similarity
+    def amp_env(self, samples):
+        return resample(np.abs(hilbert(samples)), self.env_length)
 
+    def sp_env(self, samples):
+        return resample(np.abs(fft(samples)[0:len(samples)//4]/1024), self.env_length)
 
-    def get_similarity_spenv(self, in_sound):
-        #compute similarity between spectral envelopes of input_sound
-        #with all memory_bag sounds
-        #RETURN THE FIRST SIMILARITY ABOVE THRESHOLD
-        output = 0
-        in_spenv = resample(np.abs(hilbert(in_sound)), self.env_length)
-        for ref_spenv in self.memory_bag_spenv:
-            similarity, p = pearsonr(ref_spenv, in_spenv)
-            if similarity >= self.threshold:
-                #print (similarity)
-                break
-        return similarity
+    def extract_envs(self, path):
+        samples, sr = librosa.core.load(path, self.sr)
+        env = self.amp_env(samples)
+        spenv = self.sp_env(samples)
+        cat = np.concatenate((env,spenv))
+        return cat
 
-    def filter_sound(self, in_sound):
-        amp_similarity = self.get_similarity_env(in_sound)
-        sp_similarity = self.get_similarity_spenv(in_sound)
-        mean_similarity = (amp_similarity + sp_similarity) / 2
-        #if amp OR spectral similarity is above thresh
-        if mean_similarity >= self.threshold:
-            output = in_sound
-        else:
-            #or if randomly chosen even if not similar
-            random_prob = np.random.rand()
-            if random_prob <= self.random_prob:
-                output = in_sound
-            else:
-                #if none of the above
-                output = None
-
-        return output, mean_similarity
 
 class FilterStream:
     '''

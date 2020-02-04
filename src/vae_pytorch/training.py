@@ -1,71 +1,5 @@
-#from __future__ import print_function
+from __future__ import print_function
 import sys, os
-#look at sys argv: if in crossvalidation model i/o matrices and new model filename
-#are given from crossvalidation script, otherwise are normally taken from config.ini
-try:
-    cross_tag =  sys.argv[1]
-    if cross_tag == 'crossvalidation':
-        num_experiment = sys.argv[2]
-        num_run = sys.argv[3]
-        num_fold = sys.argv[4]
-        parameters = sys.argv[5]
-        model_path = sys.argv[6]
-        results_path = sys.argv[7]
-        output_temp_data_path = sys.argv[8]
-        dataset = sys.argv[9]
-        gpu_ID = int(sys.argv[10])
-        num_folds = int(sys.argv[11])
-        task_type = sys.argv[12]
-        parameters_path = sys.argv[13]
-        task_type = sys.argv[14]
-        generator = eval(sys.argv[15])
-        SAVE_MODEL = model_path
-
-        print('crossvalidation mode: I/O from crossvalidation script')
-        print('')
-        print ('dataset: ' + dataset)
-        print ('')
-        print ('saving results at: ' + results_path)
-        print('saving model at: ' + SAVE_MODEL)
-        print ('')
-
-except IndexError:
-    #test parameters
-    #IF IN TEST MODE:no xvalidation, results saved as exp0
-    #generator: 11865
-    #nogenerator
-    dataset = 'sc09_complete_waveform'
-    exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_AFTER2'
-
-    architecture = 'WAVE_complete_net'
-    parameters = ['verbose=False', 'model_size=64', 'variational=True',
-                  'beta=2.', 'warm_up=True', 'latent_dim=100',
-                  'subdataset_bound=1000','offset_bound=0',
-                  'features_type="waveform"', 'clip_gradients=1.',
-                  'dropout=False', 'regularization_lambda=0']
-
-    SAVE_MODEL = '../models/' + exp_name
-    results_path = '../results/' + exp_name
-    training_dict_path = '../results/' + exp_name + '_training_dict.npy'
-    parameters_path = results_path + '/parameters'
-    SAVE_RESULTS = results_path
-    num_fold = 0
-    num_experiment = 0
-    num_run = 0
-    num_folds = 1
-    gpu_ID = 0
-
-
-    print ('test mode: I/O from config.ini file')
-    print ('')
-    print ('dataset: ' + dataset)
-    print ('')
-    print ('saving results at: ' + SAVE_RESULTS)
-    print ('')
-    print ('saving model at: ' + SAVE_MODEL)
-    print ('')
-
-
 import loadconfig
 import configparser
 import json
@@ -81,6 +15,39 @@ import numpy as np
 import define_models as choose_model
 import utility_functions as uf
 import training_utils
+
+dataset = 'sc09_complete_waveform'
+exp_name = 'EXP_0_sc09_beta2_clip_1000s_noCNN_AFTER2'
+
+architecture = 'WAVE_complete_net'
+parameters = ['verbose=False', 'model_size=64', 'variational=True',
+                  'beta=2.', 'warm_up=True', 'latent_dim=100',
+                  'subdataset_bound=1000','offset_bound=0',
+                  'features_type="waveform"', 'clip_gradients=1.',
+                  'dropout=False', 'regularization_lambda=0']
+
+SAVE_MODEL = '../models/' + exp_name
+results_path = '../results/' + exp_name
+training_dict_path = '../results/' + exp_name + '_training_dict.npy'
+parameters_path = results_path + '/parameters'
+SAVE_RESULTS = results_path
+num_fold = 0
+num_experiment = 0
+num_run = 0
+num_folds = 1
+gpu_ID = 0
+
+
+print ('test mode: I/O from config.ini file')
+print ('')
+print ('dataset: ' + dataset)
+print ('')
+print ('saving results at: ' + SAVE_RESULTS)
+print ('')
+print ('saving model at: ' + SAVE_MODEL)
+print ('')
+
+
 #import preprocessing_DAIC as pre
 
 #np.random.seed(0)
