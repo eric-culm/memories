@@ -18,7 +18,7 @@ config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
-SR = cfg.getint('sampling', 'sr_target')
+SR = cfg.getint('main', 'main_sr')
 
 tol = 1e-14    # threshold used to compute phase
 

@@ -13,7 +13,7 @@ config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
-batch_size = cfg.getint('training_defaults', 'batch_size')
+batch_size = cfg.getint('vae', 'batch_size')
 
 
 CCC_loss =  metrics.ConcordanceCC()

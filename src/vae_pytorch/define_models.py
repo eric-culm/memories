@@ -10,16 +10,17 @@ import torch.utils.data as utils
 from torch.autograd import Variable
 import sys
 
-def parse_parameters(defaults, parameters):
-    for param in parameters:
-        param = param.split('=')
-        item = param[0].replace(' ', '')
-        value = eval(param[1].replace(' ', ''))
-        defaults[item] = value
-    return defaults
-
-
 #DEFINE HERE YOUR MODELS!!
+
+def parse_parameters(defaults, parameters):
+    '''
+    join all requested constrains in one dict.
+    constrains_list is a list of dicts
+    '''
+    for key in parameters.keys():
+        curr_value = parameters[key]
+        defaults[key] = curr_value
+    return defaults
 
 def EXAMPLE_model_classification(time_dim, features_dim, user_parameters=['niente = 0']):
     '''
@@ -65,7 +66,7 @@ def EXAMPLE_model_classification(time_dim, features_dim, user_parameters=['nient
 
 
 
-def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
+def WAVE_complete_net(user_parameters=['niente = 0']):
     '''
     to use this model, simply call architecture=EXAMPLE_model as a parameter
     in the UI script
@@ -89,42 +90,43 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
             self.dropout = dropout
             self.drop_prob = drop_prob
             self.latent_dim = latent_dim
+            self.input_dim = input_dim
 
             #So here we will first define layers for encoder network
-            self.encoder = nn.Sequential(nn.Linear(input_dim,input_dim/2),
-                                        nn.BatchNorm1d(input_dim/2)),
-                                         nn.ReLU(),
-                                         nn.Linear(input_dim/2),input_dim/4)),
-                                         nn.BatchNorm1d(input_dim/4)),
-                                         nn.ReLU(),
-                                         nn.Linear(input_dim/4),input_dim/8)),
-                                         nn.BatchNorm1d(input_dim/8)),
-                                         nn.ReLU(),
-                                         )
+            self.encoder = nn.Sequential(nn.Linear(self.input_dim,self.input_dim//2),
+                                        nn.BatchNorm1d(self.input_dim//2),
+                                        nn.ReLU(),
+                                        nn.Linear(self.input_dim//2,self.input_dim//4),
+                                        nn.BatchNorm1d(self.input_dim//4),
+                                        nn.ReLU(),
+                                        nn.Linear(self.input_dim//4,self.input_dim//8),
+                                        nn.BatchNorm1d(self.input_dim//8),
+                                        nn.ReLU(),
+                                        )
 
             #These two layers are for getting logvar and mean
-            self.fc1 = nn.Linear(input_dim/8, input_dim/16)
-            self.fc2 = nn.Linear(input_dim/16, input_dim/32)
-            self.mean = nn.Linear(input_dim/32, latent_dim)
-            self.var = nn.Linear(input_dim/32, latent_dim)
+            self.fc1 = nn.Linear(self.input_dim//8, self.input_dim//16)
+            self.fc2 = nn.Linear(self.input_dim//16, self.input_dim//32)
+            self.mean = nn.Linear(self.input_dim//32, latent_dim)
+            self.var = nn.Linear(self.input_dim//32, latent_dim)
 
             #######The decoder part
             #This is the first layer for the decoder part
-            self.expand = nn.Linear(latent_dim, input_dim/32)
-            self.fc3 = nn.Linear(input_dim/32, input_dim/16)
-            self.fc4 = nn.Linear(input_dim/16, input_dim/8)
-            self.decoder = nn.Sequential(nn.Linear(input_dim/8,input_dim/4),
-                                         nn.BatchNorm1d(input_dim/4),
+            self.expand = nn.Linear(latent_dim, self.input_dim//32)
+            self.fc3 = nn.Linear(self.input_dim//32, self.input_dim//16)
+            self.fc4 = nn.Linear(self.input_dim//16, self.input_dim//8)
+            self.decoder = nn.Sequential(nn.Linear(self.input_dim//8,self.input_dim//4),
+                                         nn.BatchNorm1d(self.input_dim//4),
                                          nn.ReLU(),
-                                         nn.Linear(input_dim/4,input_dim/2),
-                                         nn.BatchNorm1d(input_dim/2),
+                                         nn.Linear(self.input_dim//4,self.input_dim//2),
+                                         nn.BatchNorm1d(self.input_dim//2),
                                          nn.ReLU(),
-                                         nn.Linear(input_dim/2,input_dim)
+                                         nn.Linear(self.input_dim//2,self.input_dim)
                                          )
 
         def enc_func(self, x):
             #here we will be returning the logvar(log variance) and mean of our network
-            x = x.view([-1, input_dim])
+            x = x.view([-1, self.input_dim])
             x = self.encoder(x)
             if self.dropout:
                 x = F.dropout2d(x, self.drop_prob)
@@ -144,7 +146,7 @@ def WAVE_complete_net(time_dim, features_dim, user_parameters=['niente = 0']):
                 z = F.dropout2d(z, self.drop_prob)
 
             out = self.decoder(z)
-            out = out.view([-1, 1, input_dim])
+            out = out.view([-1, 1, self.input_dim])
             out = torch.tanh(out)
             return out
 

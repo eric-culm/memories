@@ -23,12 +23,15 @@ cfg.read(config)
 
 #global parameters from config file
 dataset = cfg.get('vae', 'train_input_dataset')
-experiment_name = cfg.get('vae', 'exp_name')
+experiment_name = cfg.get('vae', 'experiment_name')
 architecture = cfg.get('vae', 'architecture')
 output_models_path = cfg.get('vae', 'output_models_path')
 load_pretrained = eval(cfg.get('vae', 'load_pretrained'))
 pretrained_path = cfg.get('vae', 'pretrained_path')
 gpu_ID = cfg.getint('vae', 'gpu_id')
+cuda = eval(cfg.get('vae', 'cuda'))
+batch_size = cfg.getint('vae', 'batch_size')
+results_path = cfg.get('vae', 'output_results_path')
 
 SAVE_MODEL = os.path.join(output_models_path, experiment_name)
 
@@ -42,11 +45,11 @@ latent_dim = 10
 clip_gradients = 1.
 dropout = False
 patience = 10
-batch_size = 500
 num_epochs = 800000
 learning_rate = 0.0001
 regularization_lambda = 0.
 optimizer = 'adam'
+features_type = 'waveform'
 
 #dataset division
 train_split = 0.8
@@ -56,12 +59,17 @@ subdataset_bound = 0
 offset_bound = 0
 shuffle_training_data = True
 
-#saving
+#saving\
+training_dict_path = os.path.join(results_path, 'stats')
 save_best_only = False
 save_model_xepochs = True
 save_model_nepochs = 100
 save_latent_distribution = True
 save_distribution_epochs_n = 100
+save_figs = False
+save_sounds = False
+save_items_epochs = 100
+save_items_n = 1
 
 #warm ups
 convergence_threshold = 0.1
@@ -78,39 +86,44 @@ reparametrize_ramp_epochs = 1500
 
 percs = [train_split, validation_split, test_split]
 
-#overwrite parameters
-for param in parameters:
-    exec(param)
+if cuda:
+    device = torch.device('cuda:' + str(gpu_ID))
+else:
+    device = torch.device('cpu')
 
+#build dict with model PARAMETERS
+parameters = {}
+parameters['verbose'] = verbose
+parameters['model_size'] = model_size
+parameters['variational'] = variational
+parameters['beta'] = beta
+parameters['warm_up'] = warm_up
+parameters['latent_dim'] = latent_dim
+parameters['clip_gradients'] = clip_gradients
+parameters['dropout'] = dropout
+parameters['regularization_lambda'] = regularization_lambda
 
-
-device = torch.device('cuda:' + str(gpu_ID))
-
-
+#training routine
 def main():
+    #create results path
+    gen_figs_path = os.path.join(results_path, 'gen_figs')
+    if not os.path.exists(gen_figs_path):
+        os.makedirs(gen_figs_path)
+    gen_sounds_path = gen_figs_path
     #load data and split into train, validation and test
+    data = np.load(dataset, allow_pickle=True)
+    num_data = data.shape[0]
+    tr_bound = int(num_data * train_split)
+    val_bound = int(num_data * (train_split + validation_split))
+    training_predictors = data[:tr_bound]
+    validation_predictors = data[tr_bound:val_bound]
+    test_predictors = data[val_bound:]
 
-    #normalize to 0-1
-    tr_max = np.max(training_predictors)
-    training_predictors = np.divide(training_predictors, tr_max)
-    validation_predictors = np.divide(validation_predictors, tr_max)
-    test_predictors = np.divide(test_predictors, tr_max)
 
     #reshape tensors
-    if features_type == 'waveform':
-        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
-        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
-        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
-    elif features_type =='spectrum':
-        training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1],training_predictors.shape[2])
-        validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1], validation_predictors.shape[2])
-        test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1], test_predictors.shape[2])
-
-    '''
-    training_target = training_predictors
-    validation_target = validation_predictors
-    test_target = test_predictors
-    '''
+    training_predictors = training_predictors.reshape(training_predictors.shape[0], 1, training_predictors.shape[1])
+    validation_predictors = validation_predictors.reshape(validation_predictors.shape[0], 1, validation_predictors.shape[1])
+    test_predictors = test_predictors.reshape(test_predictors.shape[0], 1, test_predictors.shape[1])
 
 
     #select a subdataset for testing (to be commented when normally trained)
@@ -119,40 +132,35 @@ def main():
         training_predictors = training_predictors[offset_bound:offset_bound+subdataset_bound]
         validation_predictors = validation_predictors[:subdataset_bound]
         test_predictors = test_predictors[:subdataset_bound]
-        training_target = training_target[offset_bound:offset_bound+subdataset_bound]
-        validation_target = validation_target[:subdataset_bound]
-        test_target = test_target[:subdataset_bound]
+
 
     print ('Training predictors shape: ' + str(training_predictors.shape))
-    print ('Training target shape: ' + str(training_target.shape))
 
     #convert to tensor
     train_predictors = torch.tensor(training_predictors).float()
     val_predictors = torch.tensor(validation_predictors).float()
     test_predictors = torch.tensor(test_predictors).float()
-    train_target = torch.tensor(training_target).float()
-    val_target = torch.tensor(validation_target).float()
-    test_target = torch.tensor(test_target).float()
+
 
     #build dataset from tensors
     #target i == predictors because autoencoding
-    tr_dataset = utils.TensorDataset(train_predictors,train_target)
-    val_dataset = utils.TensorDataset(val_predictors, val_target)
-    test_dataset = utils.TensorDataset(test_predictors, test_target)
+    tr_dataset = utils.TensorDataset(train_predictors, train_predictors)
+    val_dataset = utils.TensorDataset(val_predictors, val_predictors)
+    test_dataset = utils.TensorDataset(test_predictors, test_predictors)
 
     #build data loader from dataset
     tr_data = utils.DataLoader(tr_dataset, batch_size, shuffle=shuffle_training_data, pin_memory=True)
     val_data = utils.DataLoader(val_dataset, batch_size, shuffle=shuffle_training_data, pin_memory=True)
     test_data = utils.DataLoader(test_dataset, batch_size, shuffle=shuffle_training_data, pin_memory=True)  #no batch here!!
     #DNN input shape
-    time_dim = training_predictors.shape[-2]
-    features_dim = training_predictors.shape[-1]
+    parameters['input_dim'] = train_predictors.shape[-1]
+
 
 
     #load model (model is in locals()['model'])
-    print('\n loading models...')
+    print('\nloading models...')
 
-    model_string = 'model_class, model_parameters = choose_model.' + architecture + '(time_dim, features_dim, parameters)'
+    model_string = 'model_class, model_parameters = choose_model.' + architecture + '(parameters)'
     exec(model_string)
     model = locals()['model_class'].to(device)
 
@@ -161,18 +169,10 @@ def main():
         model.load_state_dict(torch.load(pretrained_path), strict=False)
 
     #create results folders
-    if not os.path.exists(results_path):
-        os.makedirs(results_path)
     model_folder = os.path.dirname(SAVE_MODEL)
     if not os.path.exists(model_folder):
         os.makedirs(model_folder)
 
-    gen_sounds_path = os.path.join(results_path, 'gen_sounds')
-    if not os.path.exists(gen_sounds_path):
-        os.makedirs(gen_sounds_path)
-    gen_figs_path = os.path.join(results_path, 'gen_figs')
-    if not os.path.exists(gen_figs_path):
-        os.makedirs(gen_figs_path)
     gen_distributions_path = os.path.join(results_path, 'hidden_distribution')
     if not os.path.exists(gen_distributions_path):
         os.makedirs(gen_distributions_path)
@@ -185,6 +185,7 @@ def main():
     #define optimizer
     optimizer_joint = optim.Adam(model.parameters(), lr=learning_rate,
                            weight_decay=regularization_lambda)
+
 
     #create warm up ramps
     if not warm_up_after_convergence:
@@ -218,6 +219,7 @@ def main():
 
     #TRAINING LOOP
     #iterate epochs
+
     for epoch in range(num_epochs):
 
         if not convergence_flag:
@@ -271,7 +273,6 @@ def main():
         model.train()
         for i, (sounds, truth) in enumerate(tr_data):
                 sounds = sounds.to(device)
-                truth = truth.to(device)
                 optimizer_joint.zero_grad()
 
                 outputs, mu, logvar = model(sounds, warm_value_reparametrize)
@@ -311,7 +312,6 @@ def main():
             for i, (sounds, truth) in enumerate(tr_data):
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
-                    truth = truth.to(device)
 
                     outputs, mu, logvar = model(sounds, warm_value_reparametrize)
 
@@ -327,7 +327,6 @@ def main():
             for i, (sounds, truth) in enumerate(val_data):
                     optimizer_joint.zero_grad()
                     sounds = sounds.to(device)
-                    truth = truth.to(device)
 
                     outputs, mu, logvar = model(sounds, warm_value_reparametrize)
 
@@ -422,68 +421,7 @@ def main():
 
 
 
-            #end of epoch loop
-    '''
-    #compute train, val and test accuracy LOADING the best saved model
-    #best validation loss
-    #init batch results
-    train_batch_losses = []
-    val_batch_losses = []
-    test_batch_losses = []
 
-
-    model.load_state_dict(torch.load(BVL_model_path), strict=False)
-    model.eval()
-    with torch.no_grad():
-        #train acc
-        for i, (sounds, truth) in enumerate(tr_data):
-            optimizer.zero_grad()
-            temp_pred, mu, logvar = model(sounds)
-            temp_loss = loss_function(temp_pred, truth, mu, logvar)
-            train_batch_losses.append(temp_loss)
-        #val acc
-        for i, (sounds, truth) in enumerate(val_data):
-            optimizer.zero_grad()
-            temp_pred, mu, logvar = model(sounds)
-            temp_loss = loss_function(temp_pred, truth, mu, logvar)
-            val_batch_losses.append(temp_loss)
-        #test acc
-        for i, (sounds, truth) in enumerate(test_data):
-            optimizer.zero_grad()
-            temp_pred, mu, logvar = model(sounds)
-            temp_loss = loss_function(temp_pred, truth, mu, logvar)
-            test_batch_losses.append(temp_loss)
-
-
-    #compute rounded mean of losses
-    train_loss = torch.mean(torch.tensor(train_batch_losses)).cpu().numpy()
-    val_loss = torch.mean(torch.tensor(val_batch_losses)).cpu().numpy()
-    test_loss = torch.mean(torch.tensor(test_batch_losses)).cpu().numpy()
-
-
-    #print results COMPUTED ON THE BEST SAVED MODEL
-    print('')
-    print ('train loss: ' + str(train_loss))
-    print ('val loss: ' + str(val_loss))
-    print ('test loss: ' + str(test_loss))
-
-
-    if not os.path.exists(results_path):
-        os.makedirs(results_path)
-
-    #save results in temp dict file
-    temp_results = {}
-
-    temp_results['train_loss_hist'] = train_loss_hist
-    temp_results['val_loss_hist'] = val_loss_hist
-
-    temp_results['train_loss'] = train_loss
-    temp_results['val_loss'] = val_loss
-    temp_results['test_loss'] = test_loss
-
-    np.save(results_path, temp_results)
-
-    '''
 
 if __name__ == '__main__':
     main()
