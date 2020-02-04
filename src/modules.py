@@ -43,7 +43,7 @@ import vae_pytorch.define_models as choose_model
 config = loadconfig.load()
 cfg = configparser.ConfigParser()
 cfg.read(config)
-SR = cfg.getint('sampling', 'sr_target')
+SR = cfg.getint('main', 'main_sr')
 MAIN_SR = cfg.getint('main', 'main_sr')
 CLIENT_IP = cfg.get('osc', 'client_ip')
 GRID_LT_PATH = cfg.get('main', 'grid_lt_path')
