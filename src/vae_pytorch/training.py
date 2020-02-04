@@ -39,7 +39,6 @@ SAVE_MODEL = os.path.join(output_models_path, experiment_name)
 #globals
 verbose = False
 model_size = 64
-variational = True
 beta = 2.
 latent_dim = 10
 clip_gradients = 1.
@@ -72,13 +71,14 @@ save_items_epochs = 100
 save_items_n = 1
 
 #warm ups
+variational = False
 convergence_threshold = 0.1
 warm_up = True
 kld_holes = True
 kld_epochs_n = 3
 warm_up_after_convergence = False
-warm_up_kld = False
-warm_up_reparametrize = False
+warm_up_kld = True
+warm_up_reparametrize = True
 kld_ramp_delay = 30
 kld_ramp_epochs = 1500
 reparametrize_ramp_delay = 30
