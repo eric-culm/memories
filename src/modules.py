@@ -50,6 +50,7 @@ GRID_LT_PATH = cfg.get('main', 'grid_lt_path')
 GRID_ST_PATH = cfg.get('main', 'grid_st_path')
 SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
 IRS_PATH = cfg.get('main', 'irs_path')
+VAE_DIM = cfg.getint('vae', 'env_length_preprocessing')
 
 
 
@@ -223,6 +224,12 @@ class Preprocessing:
         cat = np.concatenate((env,spenv))
         return cat
 
+    def internal_preprocessing(self, samples):
+        env = self.amp_env(samples)
+        spenv = self.sp_env(samples)
+        cat = np.concatenate((env,spenv))
+        return cat
+
 
 class FilterStream:
     '''
@@ -261,6 +268,211 @@ class FilterStream:
 
     def get_bag(self):
         return self.bag
+
+
+
+class LatentOperators:
+    def __init__(self, latent_dim):
+        self.latent_dim = latent_dim
+
+    def __random_slice__(self):
+        '''
+        output bounds of a random slice within the latent dim
+        '''
+        random_perc = np.random.randint(self.latent_dim)
+        random_invperc = np.random.randint(self.latent_dim)
+
+        start_init = np.random.randint(self.latent_dim - random_perc)
+        end_init = start_init + random_perc
+        #randomly invert direction
+        if random_invperc >= self.latent_dim/2:
+            start = self.latent_dim - end_init
+            end = self.latent_dim - start_init
+        else:
+            start = start_init
+            end = end_init
+        return [start, end]
+
+
+    def __slice_wrapper__(self, func_name, x1, x2):
+        '''
+        apply func_name to x1, x2 only in a random slice
+        '''
+        func = getattr(self,func_name)
+        start, end = self.__random_slice__()
+        slice1 = x1[start:end]
+        slice2 = x2[start:end]
+        processed_slice = func(slice1, slice2)
+        output = x1
+        output[start:end] = processed_slice
+
+        return output
+
+    def add(self, x1, x2):
+        return torch.sigmoid(torch.add(x1,x2))
+
+    def sub(self, x1, x2):
+        return torch.sigmoid(torch.sub(x1,x2))
+
+    def mul(self, x1, x2):
+        return torch.sigmoid(torch.mul(x1,x2))
+
+    def div(self, x1, x2):
+        return torch.sigmoid(torch.mul(x1,x2))
+
+    def mean(self, x1, x2):
+        concat = torch.stack((x1,x2))
+        return torch.mean(concat,0)
+
+    def blur(self, x, mul):
+        noise = (torch.randn(self.latent_dim) * mul).reshape(1, self.latent_dim)
+        return torch.add(x, noise)
+
+    def spike(self, x, n_peaks):
+        noise = np.zeros(self.latent_dim)
+        for i in range(n_peaks):
+            pos = np.random.randint(self.latent_dim)
+            peak = np.random.randint(self.latent_dim) / float(self.latent_dim)
+            noise[pos] = peak * 0.3
+        noise = torch.tensor(noise).float().reshape(1, self.latent_dim)
+
+        return torch.add(x, noise)
+
+
+    def xfade(self, x1, x2):
+        ramp1 = np.arange(1, x1.shape[0]+1) / x1.shape[0]
+        ramp2 = np.array(np.flip(ramp1))
+        ramp1 = torch.tensor(ramp1).float()
+        ramp2 = torch.tensor(ramp2).float()
+        scaled1 = torch.mul(x1, ramp1)
+        scaled2 = torch.mul(x2, ramp2)
+        return torch.add(scaled1, scaled2)
+
+class VAE:
+    def __init__(self, architecture, weights_path, device):
+        model_string = 'model_class, model_parameters = choose_model.' + architecture + '({})'
+        exec(model_string)
+        self.device = torch.device(device)
+        weights = torch.load(weights_path,map_location=self.device)
+        self.model = locals()['model_class'].to(self.device)
+        self.model.load_state_dict(weights, strict=False)
+        self.model.eval()
+        self.dim = VAE_DIM
+        self.preprocessing = Preprocessing(sr=SR)
+        try:
+            self.grid_lt = list(np.load(GRID_LT_PATH, allow_pickle=True))
+        except:
+            self.grid_lt = []
+        try:
+            self.grid_st = list(np.load(GRID_ST_PATH, allow_pickle=True))
+        except:
+            self.grid_st = []
+        self.CCC =  metrics.ConcordanceCC()
+
+
+    def encode_ext(self, x):
+        x = self.preprocessing.extract_envs(x)
+        x = torch.tensor(x).float().reshape(1,1,self.dim*2)
+        with torch.no_grad():
+            mu, logvar = self.model.enc_func(x)
+        return mu
+
+    def decode_ext(self, z):
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim*2).detach().numpy()
+        x = x / np.max(x)
+        x = x * 0.8
+        return x
+
+    def encode_int(self, x):
+        #x = torch.tensor(x).float().reshape(1,1,self.dim)
+        with torch.no_grad():
+            mu, logvar = self.model.enc_func(x)
+        return mu
+
+    def decode_int(self, z):
+        #z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        x = x / np.max(x)
+        x = x * 0.8
+        return x
+
+    def get_z_loss(self, x):
+        x = torch.tensor(x).float().reshape(1,1,self.dim)
+        mu, logvar = self.model.enc_func(x)
+        recon_x = self.model.dec_func(mu).reshape(self.dim)
+        recon_loss = 1 - torch.abs(self.CCC(recon_x, torch.squeeze(x))).detach().numpy()
+        return mu, recon_loss
+
+    def gen_random_x(self):
+        max_grid = np.max(np.array(self.grid_lt))
+        z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
+        z = z / max_grid
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        return x
+
+    def gen_random_z(self):
+        max_grid = np.max(np.array(self.grid_lt))
+        z = np.random.rand(self.model.latent_dim) * 0.5 + 0.5
+        z = z * max_grid
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        return z
+
+    def gen_random_peak(self):
+        max_grid = np.max(np.array(self.grid_lt))
+        z = np.zeros(self.model.latent_dim)
+        pos = np.random.randint(self.model.latent_dim)
+        peak = np.random.randint(self.model.latent_dim) / float(self.model.latent_dim)
+        peak = peak / max_grid
+        z[pos] = peak
+        z = torch.tensor(z).float().reshape(1,self.model.latent_dim)
+        x = self.model.dec_func(z).reshape(self.dim).detach().numpy()
+        return x
+
+    def quantize(self, z, grid_type='lt'):
+        if grid_type == 'lt':
+            grid = torch.tensor(self.grid_lt)
+        if grid_type == 'st':
+            grid = torch.tensor(self.grid_st)
+        dists = []
+        for i in grid:
+            curr_dist = self.CCC(z, i)
+            dists.append(curr_dist.cpu().numpy())
+        nearest_z = np.argmax(dists)
+        return grid[nearest_z]
+
+    def compute_quantization_grid(self, sounds_folder, save_path):
+        print('\nComputing quantization grid')
+        #quantization matrix has tuples of (category, model, z)
+        #grid is computed only for variation 0 of all models
+        quant_matrix = []
+        categories = list(filter(lambda x: '.DS_Store' not in x,os.listdir(sounds_folder)))
+        for cat in categories:  #iterate categories
+            print ('\ncategory: ' + str(cat))
+            cat_path = os.path.abspath(os.path.join(SRNN_DATA_PATH, cat))
+            curr_models = list(filter(lambda x: '.DS_Store' not in x, os.listdir(cat_path)))  #iterate models
+            for mod in curr_models: #iterate models
+                print ('\nmodel: ' + str(mod))
+                mod_path = os.path.abspath(os.path.join(cat_path, mod))
+                sounds_path = os.path.abspath(os.path.join(mod_path, 'sounds', 'dur_3'))
+                if os.path.exists(sounds_path): #id sounds are there
+                    target_paths = list(filter(lambda x: '.DS_Store' not in x, os.listdir(sounds_path)))
+                    for var in target_paths:  #iterate variations
+                        if var == 'model_0':  #USE ONLY BEST MODELS' SOUNDS
+                            print ('\nvariation: ' + str(var))
+                            var_path = os.path.abspath(os.path.join(sounds_path, var))
+                            final_sounds = list(filter(lambda x: '.DS_Store' not in x, os.listdir(var_path)))
+                            num_sounds = len(final_sounds)
+                            index = 0
+                            for s in final_sounds:
+                                sound = os.path.abspath(os.path.join(var_path, s))
+                                z = self.encode_ext(sound).numpy()
+                                quant_matrix.append((cat, mod, z))
+                                uf.print_bar(index, num_sounds)
+                                index += 1
+        np.save(save_path, quant_matrix)
+        print ('\ndone')
 
 class Postprocessing:
     def __init__(self, sr=0):
