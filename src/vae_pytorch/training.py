@@ -71,7 +71,7 @@ save_items_epochs = 100
 save_items_n = 1
 
 #warm ups
-variational = False
+variational = True
 convergence_threshold = 0.1
 warm_up = True
 kld_holes = True
