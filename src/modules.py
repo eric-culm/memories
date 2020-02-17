@@ -152,10 +152,10 @@ class InputChannel:
     record a sliding buffer from a desired input channel
     '''
     def __init__(self, dur, channel, total_channels, sr):
-        self.dur = dur
+        self.dur_samps = int(dur * sr)
         self.channel = channel
         self.total_channels = total_channels
-        self.buffer = np.zeros(dur)
+        self.buffer = np.zeros(int(dur*sr))
         self.stream =  sd.InputStream(channels=self.total_channels, samplerate=sr,
                                     blocksize=512 , callback=self.rec_callback)
 
@@ -236,12 +236,14 @@ class FilterStream:
     Apply FilterSound to multiple input sounds and collects a bag
     of filtered sounds
     '''
-    def __init__(self, frequency, streaming_object, filtering_object):
+    def __init__(self, frequency, streaming_object, ):
         self.frequency = frequency
         self.flag = 0
         self.streaming_object = streaming_object
         self.filtering_object = filtering_object
         self.bag = []
+
+    def filter(self, )
 
     def filter_input_sound(self):
         buffer = self.streaming_object.get_buffer()
@@ -1739,12 +1741,14 @@ class BuildScene:
         return mix, scene.global_score
 
 
-
-
-
-
-
-
-
-
-        print ('fottiti')
+class Dream:
+    '''
+    build dream scene.
+    Global score contains all sounds
+    '''
+    def __init__(self, max_dur=60, max_num_sounds = 100, sr=MAIN_SR):
+        self.max_num_sounds = max_num_sounds
+        self.max_dur = 60
+        self.score_resolution = 0.1  #in secs
+        self.score_length = 1000
+        self.sr=sr

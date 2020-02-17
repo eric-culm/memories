@@ -10,14 +10,7 @@ allocator = Allocator(server_shared_path='../shared', sr=44100,
                     client_shared_path='cazzo')
 post = Postprocessing()
 
-#constrains = only_available
-'''
-    def build(self, length, density, score_diversity, sel_diversity, single_model=False,
-              fixed_category='rand', fixed_model='rand', fast=True, carpet=False,
-              perc_particles=0, enhance_random=False, complete_random=False,
-              global_rev=False, global_stretch_dir=0, global_stretch=0.6,
-              global_shift_dir=0, global_shift=0.7, verbose=False):
-'''
+
 scene.gen_macro()
 build = BuildScene()
 mix, score = build.build(length=0.6,
