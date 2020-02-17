@@ -5,11 +5,14 @@ import scene_constrains as sc
 import random
 import utility_functions as uf
 
+print (sc.check_available_models())
+
 scene = Scene(main_dur=60)
 allocator = Allocator(server_shared_path='../shared', sr=44100,
                     client_shared_path='cazzo')
 post = Postprocessing()
 
+choice_dict = {'instrumental': ['pianoDreamy', 'pianoChill', 'pianoSmooth']}
 
 scene.gen_macro()
 build = BuildScene()
@@ -17,9 +20,10 @@ mix, score = build.build(length=0.6,
                   density=0.2,
                   score_diversity=0.4,
                   sel_diversity=0.8,
-                  single_model=True,
+                  single_model=False,
                   fixed_category='instrumental',
                   fixed_model='guitarAcoustic',
+                  neuro_choice=choice_dict,
                   fast=True,
                   carpet=True,
                   perc_particles=1,
@@ -33,6 +37,6 @@ mix, score = build.build(length=0.6,
                   global_shift=0,
                   verbose=False)
 
-allocator.write_local(mix, 'coglione')
+allocator.write_local(mix, 'coglionazzo')
 scene.load_score(score)
 #scene.plot_score(dimensions=3)

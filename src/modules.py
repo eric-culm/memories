@@ -243,7 +243,6 @@ class FilterStream:
         self.filtering_object = filtering_object
         self.bag = []
 
-    def filter(self, )
 
     def filter_input_sound(self):
         buffer = self.streaming_object.get_buffer()
@@ -1582,7 +1581,7 @@ class BuildScene:
         self.sr=sr
 
     def build(self, length, density, score_diversity, sel_diversity, single_model=False,
-              fixed_category='rand', fixed_model='rand', fast=True, carpet=False,
+              fixed_category='rand', fixed_model='rand', neuro_choice=False, fast=True, carpet=False,
               perc_particles=0, enhance_random=False, complete_random=False,
               global_rev=False, global_rev_amount=0.3, global_stretch_dir=0,
               global_stretch=1, global_shift_dir=0, global_shift=0, verbose=False):
@@ -1590,6 +1589,7 @@ class BuildScene:
         generate scene from macroparameters
         fast= no shift, no stretch
         carpet = 1 or 2 long sounds starting from the berginning
+        neuro_choice = list of possible sound selection (dict from VAE)
         '''
         #scale variables by macroparameters
         random_diversity_flag = random.choice([True, False])  #50% choice
@@ -1653,6 +1653,7 @@ class BuildScene:
                 possible_models.append(ch_model)
 
         #building dictionary of fixed options
+        print (sc.check_available_models())
         options = copy.deepcopy(sc.constrains_dict)
 
         #build_scene
@@ -1667,7 +1668,7 @@ class BuildScene:
             curr_score_macro = score_macros[rand_score_macro]
 
             #generate random prameters with chosen constrains
-            #if not single sound 50% times section diversity choses also the number of sounds
+            #if not single sound 50% times section diversity chooses also the number of sounds
             if single_model:
                 #sound is fixed
                 curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
@@ -1683,6 +1684,15 @@ class BuildScene:
                 else:
                     #model selection is completely random
                     curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro, verbose=verbose)
+
+            #if list of sounds is selected by VAE (in the form of dict of possible choices)
+            if isinstance(neuro_choice, dict):
+                cats = list(neuro_choice.keys())
+                ch_category = random.choice(cats)
+                ch_model = random.choice(neuro_choice[ch_category])
+                curr_sound_parameters = scene.gen_random_parameters(curr_sound_macro,fixed_category=ch_category,
+                                                                        fixed_model=ch_model, verbose=verbose)
+
 
             curr_score_parameters = scene.gen_random_parameters(curr_score_macro, verbose=verbose)
 
@@ -1743,12 +1753,7 @@ class BuildScene:
 
 class Dream:
     '''
-    build dream scene.
-    Global score contains all sounds
+    build dream from scenes .
     '''
     def __init__(self, max_dur=60, max_num_sounds = 100, sr=MAIN_SR):
-        self.max_num_sounds = max_num_sounds
-        self.max_dur = 60
-        self.score_resolution = 0.1  #in secs
-        self.score_length = 1000
-        self.sr=sr
+        pass
