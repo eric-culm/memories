@@ -1029,7 +1029,7 @@ class Scene:
 
     def resolve_score_stereo(self, global_volume=1., fade_in=5, fade_out=5,
                              global_rev=False, rev_length=4, rev_amount='any',
-                             global_shift=0, global_stretch=1):
+                             global_shift=0, global_stretch=1, verbose=False):
         '''
         takes avery file in the score and produces a stereo mix
         '''
@@ -1039,6 +1039,8 @@ class Scene:
 
 
         #apply panning
+        if verbose:
+            print ('pan')
         for sound in self.global_score.keys(): #iterate all sounds in score
             pan = self.global_score[sound]['pan'][0]
 
@@ -1055,16 +1057,22 @@ class Scene:
 
         #apply stretch
         if global_stretch != 1:
+            if verbose:
+                print ('stretch')
             mix_left = self.post.stretch(mix_left, global_stretch)
             mix_right = self.post.stretch(mix_right, global_stretch)
 
         #apply shift
         if global_shift != 0:
+            if verbose:
+                print ('shift')
             mix_left = self.post.pitch_shift(mix_left, global_shift)
             mix_right = self.post.pitch_shift(mix_right, global_shift)
 
         #apply reverb
         if global_rev:
+            if verbose:
+                print ('rev')
             mix_left, mix_right = self.post.reverb_stereo(mix_left, mix_right, rev_length, rev_amount)
 
         #normalize and rescale amplitude
@@ -1325,6 +1333,7 @@ class Scene:
                                'volume': [],
                                'position': [],
                                'pan': [],
+                               'pan_frbk': [],
                                'eq': [],
                                'rev': [],
                                'rev_length': [],
@@ -1438,8 +1447,9 @@ class Scene:
         if verbose:
             print ('chosen parameter for score, position: ' + str(sel_position))
 
-        #pan  only stereo for now
-        pans = np.arange(-1, 1, 0.01)  #10 ms resolution
+        #PAN
+        #left-right
+        pans = np.arange(-1, 1, 0.01)
         if 'pan' in constrains['score'].keys():
             pans = constrains['score']['pan'](pans)
             #print ('constrain for score, pan: ' + str(constrains['score']['pan']))
@@ -1448,8 +1458,18 @@ class Scene:
             #print ('no constrain for score, pan')
         sel_pan = np.random.choice(pans)
         parameters['score']['pan'] = [sel_pan, sel_pan]
+        #front-back
+        pans_frbk = np.arange(-1, 1, 0.01)
+        if 'pan_frbk' in constrains['score'].keys():
+            pans_frbk = constrains['score']['pan_frbk'](pans)
+            #print ('constrain for score, pan: ' + str(constrains['score']['pan']))
+        else:
+            pass
+            #print ('no constrain for score, pan')
+        sel_pan_frbk = np.random.choice(pans_frbk)
+        parameters['score']['pan'] = [sel_pan, sel_pan_frbk]
         if verbose:
-            print ('chosen parameter for score, pan: ' + str(sel_pan))
+            print ('chosen parameter for score, pan: ' + str(sel_pan) + ' , ' + str(sel_pan_frbk))
 
         #eq
         eqs = [True, False]  #10 ms resolution
@@ -1573,7 +1593,7 @@ class BuildScene:
     build dream scene.
     Global score contains all sounds
     '''
-    def __init__(self, max_dur=60, max_num_sounds = 100, sr=MAIN_SR):
+    def __init__(self, max_dur=60, max_num_sounds = 50, sr=MAIN_SR):
         self.max_num_sounds = max_num_sounds
         self.max_dur = 60
         self.score_resolution = 0.1  #in secs
@@ -1641,7 +1661,6 @@ class BuildScene:
                 ch_model = fixed_model
 
         if not single_model and random_diversity_flag:
-            print ('vaffanculo')
             ava = sc.check_available_models()
             possible_categories = []
             possible_models = []
@@ -1653,7 +1672,7 @@ class BuildScene:
                 possible_models.append(ch_model)
 
         #building dictionary of fixed options
-        print (sc.check_available_models())
+
         options = copy.deepcopy(sc.constrains_dict)
 
         #build_scene
@@ -1745,15 +1764,73 @@ class BuildScene:
 
         print ('\napplying global post-processing')
         mix = scene.resolve_score_stereo(global_rev=global_rev, rev_amount=global_rev_amount,
-                        global_shift=global_shift, global_stretch=global_stretch)
+                        global_shift=global_shift, global_stretch=global_stretch, verbose=verbose)
 
 
         return mix, scene.global_score
+
+    def random_build(self, neuro_choice=False, fast=True, may_stretch=False,
+                    verbose=False):
+        '''
+        build scene with random user parameters
+        '''
+        p = {}
+        p['length'] = np.random.uniform() * 0.5 + 0.5 #length starts from half dur
+        p['density'] = np.random.uniform() * 0.8 + 0.2
+        p['score_diversity'] = np.random.uniform()
+        p['sel_diversity'] = np.random.uniform()
+        p['single_model'] = np.random.choice([True, False, False, False])
+        p['fixed_category'] = 'rand'
+        p['fixed_model'] = 'rand'
+        p['neuro_choice'] = neuro_choice
+        p['fast'] = fast
+        p['carpet'] = np.random.choice([True, False])
+        p['perc_particles'] = np.random.uniform()
+        p['enhance_random'] = np.random.choice([True, False, False, False])
+        p['complete_random'] = np.random.choice([True, False, False, False])
+        p['global_rev'] = np.random.choice([True, False, False])
+        p['global_rev_amount'] = np.random.uniform() * 0.5
+        p['global_stretch_dir'] = np.random.choice([0,0,0,1])
+        global_stretch_factor = np.random.uniform() * 8
+        if may_stretch:
+            p['global_stretch'] = np.random.choice([0,0,0,0,0,0,global_stretch_factor])
+        else:
+            p['global_stretch'] = 0
+        p['global_shift_dir'] = np.random.choice([0,0,0])
+        global_shift_factor = np.random.uniform() * 48
+        p['global_shift'] = np.random.choice([0,0,0,0,global_shift_factor])
+        p['verbose'] = verbose
+
+        mix, score = self.build(length=p['length'],
+                                density=p['density'],
+                                score_diversity=p['score_diversity'],
+                                sel_diversity=p['sel_diversity'],
+                                single_model=p['single_model'],
+                                fixed_category=p['fixed_category'],
+                                fixed_model=p['fixed_model'],
+                                neuro_choice=p['neuro_choice'],
+                                fast=p['fast'],
+                                carpet=p['carpet'],
+                                perc_particles=p['perc_particles'],
+                                enhance_random=p['enhance_random'],
+                                complete_random=p['complete_random'],
+                                global_rev=p['global_rev'],
+                                global_rev_amount=p['global_rev_amount'],
+                                global_stretch_dir=p['global_stretch_dir'],
+                                global_stretch=p['global_stretch'],
+                                global_shift_dir=p['global_shift_dir'],
+                                global_shift=p['global_shift'],
+                                verbose=p['verbose'])
+
+        print (p)
+        return mix, score, p
+
 
 
 class Dream:
     '''
     build dream from scenes .
     '''
-    def __init__(self, max_dur=60, max_num_sounds = 100, sr=MAIN_SR):
-        pass
+    def __init__(self, max_dur=60, max_num_sounds=50, sr=MAIN_SR):
+        self.sr = sr
+        self.scene_builder = BuildScene(max_dur=max_dur, max_num_sounds=max_num_sounds, sr=sr)

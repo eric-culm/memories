@@ -234,6 +234,28 @@ parameters['pan']['always_left']['score']['pan'] = lambda x: [-1]
 parameters['pan']['always_right'] = copy.deepcopy(constrains_dict)
 parameters['pan']['always_right']['score']['pan'] = lambda x: [1]
 
+#PAN
+parameters['pan_frbk'] = {}
+#around center
+parameters['pan_frbk']['around_center'] = copy.deepcopy(constrains_dict)
+parameters['pan_frbk']['around_center']['score']['pan_frbk'] = lambda x: np.arange(-0.2,0.2,0.01)
+
+#towards left
+parameters['pan_frbk']['towards_back'] = copy.deepcopy(constrains_dict)
+parameters['pan_frbk']['towards_back']['score']['pan_frbk'] = lambda x: np.arange(-1,0.2,0.01)
+
+#towards right
+parameters['pan_frbk']['towards_front'] = copy.deepcopy(constrains_dict)
+parameters['pan_frbk']['towards_front']['score']['pan_frbk'] = lambda x: np.arange(0.2,1,0.01)
+
+#always left
+parameters['pan_frbk']['always_back'] = copy.deepcopy(constrains_dict)
+parameters['pan_frbk']['always_back']['score']['pan_frbk'] = lambda x: [-1]
+
+#always right
+parameters['pan_frbk']['always_front'] = copy.deepcopy(constrains_dict)
+parameters['pan_frbk']['always_front']['score']['pan_frbk'] = lambda x: [1]
+
 #EQ
 parameters['eq'] = {}
 #eq always on
