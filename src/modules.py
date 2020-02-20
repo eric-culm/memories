@@ -18,6 +18,7 @@ import sounddevice as sd
 import subprocess
 import copy
 from multiprocessing import Process
+import multiprocessing
 import time
 from concurrent.futures import ThreadPoolExecutor
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
@@ -798,6 +799,70 @@ class Postprocessing:
         end = x2[ramp:]
 
         return np.concatenate((left,center,end), axis=0)
+
+
+    def cut_silence_multichannel(self, input_vector, max_sil_len=3, sil_threshold=60):
+        '''
+        cut silence from the beginning, end of a multichannel audio file
+        and cut silence in the middle if it is longer than max_sil_len
+        '''
+
+        if len(input_vector.shape) == 1: #if mono file
+            input_vector = np.array([input_vector, input_vector])  #copy to Stereo
+
+        #cut init and final silences
+        mono_vec = np.sum(input_vector, axis=0) / np.max(input_vector)
+        split_vec = librosa.effects.split(mono_vec, top_db=sil_threshold)
+        onset = split_vec[0][0]
+        offset = split_vec[-1][-1]
+        input_vector_cut = {}
+        #cut for all input channels
+        for channel in range(len(input_vector)):
+            input_vector_cut[channel] = input_vector[channel][onset:offset] # cut beginning and ending silence
+        input_vector = []
+        #rebuild cut matrix
+        for i in input_vector_cut.keys():
+            input_vector.append(input_vector_cut[i])
+        #re-compute split_vec, since begin and end are now cut
+        mono_vec_cut = np.sum(input_vector, axis=0) / np.max(input_vector)
+        split_vec = librosa.effects.split(mono_vec, top_db=sil_threshold)
+        #cut intermediate silences longer than max_sil_len
+        #list of silence positions to be cut
+        cuts_list = []
+        if len(split_vec) > 1:
+            for i in range(len(split_vec)-1):
+                curr_end = split_vec[i][1]
+                next_start = split_vec[i+1][0]
+                dist = (next_start - curr_end) / sr
+                if dist > max_sil_len:
+                    cuts_list.append([curr_end, next_start])
+
+            #add new reduced silence
+            for k in range(len(cuts_list)):
+                len_new_silence = int(np.random.uniform() * max_sil_len * sr) #random silence time
+                len_new_silence = int(np.clip(len_new_silence, sr/2, max_sil_len * sr))
+                cuts_list[k][0] = cuts_list[k][0] + len_new_silence
+
+            #build output cutting every channel
+            output_vector = {}
+            for channel in range(len(input_vector)):
+                output_vector[channel] = input_vector[channel][:cuts_list[0][0]]
+                for cut in range(len(cuts_list)-1):
+                    output_vector[channel] = post.xfade(output_vector[channel], input_vector[channel][cuts_list[cut][1]:cuts_list[cut+1][0]], 2000)
+                output_vector[channel] = post.xfade(output_vector[channel], input_vector[channel][cuts_list[-1][1]:], 2000)
+
+            #reconstruct matrix and apply init and final fades
+            final_vector = []
+            for i in output_vector.keys():
+                final_vector.append(post.apply_fades(output_vector[i], 2000, 2000, 1.6))
+            final_vector = np.array(final_vector)
+
+        else:
+            final_vector = input_vector
+
+        return final_vector
+
+
 
     def distribute_pan_stereo(self, sounds, bounds=[0,1]):
 
@@ -1604,7 +1669,8 @@ class BuildScene:
               fixed_category='rand', fixed_model='rand', neuro_choice=False, fast=True, carpet=False,
               perc_particles=0, enhance_random=False, complete_random=False,
               global_rev=False, global_rev_amount=0.3, global_stretch_dir=0,
-              global_stretch=1, global_shift_dir=0, global_shift=0, verbose=False):
+              global_stretch=1, global_shift_dir=0, global_shift=0, verbose=False,
+              basic_prints=True):
         '''
         generate scene from macroparameters
         fast= no shift, no stretch
@@ -1676,7 +1742,8 @@ class BuildScene:
         options = copy.deepcopy(sc.constrains_dict)
 
         #build_scene
-        print ('building scene')
+        if basic_prints:
+            print ('building scene')
         index = 0
         for i in range(num_sounds):
             options_updated = copy.deepcopy(options)
@@ -1758,24 +1825,29 @@ class BuildScene:
                                                overwrite=options_updated, verbose=verbose)
 
             index += 1
-            uf.print_bar(index, num_sounds)
+            if basic_prints:
+                uf.print_bar(index, num_sounds)
 
             #end of for
-
-        print ('\napplying global post-processing')
+        if basic_prints:
+            print ('\napplying global post-processing')
         mix = scene.resolve_score_stereo(global_rev=global_rev, rev_amount=global_rev_amount,
                         global_shift=global_shift, global_stretch=global_stretch, verbose=verbose)
 
 
         return mix, scene.global_score
 
-    def random_build(self, neuro_choice=False, fast=True, may_stretch=False,
-                    verbose=False):
+    def random_build(self, length=False, neuro_choice=False, fast=True, may_stretch=False,
+                    verbose=False, basic_prints=False):
         '''
         build scene with random user parameters
         '''
         p = {}
-        p['length'] = np.random.uniform() * 0.5 + 0.5 #length starts from half dur
+        if length:
+            p['length'] = length
+        else:
+            p['length'] = np.random.uniform() * 0.5 + 0.5 #length starts from half dur
+
         p['density'] = np.random.uniform() * 0.8 + 0.2
         p['score_diversity'] = np.random.uniform()
         p['sel_diversity'] = np.random.uniform()
@@ -1820,9 +1892,10 @@ class BuildScene:
                                 global_stretch=p['global_stretch'],
                                 global_shift_dir=p['global_shift_dir'],
                                 global_shift=p['global_shift'],
-                                verbose=p['verbose'])
-
-        print (p)
+                                verbose=p['verbose'],
+                                basic_prints=basic_prints)
+        if verbose:
+            print (p)
         return mix, score, p
 
 
@@ -1831,6 +1904,64 @@ class Dream:
     '''
     build dream from scenes .
     '''
-    def __init__(self, max_dur=60, max_num_sounds=50, sr=MAIN_SR):
+    def __init__(self, scene_maxdur=60, max_num_sounds=50, sr=MAIN_SR):
         self.sr = sr
-        self.scene_builder = BuildScene(max_dur=max_dur, max_num_sounds=max_num_sounds, sr=sr)
+        self.scene_maxdur = scene_maxdur
+        self.max_num_sounds = max_num_sounds
+        self.scene_builder = BuildScene(max_dur=scene_maxdur, max_num_sounds=max_num_sounds, sr=sr)
+
+    def gen_durations(self, tot_dur, scene_maxdur):
+        #gen vector of durations
+        durations = []
+        while sum(durations) < tot_dur/scene_maxdur:
+            rand_dur = np.random.uniform(0.1,1.)
+            durations.append(rand_dur)
+        return durations
+
+    def queued_buildscene(self, length, q, neuro_choice=False, fast=True, may_stretch=False,
+                    verbose=False, basic_prints=False):
+        q.put(self.scene_builder.random_build(length=length, neuro_choice=neuro_choice,fast=fast,
+                                              may_stretch=may_stretch, verbose=verbose,
+                                              basic_prints=basic_prints))
+
+
+    def random_dream(self, dur):
+        '''
+        build dream with random parameters with a wanted duration
+        '''
+        q = multiprocessing.Queue()
+        durations = self.gen_durations(dur, self.scene_maxdur)
+        print ('builing random dream')
+        for curr_dur in durations:
+            p = multiprocessing.Process(target=self.queued_buildscene, args=(curr_dur,q,))
+            p.start()
+            uf.print_bar(index, len(durations))
+
+        sounds = []
+        #for i in range(len(durations))
+        print ('CAZZOOOOOOO0O0O0O00O0O0O0O00O00O0O00O000O0O')
+        #print (len(q))
+        p.join()
+        #q.get()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#fottiti
