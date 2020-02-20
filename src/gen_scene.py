@@ -13,12 +13,14 @@ allocator = Allocator(server_shared_path='../shared', sr=44100,
 post = Postprocessing()
 
 choice_dict = {'instrumental': ['pianoDreamy', 'pianoChill', 'pianoSmooth']}
-
+dream = Dream()
 scene.gen_macro()
 build = BuildScene()
+a = dream.gen_durations(60*60, 60)
+print ('cazzo', len(a))
 '''
-mix, score = build.build(length=0.6,
-                  density=0.4,
+mix, score = build.build(length=1,
+                  density=0.9,
                   score_diversity=0.4,
                   sel_diversity=0.2,
                   single_model=False,
@@ -38,7 +40,8 @@ mix, score = build.build(length=0.6,
                   global_shift=0,
                   verbose=True)
 '''
-mix, score, p = build.random_build()
+mix, score, p = build.random_build(length=1)
+
 print ('sfiget')
 print (mix.shape)
 allocator.write_local(mix, 'coglionazzo')

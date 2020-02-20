@@ -801,7 +801,7 @@ class Postprocessing:
         return np.concatenate((left,center,end), axis=0)
 
 
-    def cut_silence_multichannel(self, input_vector, max_sil_len=3, sil_threshold=60):
+    def cut_silence_multichannel(self, input_vector, max_sil_len=3, sil_threshold=40):
         '''
         cut silence from the beginning, end of a multichannel audio file
         and cut silence in the middle if it is longer than max_sil_len
@@ -825,7 +825,7 @@ class Postprocessing:
             input_vector.append(input_vector_cut[i])
         #re-compute split_vec, since begin and end are now cut
         mono_vec_cut = np.sum(input_vector, axis=0) / np.max(input_vector)
-        split_vec = librosa.effects.split(mono_vec, top_db=sil_threshold)
+        split_vec = librosa.effects.split(mono_vec_cut, top_db=sil_threshold)
         #cut intermediate silences longer than max_sil_len
         #list of silence positions to be cut
         cuts_list = []
@@ -833,32 +833,35 @@ class Postprocessing:
             for i in range(len(split_vec)-1):
                 curr_end = split_vec[i][1]
                 next_start = split_vec[i+1][0]
-                dist = (next_start - curr_end) / sr
+                dist = (next_start - curr_end) / self.sr
                 if dist > max_sil_len:
                     cuts_list.append([curr_end, next_start])
 
             #add new reduced silence
             for k in range(len(cuts_list)):
-                len_new_silence = int(np.random.uniform() * max_sil_len * sr) #random silence time
-                len_new_silence = int(np.clip(len_new_silence, sr/2, max_sil_len * sr))
+                len_new_silence = int(np.random.uniform() * max_sil_len * self.sr) #random silence time
+                len_new_silence = int(np.clip(len_new_silence, self.sr/2, max_sil_len * self.sr))
                 cuts_list[k][0] = cuts_list[k][0] + len_new_silence
 
-            #build output cutting every channel
-            output_vector = {}
-            for channel in range(len(input_vector)):
-                output_vector[channel] = input_vector[channel][:cuts_list[0][0]]
-                for cut in range(len(cuts_list)-1):
-                    output_vector[channel] = post.xfade(output_vector[channel], input_vector[channel][cuts_list[cut][1]:cuts_list[cut+1][0]], 2000)
-                output_vector[channel] = post.xfade(output_vector[channel], input_vector[channel][cuts_list[-1][1]:], 2000)
+            if len(cuts_list) > 0:  #if there are silences longer than max_sil_len
+                #build output cutting every channel
+                output_vector = {}
+                for channel in range(len(input_vector)):
+                    output_vector[channel] = input_vector[channel][:cuts_list[0][0]]
+                    for cut in range(len(cuts_list)-1):
+                        output_vector[channel] = self.xfade(output_vector[channel], input_vector[channel][cuts_list[cut][1]:cuts_list[cut+1][0]], 2000)
+                    output_vector[channel] = self.xfade(output_vector[channel], input_vector[channel][cuts_list[-1][1]:], 2000)
 
-            #reconstruct matrix and apply init and final fades
-            final_vector = []
-            for i in output_vector.keys():
-                final_vector.append(post.apply_fades(output_vector[i], 2000, 2000, 1.6))
-            final_vector = np.array(final_vector)
+                #reconstruct matrix and apply init and final fades
+                final_vector = []
+                for i in output_vector.keys():
+                    final_vector.append(self.apply_fades(output_vector[i], 2000, 2000, 1.6))
+                final_vector = np.array(final_vector)
+            else:
+                final_vector = np.array(input_vector)
 
         else:
-            final_vector = input_vector
+            final_vector = np.array(input_vector)
 
         return final_vector
 
@@ -1624,6 +1627,8 @@ class Scene:
 
         #fade_in
         fade_ins = np.arange(0, sel_score_dur*1000/2,1)
+        if len(fade_ins) == 0:
+            fade_ins = np.arange(50, 100)
         if 'fade_in' in constrains['score'].keys():
             fade_ins = constrains['score']['fade_in'](fade_ins)
             #print ('constrain for score, fade_in: ' + str(constrains['score']['fade_in']))
@@ -1637,6 +1642,8 @@ class Scene:
 
         #fade_out
         fade_outs = np.arange(sel_score_dur*1000/4, sel_score_dur*1000/2,1)
+        if len(fade_outs) == 0:
+            fade_outs = np.arange(50, 100)
         if 'fade_out' in constrains['score'].keys():
             fade_out = constrains['score']['fade_out'](fade_outs)
             #print ('constrain for score, fade_out: ' + str(constrains['score']['fade_out']))
@@ -1664,8 +1671,9 @@ class BuildScene:
         self.score_resolution = 0.1  #in secs
         self.score_length = 1000
         self.sr=sr
+        self.post = Postprocessing(sr)
 
-    def build(self, length, density, score_diversity, sel_diversity, single_model=False,
+    def build(self, length, density, score_diversity, sel_diversity, cut_silence=True, single_model=False,
               fixed_category='rand', fixed_model='rand', neuro_choice=False, fast=True, carpet=False,
               perc_particles=0, enhance_random=False, complete_random=False,
               global_rev=False, global_rev_amount=0.3, global_stretch_dir=0,
@@ -1834,11 +1842,15 @@ class BuildScene:
         mix = scene.resolve_score_stereo(global_rev=global_rev, rev_amount=global_rev_amount,
                         global_shift=global_shift, global_stretch=global_stretch, verbose=verbose)
 
+        if cut_silence:
+            #print ('before cut', mix.shape)
+            mix = self.post.cut_silence_multichannel(mix)
+            #print ('after cut', mix.shape)
 
         return mix, scene.global_score
 
-    def random_build(self, length=False, neuro_choice=False, fast=True, may_stretch=False,
-                    verbose=False, basic_prints=False):
+    def random_build(self, length=False, cut_silence=True, neuro_choice=False, fast=True, may_stretch=False,
+                    verbose=False, basic_prints=True):
         '''
         build scene with random user parameters
         '''
@@ -1880,6 +1892,7 @@ class BuildScene:
                                 single_model=p['single_model'],
                                 fixed_category=p['fixed_category'],
                                 fixed_model=p['fixed_model'],
+                                cut_silence=cut_silence,
                                 neuro_choice=p['neuro_choice'],
                                 fast=p['fast'],
                                 carpet=p['carpet'],
@@ -1896,6 +1909,8 @@ class BuildScene:
                                 basic_prints=basic_prints)
         if verbose:
             print (p)
+
+
         return mix, score, p
 
 
@@ -1909,7 +1924,7 @@ class Dream:
         self.scene_maxdur = scene_maxdur
         self.max_num_sounds = max_num_sounds
         self.scene_builder = BuildScene(max_dur=scene_maxdur, max_num_sounds=max_num_sounds, sr=sr)
-
+        self.post = Postprocessing(sr)
     def gen_durations(self, tot_dur, scene_maxdur):
         #gen vector of durations
         durations = []
@@ -1918,31 +1933,38 @@ class Dream:
             durations.append(rand_dur)
         return durations
 
-    def queued_buildscene(self, length, q, neuro_choice=False, fast=True, may_stretch=False,
-                    verbose=False, basic_prints=False):
-        q.put(self.scene_builder.random_build(length=length, neuro_choice=neuro_choice,fast=fast,
-                                              may_stretch=may_stretch, verbose=verbose,
-                                              basic_prints=basic_prints))
+
+    def compute_soundslist(self, durations_list, num_workers=8, verbose=False):
+        '''
+        compute sounds of lenghts present in durations_list
+        '''
+        sounds_list = []
+        def callback_append(msp):
+            mix, score, par = msp
+            sounds_list.append(mix)
+
+        pool = multiprocessing.Pool(processes=num_workers)
+        print ('builing random dream')
+        print ('scene durations:')
+        print (durations_list)
+        #compute sounds in multithread
+        for curr_dur in durations_list:
+            print(pool._outqueue)
+            pool.apply_async(self.scene_builder.random_build, (curr_dur,), callback=callback_append)
+        pool.close()
+        pool.join()
+
+        return sounds_list
 
 
     def random_dream(self, dur):
         '''
         build dream with random parameters with a wanted duration
         '''
-        q = multiprocessing.Queue()
-        durations = self.gen_durations(dur, self.scene_maxdur)
-        print ('builing random dream')
-        for curr_dur in durations:
-            p = multiprocessing.Process(target=self.queued_buildscene, args=(curr_dur,q,))
-            p.start()
-            uf.print_bar(index, len(durations))
-
-        sounds = []
-        #for i in range(len(durations))
-        print ('CAZZOOOOOOO0O0O0O00O0O0O0O00O00O0O00O000O0O')
-        #print (len(q))
-        p.join()
-        #q.get()
+        durations_list = self.gen_durations(dur, self.scene_maxdur)
+        sounds_list = self.compute_soundslist(durations_list)
+        for i in sounds_list:
+            print (i.shape)
 
 
 

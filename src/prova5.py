@@ -11,4 +11,4 @@ post = Postprocessing()
 build = BuildScene()
 dream = Dream()
 
-dream.random_dream(2*60)
+dream.random_dream(1*60)
