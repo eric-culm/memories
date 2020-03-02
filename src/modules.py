@@ -785,11 +785,13 @@ class Postprocessing:
 
         return random_sound
 
-    def xfade(self, x1, x2, ramp):
+    def xfade(self, x1, x2, ramp, exp=1.):
         #simple linear crossfade and concatenation
         out = []
         fadein = np.arange(ramp) / ramp
         fadeout = np.arange(ramp, 0, -1) / ramp
+        fade_in = fadein * exp
+        fade_out = fadeout * exp
 
         x1[-ramp:] = x1[-ramp:] * fadeout
         x2[:ramp] = x2[:ramp] * fadein
@@ -1869,7 +1871,11 @@ class BuildScene:
         p['neuro_choice'] = neuro_choice
         p['fast'] = fast
         p['carpet'] = np.random.choice([True, False])
-        p['perc_particles'] = np.random.uniform()
+        particles_flag = np.random.choice([True, False])
+        if particles_flag:
+            p['perc_particles'] = np.random.uniform()
+        else:
+            p['perc_particles'] = 0.
         p['enhance_random'] = np.random.choice([True, False, False, False])
         p['complete_random'] = np.random.choice([True, False, False, False])
         p['global_rev'] = np.random.choice([True, False, False])
@@ -1925,6 +1931,7 @@ class Dream:
         self.max_num_sounds = max_num_sounds
         self.scene_builder = BuildScene(max_dur=scene_maxdur, max_num_sounds=max_num_sounds, sr=sr)
         self.post = Postprocessing(sr)
+
     def gen_durations(self, tot_dur, scene_maxdur):
         #gen vector of durations
         durations = []
@@ -1933,8 +1940,8 @@ class Dream:
             durations.append(rand_dur)
         return durations
 
-
-    def compute_soundslist(self, durations_list, num_workers=8, verbose=False):
+    def compute_soundslist(self, durations_list, num_workers=8, verbose=False,
+                            neuro_choice=False, fast=False, global_stretches=False):
         '''
         compute sounds of lenghts present in durations_list
         '''
@@ -1944,27 +1951,47 @@ class Dream:
             sounds_list.append(mix)
 
         pool = multiprocessing.Pool(processes=num_workers)
-        print ('builing random dream')
         print ('scene durations:')
         print (durations_list)
         #compute sounds in multithread
         for curr_dur in durations_list:
             print(pool._outqueue)
-            pool.apply_async(self.scene_builder.random_build, (curr_dur,), callback=callback_append)
+            pool.apply_async(self.scene_builder.random_build, (curr_dur,True,neuro_choice,fast,global_stretches,), callback=callback_append)
         pool.close()
         pool.join()
 
         return sounds_list
 
-
-    def random_dream(self, dur):
+    def random_dream(self, dur, neuro_choice=False, fast=True, global_stretches=False):
         '''
         build dream with random parameters with a wanted duration
         '''
+        print ('builing random dream')
         durations_list = self.gen_durations(dur, self.scene_maxdur)
-        sounds_list = self.compute_soundslist(durations_list)
-        for i in sounds_list:
-            print (i.shape)
+        sounds_list = self.compute_soundslist(durations_list, neuro_choice=neuro_choice,
+                                            fast=fast, global_stretches=global_stretches)
+        random.shuffle(sounds_list)
+        output_vec_L = sounds_list[0][0]
+        output_vec_R = sounds_list[0][1]
+        print ('concatenating scenes')
+        for i in range(len(sounds_list)-1):
+            curr_len = sounds_list[i].shape[-1]
+            next_len = sounds_list[i+1].shape[-1]
+            #xfade time random between 1/10 and 1/2 of the smallest sound
+            shorter = min(curr_len, next_len)
+            xfade_time = np.random.randint(shorter/10, shorter/2)
+            output_vec_L = self.post.xfade(output_vec_L, sounds_list[i+1][0], xfade_time)
+            output_vec_R = self.post.xfade(output_vec_R, sounds_list[i+1][1], xfade_time)
+
+        #fade in-out for pops
+        output_vec_L = self.post.apply_fades(output_vec_L, 2000, 2000)
+        output_vec_R = self.post.apply_fades(output_vec_R, 2000, 2000)
+
+        output_vec = np.array([output_vec_L, output_vec_R])
+        output_vec = self.post.cut_silence_multichannel(output_vec)
+
+        return output_vec
+
 
 
 
