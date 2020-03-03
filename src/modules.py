@@ -867,7 +867,30 @@ class Postprocessing:
 
         return final_vector
 
+    def brill(input_vector, sr=44100, in_sr=26000, fft_size=4096):
+        '''
+        copy upper spectrum of a low-sr sound
+        to roughly reconstruct missing upper freqs
+        '''
+        binsize = sr / fft_size
+        bin_limit = int(np.floor(in_sr / binsize / 2)-10) #last bin with freq
+        hole_size = int(fft_size/2 - bin_limit) #empty bins
+        out_signal = []
+        if len(input_vector.shape) > 1:
+            channels = input_vector.shape[0]
+        else:
+            channels = 1
+            input_vector = np.expand_dims(input_vector, axis=0)
 
+        for i in range(channels):
+            stft = librosa.core.stft(samples[i], n_fft=fft_size)
+            stft[bin_limit:bin_limit+hole_size] = stft[bin_limit-hole_size:bin_limit]
+            signal = librosa.core.istft(stft)
+            out_signal.append(signal)
+
+        out_signal = np.array(out_signal)
+
+        return out_signal
 
     def distribute_pan_stereo(self, sounds, bounds=[0,1]):
 

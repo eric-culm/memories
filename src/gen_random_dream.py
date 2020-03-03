@@ -10,9 +10,9 @@ allocator = Allocator(server_shared_path='../shared', sr=44100,
 post = Postprocessing()
 build = BuildScene()
 #dream = Dream(scene_maxdur=60, max_num_sounds=50)
-choice_dict = {'instrumental': ['percsWar']}
+choice_dict = {'instrumental': ['pianoDreamy']}
 
 dream = Dream(scene_maxdur=60, max_num_sounds=50)
 
-mix = dream.random_dream(10*60, neuro_choice=choice_dict)
+mix = dream.random_dream(10*60, neuro_choice=False)
 allocator.write_local(mix, 'straculo')
