@@ -15,4 +15,4 @@ choice_dict = {'instrumental': ['pianoDreamy']}
 dream = Dream(scene_maxdur=60, max_num_sounds=50)
 
 mix = dream.random_dream(10*60, neuro_choice=False)
-allocator.write_local(mix, 'straculo')
+allocator.write_local(mix, 'stramerda2')

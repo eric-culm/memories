@@ -115,9 +115,6 @@ def check_available_models(models_folder=SRNN_DATA_PATH):
     return available
 
 
-
-
-
 #SOUND SELECTION CONSTRAINS
 parameters['selection_type'] = {}
 parameters['selection_length'] = {}
