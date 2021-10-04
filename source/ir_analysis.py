@@ -48,9 +48,10 @@ analysis_file_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
 np.save(analysis_file_path, ir_lengths)
 print (ir_lengths)
 
-
+'''
 import matplotlib.pyplot as plt
 import numpy as np
 plt.title('REVERB LENGTHS')
 plt.hist(lens, normed=True)
 plt.show()
+'''
