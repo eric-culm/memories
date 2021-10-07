@@ -30,8 +30,8 @@ class GenDream(cog.Predictor):
     @cog.input("enhance_random", type=bool, default=False, help="If true some unpredictable parameters are set to random")
     @cog.input("complete_random", type=bool, default=False, help="If true everything is random despite what is selected in the UI")
     @cog.input("global_rev_amount", type=float, default=0.1, help="Amount of global reverb [range 0-1]")
-    @cog.input("global_stretch", type=float, default=0., help="Amount of time stretching. Negative to shorten, positive to increase duration")
-    @cog.input("global_shift", type=float, default=0., help="Amount of pitch shifting. Negative to lower, positive to increase pitch")
+    @cog.input("global_stretch", type=float, default=0, help="Amount of time stretching. Negative to shorten, positive to increase duration")
+    @cog.input("global_shift", type=float, default=0, help="Amount of pitch shifting. Negative to lower, positive to increase pitch")
     @cog.input("output_type", type=str, default='mp3', options=["wav", "mp3"], help="Wav or mp3 output")
 
     def predict(self, type, length, fast, max_num_sounds, memories_instrumental,
@@ -40,6 +40,7 @@ class GenDream(cog.Predictor):
                     global_stretch, global_shift):
         """Compute dream!!"""
         #init paths and classes
+        print ('COGLIONE!!!', fast)
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
         self.build = BuildScene(max_dur=60*length, max_num_sounds=max_num_sounds)

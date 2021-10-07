@@ -15,6 +15,7 @@ build:
   run:
     - "pip install audtorch"
   system_packages:
+    - sox
     - ffmpeg
     - libportaudio2
     - rubberband-cli

@@ -55,6 +55,7 @@ VAE_DIM = cfg.getint('vae', 'env_length_preprocessing')
 
 
 
+
 class Memory:
     '''
     long-term short-term and real-time memory bags of the system
@@ -1253,7 +1254,7 @@ class Scene:
                                    'sounds', 'dur_' + str(dur), 'model_' + str(variation))
         sounds_path = os.path.abspath(sounds_path)
         sounds = os.listdir(sounds_path)
-        sounds = list(filter(lambda x: '.wav' in x, sounds))
+        sounds = list(filter(lambda x: '.wav' in x or '.mp3' in x, sounds))
         chosen = random.choice(sounds)
         chosen_path = os.path.abspath(os.path.join(sounds_path, chosen))
         samples, sr = librosa.core.load(chosen_path, sr=self.sr)
@@ -1963,7 +1964,7 @@ class Dream:
             durations.append(rand_dur)
         return durations
 
-    def compute_soundslist(self, durations_list, num_workers=8, verbose=False,
+    def compute_soundslist(self, durations_list, num_workers=32, verbose=False,
                             neuro_choice=False, fast=False, global_stretches=False):
         '''
         compute sounds of lenghts present in durations_list
