@@ -65,9 +65,8 @@ class GenDream(cog.Predictor):
         global_rev_amount,
         global_stretch,
         global_shift,
-        cut_silence,
-    ):
-        """Compute dream!!"""
+        cut_silence):
+        """Compute dream"""
         # init paths and classes
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
