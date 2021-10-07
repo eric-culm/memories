@@ -1693,7 +1693,7 @@ class BuildScene:
     '''
     def __init__(self, max_dur=60, max_num_sounds = 50, sr=MAIN_SR):
         self.max_num_sounds = max_num_sounds
-        self.max_dur = 60
+        self.max_dur = max_dur
         self.score_resolution = 0.1  #in secs
         self.score_length = 1000
         self.sr=sr
@@ -1964,7 +1964,7 @@ class Dream:
             durations.append(rand_dur)
         return durations
 
-    def compute_soundslist(self, durations_list, num_workers=32, verbose=False,
+    def compute_soundslist(self, durations_list, num_workers=8, verbose=False,
                             neuro_choice=False, fast=False, global_stretches=False):
         '''
         compute sounds of lenghts present in durations_list

@@ -12,7 +12,8 @@ build = BuildScene()
 #dream = Dream(scene_maxdur=60, max_num_sounds=50)
 choice_dict = {'instrumental': ['pianoDreamy']}
 
-dream = Dream(scene_maxdur=20, max_num_sounds=50)
+dream = Dream(scene_maxdur=60, max_num_sounds=50)
 
-mix = dream.random_dream(10*60, neuro_choice=choice_dict)
-allocator.write_local(mix, 'booooooo')
+mix = dream.random_dream(1*60, neuro_choice=choice_dict)
+print("cwefdf")
+#allocator.write_local(mix, 'booooooo')

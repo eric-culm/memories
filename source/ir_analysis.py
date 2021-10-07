@@ -22,36 +22,41 @@ def strip_silence(input_vector, threshold=60):
 
     return cut
 
-contents = list(filter(lambda x: '.wav' in x,os.listdir(IRS_PATH)))
-index = 0
-print ('analysis:')
-for i in contents:
-    curr_path = os.path.abspath(os.path.join(IRS_PATH, i))
-    curr_sound, dummy = librosa.core.load(curr_path, sr=MAIN_SR)
-    cut = strip_silence(curr_sound)
-    curr_len = len(cut) / MAIN_SR
-    lens.append(curr_len)
-    if curr_len <= 0.5:
-        ir_lengths[0].append(curr_path)
-    elif curr_len > 0.5 and curr_len <= 1.:
-        ir_lengths[1].append(curr_path)
-    elif curr_len > 1. and curr_len <= 1.5:
-        ir_lengths[2].append(curr_path)
-    elif curr_len > 1.5 and curr_len <= 2.:
-        ir_lengths[3].append(curr_path)
-    elif curr_len > 2.:
-        ir_lengths[4].append(curr_path)
-    uf.print_bar(index, len(contents))
-    index += 1
+def analyze_irs(verbose=False):
+    contents = list(filter(lambda x: '.wav' in x,os.listdir(IRS_PATH)))
+    index = 0
+    print ('analysis:')
+    for i in contents:
+        curr_path = os.path.abspath(os.path.join(IRS_PATH, i))
+        curr_sound, dummy = librosa.core.load(curr_path, sr=MAIN_SR)
+        cut = strip_silence(curr_sound)
+        curr_len = len(cut) / MAIN_SR
+        lens.append(curr_len)
+        if curr_len <= 0.5:
+            ir_lengths[0].append(curr_path)
+        elif curr_len > 0.5 and curr_len <= 1.:
+            ir_lengths[1].append(curr_path)
+        elif curr_len > 1. and curr_len <= 1.5:
+            ir_lengths[2].append(curr_path)
+        elif curr_len > 1.5 and curr_len <= 2.:
+            ir_lengths[3].append(curr_path)
+        elif curr_len > 2.:
+            ir_lengths[4].append(curr_path)
+        uf.print_bar(index, len(contents))
+        index += 1
 
-analysis_file_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
-np.save(analysis_file_path, ir_lengths)
-print (ir_lengths)
+    analysis_file_path = os.path.join(IRS_PATH, 'ir_analysis.npy')
+    np.save(analysis_file_path, ir_lengths)
+    if verbose:
+        print (ir_lengths)
 
-'''
-import matplotlib.pyplot as plt
-import numpy as np
-plt.title('REVERB LENGTHS')
-plt.hist(lens, normed=True)
-plt.show()
-'''
+    '''
+    import matplotlib.pyplot as plt
+    import numpy as np
+    plt.title('REVERB LENGTHS')
+    plt.hist(lens, normed=True)
+    plt.show()
+    '''
+
+if __name__ == '__main__':
+    analyze_irs()
