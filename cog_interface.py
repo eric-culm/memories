@@ -20,8 +20,8 @@ class GenDream(cog.Predictor):
     @cog.input("length", type=int, default=60, help="Soundfile length in minutes")
     @cog.input("fast", type=bool, default=True, help="If True disables the most resource-demanding processes to speed up generation")
     @cog.input("max_num_sounds", type=int, default=50, help="Maximum number of simultaneous sounds")
-    @cog.input("memories_instrumental", type=str, default='all', help="Type of instrumental memories that can occur in the dream. List of strings. Options: 'all', 'africanPercs', 'ambient1', 'buchla', 'buchla2', 'classical', 'classical2', 'guitarAcoustic', 'guitarBaroque', 'jazz', 'organ', 'percsWar', 'percussions', 'pianoChill', 'pianoDreamy', 'pianoSmooth'")
-    @cog.input("memories_soundscape", type=str, default='all', help="Type of soundscape memories that can occur in the dream. List of strings. Options: 'all', airport', 'birdsStreet', 'forest', 'library', 'mixed', 'office', 'rain', 'sea', 'train', 'wind'")
+    @cog.input("memories_instrumental", type=str, default='all', help="Type of instrumental memories that can occur in the dream. Should be a list of strings. Options: 'all', 'africanPercs', 'ambient1', 'buchla', 'buchla2', 'classical', 'classical2', 'guitarAcoustic', 'guitarBaroque', 'jazz', 'organ', 'percsWar', 'percussions', 'pianoChill', 'pianoDreamy', 'pianoSmooth'")
+    @cog.input("memories_soundscape", type=str, default='all', help="Type of soundscape memories that can occur in the dream. Should be a list of strings. Options: 'all', airport', 'birdsStreet', 'forest', 'library', 'mixed', 'office', 'rain', 'sea', 'train', 'wind'")
     @cog.input("density", type=float, default=0.2, help="Density of sound events [range 0-1]")
     @cog.input("score_diversity", type=float, default=0.2, help="Diversity of sound archetye choice [range 0-1]")
     @cog.input("timbre_diversity", type=float, default=0.2, help="Diversity of chosen timbres")
@@ -40,7 +40,6 @@ class GenDream(cog.Predictor):
                     global_stretch, global_shift):
         """Compute dream!!"""
         #init paths and classes
-        print ('COGLIONE!!!', fast)
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
         self.build = BuildScene(max_dur=60*length, max_num_sounds=max_num_sounds)
