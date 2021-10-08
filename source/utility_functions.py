@@ -17,7 +17,6 @@ import pydub
 
 config = os.path.abspath(loadconfig.load())
 
-print (config, "DCVFIEGRNWJEON")
 cfg = configparser.ConfigParser()
 cfg.read(config)
 
