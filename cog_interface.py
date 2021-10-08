@@ -26,25 +26,131 @@ class GenDream(cog.Predictor):
         print("creating IR analysis file")
         analyze_irs()
 
-    @cog.input("type", type=str, default="episode", options=["episode","dream"], help="Type of file to generate. Episode is a single scenario, dream is a concatenation of episodes. For 'dream' only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories_instrumental', 'memories_soundscape' parameters have an effect")
-    @cog.input("dream_length", type=float, default=3, help="Soundfile length in minutes (approximative), only for dream type")
-    @cog.input("max_episode_length", type=int, default=60, min=20, max=60, help="Maximum episodes duration in seconds")
-    @cog.input("fast", type=bool, default=True, help="If True disables the most resource-demanding processes to speed up generation")
-    @cog.input("max_num_sounds", type=int, default=50, min=0, max=300, help="Maximum number of simultaneous sounds")
-    @cog.input("memories_instrumental", type=str, default='all', help="Type of instrumental memories that can occur in the dream. Should be a list of strings. Options: 'all', 'none', 'africanPercs', 'ambient1', 'buchla', 'buchla2', 'classical', 'classical2', 'guitarAcoustic', 'guitarBaroque', 'jazz', 'organ', 'percsWar', 'percussions', 'pianoChill', 'pianoDreamy', 'pianoSmooth'")
-    @cog.input("memories_soundscape", type=str, default='all', help="Type of soundscape memories that can occur in the dream. Should be a list of strings. Options: 'all', 'none', airport', 'birdsStreet', 'forest', 'library', 'mixed', 'office', 'rain', 'sea', 'train', 'wind'")
-    @cog.input("density", type=float, default=0.8, min=0, max=1, help="Density of sound events [range 0-1]")
-    @cog.input("score_diversity", type=float, default=0.6, min=0, max=1, help="Diversity of sound archetypes choice [range 0-1]")
-    @cog.input("timbre_diversity", type=float, default=0.6, min=0, max=1, help="Diversity of chosen timbres")
-    @cog.input("carpet", type=bool, default=True, help="If True it is very probable that there is always a long sound at low volume")
-    @cog.input("perc_particles", type=float, default=0.5, min=0, max=1, help="Probability of having fast and percussive sounds")
-    @cog.input("enhance_random", type=bool, default=False, help="If true some unpredictable parameters are set to random")
-    @cog.input("complete_random", type=bool, default=False, help="If true everything is random despite what is selected in the UI")
-    @cog.input("global_rev_amount", type=float, default=0.1, min=0, max=1, help="Amount of global reverb [range 0-1]")
-    @cog.input("global_stretch", type=float, default=0, help="Amount of global time stretching. Negative to shorten, positive to lengthen duration")
-    @cog.input("global_shift", type=float, default=0, help="Amount of global pitch shifting. Negative to decrease, positive to increase pitch")
-    @cog.input("output_type", type=str, default='wav', options=["wav", "mp3"], help="Wav or mp3 output")
-    @cog.input("cut_silence", type=bool, default=True, help="Cut all silences longer than 5 seconds")
+    @cog.input(
+        "type",
+        type=str,
+        default="episode",
+        options=["episode", "dream"],
+        help="Type of file to generate. Episode is a single scenario, dream is a concatenation of episodes. For 'dream' only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories_instrumental', 'memories_soundscape' parameters have an effect",
+    )
+    @cog.input(
+        "dream_length",
+        type=float,
+        default=3,
+        help="Soundfile length in minutes (approximative), only for dream type",
+    )
+    @cog.input(
+        "max_episode_length",
+        type=int,
+        default=60,
+        min=20,
+        max=60,
+        help="Maximum episodes duration in seconds",
+    )
+    @cog.input(
+        "max_num_sounds",
+        type=int,
+        default=50,
+        min=0,
+        max=300,
+        help="Maximum number of simultaneous sounds",
+    )
+    @cog.input(
+        "memories",
+        type=str,
+        default="all",
+        help="Type of memories that can occur in the dream. Should be a list of strings. Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
+    )
+
+    @cog.input(
+        "density",
+        type=float,
+        default=0.8,
+        min=0,
+        max=1,
+        help="Density of sound events [range 0-1]",
+    )
+    @cog.input(
+        "score_diversity",
+        type=float,
+        default=0.6,
+        min=0,
+        max=1,
+        help="Diversity of sound archetypes choice [range 0-1]",
+    )
+    @cog.input(
+        "timbre_diversity",
+        type=float,
+        default=0.6,
+        min=0,
+        max=1,
+        help="Diversity of chosen timbres",
+    )
+    @cog.input(
+        "carpet",
+        type=bool,
+        default=True,
+        help="If True it is very probable that there is always a long sound at low volume",
+    )
+    @cog.input(
+        "perc_particles",
+        type=float,
+        default=0.5,
+        min=0,
+        max=1,
+        help="Probability of having fast and percussive sounds",
+    )
+    @cog.input(
+        "enhance_random",
+        type=bool,
+        default=False,
+        help="If true some unpredictable parameters are set to random",
+    )
+    @cog.input(
+        "complete_random",
+        type=bool,
+        default=False,
+        help="If true everything is random despite what is selected in the UI",
+    )
+    @cog.input(
+        "global_rev_amount",
+        type=float,
+        default=0.1,
+        min=0,
+        max=1,
+        help="Amount of global reverb [range 0-1]",
+    )
+    @cog.input(
+        "global_stretch",
+        type=float,
+        default=0,
+        help="Amount of global time stretching. Negative to shorten, positive to lengthen duration",
+    )
+    @cog.input(
+        "global_shift",
+        type=float,
+        default=0,
+        help="Amount of global pitch shifting. Negative to decrease, positive to increase pitch",
+    )
+    @cog.input(
+        "output_type",
+        type=str,
+        default="wav",
+        options=["wav", "mp3"],
+        help="Wav or mp3 output",
+    )
+    @cog.input(
+        "fast",
+        type=bool,
+        default=True,
+        help="If True disables the most resource-demanding processes to speed up generation",
+    )
+    @cog.input(
+        "cut_silence",
+        type=bool,
+        default=True,
+        help="Cut all silences longer than 5 seconds",
+    )
     def predict(
         self,
         type,
@@ -52,8 +158,7 @@ class GenDream(cog.Predictor):
         max_episode_length,
         fast,
         max_num_sounds,
-        memories_instrumental,
-        memories_soundscape,
+        memories,
         output_type,
         density,
         score_diversity,
@@ -65,7 +170,8 @@ class GenDream(cog.Predictor):
         global_rev_amount,
         global_stretch,
         global_shift,
-        cut_silence):
+        cut_silence,
+    ):
         """Compute dream"""
         # init paths and classes
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
@@ -78,28 +184,30 @@ class GenDream(cog.Predictor):
         )
         self.post = Postprocessing()
 
-        choice_dict = {}
-        # create memories dict
-        if memories_instrumental == "none" and memories_soundscape == "none":
-            raise ValueError(
-                "There must be at least one memory to build a dream or episode"
-            )
-        else:
-            if memories_instrumental == "all":
-                choice_dict["instrumental"] = sc.check_available_models()[
-                    "instrumental"
-                ]
-            elif memories_instrumental == "none":
-                pass
-            else:
-                choice_dict["instrumental"] = memories_instrumental.split(",")
+        memories = memories.replace(" ", "")
 
-            if memories_soundscape == "all":
-                choice_dict["fieldrec"] = sc.check_available_models()["fieldrec"]
-            elif memories_soundscape == "none":
-                pass
-            else:
-                choice_dict["fieldrec"] = memories_soundscape.split(",")
+        if 'all' in memories:
+            choice_dict = sc.check_available_models()
+        else:
+            choice_dict = {"instrumental": [], "fieldrec": []}
+            available_instrumental = sc.check_available_models()["instrumental"]
+            available_fieldrec = sc.check_available_models()["fieldrec"]
+
+            memories = memories.split(",")
+            print (available_instrumental)
+            print (available_fieldrec)
+
+            for i in memories:
+                print (i)
+                if i in available_instrumental:
+                    choice_dict["instrumental"].append(i)
+                if i in available_fieldrec:
+                    choice_dict["fieldrec"].append(i)
+
+            if choice_dict["instrumental"] == []:
+                choice_dict.pop("instrumental")
+            if choice_dict["fieldrec"] == []:
+                choice_dict.pop("fieldrec")
 
         print("Memories dict: ", choice_dict)
 
