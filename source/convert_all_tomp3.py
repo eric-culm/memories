@@ -13,7 +13,7 @@ cfg.read(config)
 SRNN_DATA_PATH = cfg.get('samplernn', 'samplernn_data_path')
 
 folders_macro = ['instrumental', 'fieldrec']
-folders_macro_wav = [os.path.join(SRNN_DATA_PATH, i) for i in folders_macro]
+folders_macro_wav = [os.path.join('srnn_data', i) for i in folders_macro]
 
 
 a = 'srnn_data/fieldrec/birdsStreet/sounds/dur_30/model_1/ep01-02-2020_05:10:50-s37.wav'
@@ -41,6 +41,7 @@ def convert_to_mp3(wavname, mp3name):
 
 pool = multiprocessing.Pool(processes=32)
 count = 0
+
 for i in folders_macro_wav:
     contents = os.listdir(i)
     contents = [s for s in contents if '.DS_Store' not in s]
