@@ -19,3 +19,10 @@ In fact, the sound elements present in Reckon resemble blurred memories, remotel
 On the other hand a semi-entropic apparatus controls SampleRNN and selects, re-elaborates, concatenate and overlaps sound memories to compose digital audio dreams. To perform this operation, the system auto-defines a hierarchy of complex semi-random rules through which create a semantic evolution of the sound material in a similar way to how happens in human biologic dreams.
 
 ## Usage
+
+With the UI parameters you have broad control on many macro details of the generated dreams. Although a big part of the process is aleatory, so the output will be always a bit unpredictable.
+
+### User parameters
+
+* cazzo
+* m,erda
