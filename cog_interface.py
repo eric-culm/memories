@@ -27,11 +27,11 @@ class GenDream(cog.Predictor):
         analyze_irs()
 
     @cog.input(
-        "type",
+        "sleep_type",
         type=str,
-        default="episode",
-        options=["episode", "dream"],
-        help="Type of file to generate. Episode is a single scenario, dream is a concatenation of episodes. For 'dream' only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories', parameters have an effect",
+        default="consciuos",
+        options=["consciuos", "unconscious"],
+        help="Type of AI dream. 'conscious' for shorter dreams with all UI controls, 'unconsciuous' for longer bu more unpredictable outputs",
     )
     @cog.input(
         "memories",
@@ -40,18 +40,18 @@ class GenDream(cog.Predictor):
         help="Type of sound memories that can occur in the dream (list of comme-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
     )
     @cog.input(
-        "dream_length",
+        "unconscious_dream_length",
         type=float,
         default=3,
-        help="Approximative length of soundfile to generate in minutes (only for dream type)",
+        help="Approximative length in minutes of the soundfile to generate (only for unconscious dream type)",
     )
     @cog.input(
-        "max_episode_length",
+        "max_segment_length",
         type=int,
         default=60,
         min=10,
         max=60,
-        help="Maximum episodes duration in seconds. With lower values dreams will contain more episodes",
+        help="Maximum segment duration in seconds. With lower values, unconscious dreams will contain more different segments",
     )
     @cog.input(
         "max_num_sounds",
@@ -59,7 +59,7 @@ class GenDream(cog.Predictor):
         default=50,
         min=0,
         max=300,
-        help="Maximum number of simultaneous sounds. Higher values for more dense outputs",
+        help="Maximum number of simultaneous sounds. Higher values for fuller outputs",
     )
     @cog.input(
         "density",
@@ -124,13 +124,13 @@ class GenDream(cog.Predictor):
         "enhance_random",
         type=bool,
         default=False,
-        help="If true some unpredictable parameters are set to random",
+        help="If enabled some unpredictable parameters are set to random",
     )
     @cog.input(
         "complete_random",
         type=bool,
         default=False,
-        help="If true everything is random despite what is selected in the UI",
+        help="If enabled everything is random despite what is selected in the UI",
     )
     @cog.input(
         "carpet",
@@ -142,7 +142,7 @@ class GenDream(cog.Predictor):
         "fast",
         type=bool,
         default=True,
-        help="If True disables the most resource-demanding processes to speed up generation",
+        help="If enabled disables the most resource-demanding processes to speed up generation",
     )
     @cog.input(
         "cut_silence",
@@ -152,9 +152,9 @@ class GenDream(cog.Predictor):
     )
     def predict(
         self,
-        type,
-        dream_length,
-        max_episode_length,
+        sleep_type,
+        unconscious_dream_length,
+        max_segment_length,
         fast,
         max_num_sounds,
         memories,
@@ -176,10 +176,10 @@ class GenDream(cog.Predictor):
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
         self.build = BuildScene(
-            max_dur=max_episode_length, max_num_sounds=max_num_sounds
+            max_dur=max_segment_length, max_num_sounds=max_num_sounds
         )
         self.dream = Dream(
-            max_num_sounds=max_num_sounds, scene_maxdur=max_episode_length
+            max_num_sounds=max_num_sounds, scene_maxdur=max_segment_length
         )
         self.post = Postprocessing()
 
@@ -227,7 +227,7 @@ class GenDream(cog.Predictor):
             global_shift_dir = 0
 
         # compute scene if desired
-        if type == "episode":
+        if sleep_type == "conscious":
             if not complete_random:
                 mix, score = self.build.build(
                     length=1,
@@ -258,7 +258,7 @@ class GenDream(cog.Predictor):
                 )
         # or compute dream
         else:
-            mix = self.dream.random_dream(dream_length * 60, neuro_choice=choice_dict)
+            mix = self.dream.random_dream(unconscious_dream_length * 60, neuro_choice=choice_dict)
 
         # cut silences longer than 3 secs
         if cut_silence:

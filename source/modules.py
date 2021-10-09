@@ -1986,6 +1986,45 @@ class Dream:
 
         return sounds_list
 
+    '''
+    def compute_soundslist_kwargs(self, durations_list, num_workers=8, verbose=False,
+                            neuro_choice=False, fast=False, global_stretches=False, **kwargs):
+
+        #compute sounds of lenghts present in durations_list
+        
+        sounds_list = []
+        def callback_append(msp):
+            mix, score = msp
+            sounds_list.append(mix)
+
+        pool = multiprocessing.Pool(processes=num_workers)
+        print ('scene durations:')
+        print (durations_list)
+
+        #compute sounds in multithread
+        for curr_dur in durations_list:
+            print(pool._outqueue)
+            pool.apply_async(self.scene_builder.build,
+                            (length=length, density=density, score_diversity=score_diversity,
+                            sel_diversity=sel_diversity,
+                            cut_silence=cut_silence,
+                            single_model=False, fixed_category='rand', fixed_model='rand',
+                            neuro_choice=neuro_choice, fast=fase, carpet=carpet,
+                            perc_particles=perc_particles, enhance_random=enhance_random,
+                            complete_random=Falcomplete_randomse, global_rev=global_rev,
+                            global_rev_amount=global_rev_amount, global_stretch_dir=global_stretch_dir,
+                            global_stretch=global_stretch, global_shift_dir=global_shift_dir,
+                            global_shift=global_shift, verbose=False,basic_prints=True),
+
+                            callback=callback_append)
+
+
+        pool.close()
+        pool.join()
+
+        return sounds_list
+    '''
+
     def random_dream(self, dur, neuro_choice=False, fast=True, global_stretches=False):
         '''
         build dream with random parameters with a wanted duration
