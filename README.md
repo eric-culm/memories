@@ -1,6 +1,6 @@
 # Reckon
 
-This repository supports Reckon, released under [Krisis Publishing](http://www.krisispublishing.com/).
+This repository supports Eric Culm's Reckon, released under [Krisis Publishing](http://www.krisispublishing.com/).
 
 ## Description
 
@@ -14,3 +14,7 @@ The mathematical procedure at the basis of this model, as well as the resulting 
 In fact, the sound elements present in Reckon resemble blurred memories, remotely evoking the main characteristics of musical instruments and natural soundscapes, but discarding their most accurate elements that would make them real.
 
 On the other hand a semi-entropic apparatus controls SampleRNN and selects, re-elaborates, concatenate and overlaps sound memories to compose digital audio dreams. To perform this operation, the system auto-defines a hierarchy of complex semi-random rules through which create a semantic evolution of the sound material in a similar way to how happens in human biologic dreams.
+
+## Usage
+
+In this Replicate demo you can use the Reckon engine equipped with the same pretrained models used for the [release])http://www.krisispublishing.com/release.
