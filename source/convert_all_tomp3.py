@@ -35,7 +35,7 @@ def get_mp3_name(input_dir):
 
 def convert_to_mp3(wavname, mp3name):
     print (wavname)
-    AudioSegment.from_wav(wavname).export(mp3name, format="mp3", bitrate="320k")
+    AudioSegment.from_wav(wavname).export(mp3name, format="mp3", bitrate="320k", codec="libmp3lame")
 
 
 
