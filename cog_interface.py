@@ -31,7 +31,7 @@ class GenDream(cog.Predictor):
         type=str,
         default="consciuos",
         options=["consciuos", "unconscious"],
-        help="Type of AI dream. 'conscious' for shorter dreams with all UI controls, 'unconsciuous' for longer bu more unpredictable outputs",
+        help="Type of AI dream. 'conscious' for shorter dreams with all UI controls, 'unconsciuous' for longer but more unpredictable outputs",
     )
     @cog.input(
         "memories",
@@ -83,7 +83,7 @@ class GenDream(cog.Predictor):
         default=0.6,
         min=0,
         max=1,
-        help="Diversity of chosen timbres",
+        help="Diversity of chosen timbres [range 0-1]",
     )
     @cog.input(
         "perc_particles",
@@ -91,10 +91,10 @@ class GenDream(cog.Predictor):
         default=0.5,
         min=0,
         max=1,
-        help="Probability of having fast and percussive sounds",
+        help="Probability of having fast and percussive sounds [range 0-1]",
     )
     @cog.input(
-        "global_rev_amount",
+        "rev_amount",
         type=float,
         default=0.1,
         min=0,
@@ -102,13 +102,13 @@ class GenDream(cog.Predictor):
         help="Amount of global reverb [range 0-1]",
     )
     @cog.input(
-        "global_stretch",
+        "stretch",
         type=float,
         default=0,
         help="Amount of global time stretching. Negative to shorten, positive to lengthen duration",
     )
     @cog.input(
-        "global_shift",
+        "shift",
         type=float,
         default=0,
         help="Amount of global pitch shifting. Negative to decrease, positive to increase pitch",
@@ -166,9 +166,9 @@ class GenDream(cog.Predictor):
         perc_particles,
         complete_random,
         enhance_random,
-        global_rev_amount,
-        global_stretch,
-        global_shift,
+        rev_amount,
+        stretch,
+        shift,
         cut_silence,
     ):
         """Compute dream"""
@@ -211,17 +211,17 @@ class GenDream(cog.Predictor):
         print("Memories dict: ", choice_dict)
 
         # set global proccesing bools
-        if global_rev_amount == 0.0:
+        if rev_amount == 0.0:
             global_rev = False
         else:
             global_rev = True
 
-        if global_stretch >= 0.0:
+        if stretch >= 0.0:
             global_stretch_dir = 1
         else:
             global_stretch_dir = 0
 
-        if global_shift >= 0.0:
+        if shift >= 0.0:
             global_shift_dir = 1
         else:
             global_shift_dir = 0
