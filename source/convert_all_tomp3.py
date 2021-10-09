@@ -57,6 +57,7 @@ for i in folders_macro_wav:
             contents_3 = [os.path.join(m, i) for i in contents_3]
             random.shuffle(contents_3)
             for i_m in contents_3:
+                print ("creating_dir")
                 make_mp3_dirs(i_m)
             for s in contents_3:
                 contents_4 = os.listdir(s)
@@ -69,6 +70,7 @@ for i in folders_macro_wav:
                         count += 1
                         #pool.apply_async(convert_to_mp3, (soundfile,soundfile_mp3,), callback=callback_append)
                         #AudioSegment.from_wav(soundfile).export(soundfile_mp3, format="mp3", bitrate="320k")
+
 print ("To process: ", count)
 random.seed(412)
 new_count = 0
