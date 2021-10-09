@@ -24,5 +24,5 @@ With the UI parameters you have broad control on many macro details of the gener
 
 ### User parameters
 
-* cazzo
+* ‘‘‘type’’’: 
 * m,erda
