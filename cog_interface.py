@@ -27,160 +27,62 @@ class GenDream(cog.Predictor):
         analyze_irs()
 
     @cog.input(
-        "sleep_type",
-        type=str,
-        default="consciuos",
-        options=["consciuos", "unconscious"],
-        help="Type of AI dream. 'conscious' for shorter dreams with all UI controls, 'unconsciuous' for longer but more unpredictable outputs",
-    )
-    @cog.input(
         "memories",
         type=str,
         default="all",
         help="Type of sound memories that can occur in the dream (list of comme-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
     )
     @cog.input(
-        "unconscious_dream_length",
+        "dream_length",
         type=float,
-        default=3,
-        help="Approximative length in minutes of the soundfile to generate (only for unconscious dream type)",
-    )
-    @cog.input(
-        "max_segment_length",
-        type=int,
-        default=60,
-        min=10,
+        min=0.2,
         max=60,
-        help="Maximum segment duration in seconds. With lower values, unconscious dreams will contain more different segments",
-    )
-    @cog.input(
-        "max_num_sounds",
-        type=int,
-        default=50,
-        min=0,
-        max=300,
-        help="Maximum number of simultaneous sounds. Higher values for fuller outputs",
+        default=1,
+        help="Approximative length in minutes of the soundfile to generate",
     )
     @cog.input(
         "density",
         type=float,
-        default=0.8,
-        min=0,
-        max=1,
-        help="Density of sound events [range 0-1]",
-    )
-    @cog.input(
-        "score_diversity",
-        type=float,
-        default=0.6,
-        min=0,
-        max=1,
-        help="Diversity of sound archetypes choice [range 0-1]",
-    )
-    @cog.input(
-        "timbre_diversity",
-        type=float,
-        default=0.6,
-        min=0,
-        max=1,
-        help="Diversity of chosen timbres [range 0-1]",
-    )
-    @cog.input(
-        "perc_particles",
-        type=float,
         default=0.5,
         min=0,
         max=1,
-        help="Probability of having fast and percussive sounds [range 0-1]",
+        help="Maximum number of simultaneous sounds. Higher values for fuller outputs",
     )
     @cog.input(
-        "rev_amount",
+        "diversity",
         type=float,
-        default=0.1,
+        default=0.7,
         min=0,
         max=1,
-        help="Amount of global reverb [range 0-1]",
-    )
-    @cog.input(
-        "stretch",
-        type=float,
-        default=0,
-        help="Amount of global time stretching. Negative to shorten, positive to lengthen duration",
-    )
-    @cog.input(
-        "shift",
-        type=float,
-        default=0,
-        help="Amount of global pitch shifting. Negative to decrease, positive to increase pitch",
+        help="Chance to have different types of sound memories. Higher values for more variegate outputs",
     )
     @cog.input(
         "output_type",
         type=str,
         default="wav",
         options=["wav", "mp3"],
-        help="Wav or mp3 output",
+        help="Sound file output format",
     )
-    @cog.input(
-        "enhance_random",
-        type=bool,
-        default=False,
-        help="If enabled some unpredictable parameters are set to random",
-    )
-    @cog.input(
-        "complete_random",
-        type=bool,
-        default=False,
-        help="If enabled everything is random despite what is selected in the UI",
-    )
-    @cog.input(
-        "carpet",
-        type=bool,
-        default=True,
-        help="If True it is very probable that there is always a long sound at low volume",
-    )
-    @cog.input(
-        "fast",
-        type=bool,
-        default=True,
-        help="If enabled disables the most resource-demanding processes to speed up generation",
-    )
-    @cog.input(
-        "cut_silence",
-        type=bool,
-        default=True,
-        help="Cut all silences longer than 5 seconds",
-    )
+
     def predict(
         self,
-        sleep_type,
-        unconscious_dream_length,
-        max_segment_length,
-        fast,
-        max_num_sounds,
         memories,
-        output_type,
+        dream_length,
+        diversity,
         density,
-        score_diversity,
-        timbre_diversity,
-        carpet,
-        perc_particles,
-        complete_random,
-        enhance_random,
-        rev_amount,
-        stretch,
-        shift,
-        cut_silence,
+        output_type,
     ):
         """Compute dream"""
-        # init paths and classes
+        cut_silence = True
+
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
-        self.build = BuildScene(
-            max_dur=max_segment_length, max_num_sounds=max_num_sounds
-        )
-        self.dream = Dream(
-            max_num_sounds=max_num_sounds, scene_maxdur=max_segment_length
-        )
+
+        max_num_sounds = np.interp(density, [0.,1.], [10,100])
+        max_segment_length = np.interp(diversity, [0.,1.], [120,10])
+
+        self.dream = Dream(max_num_sounds=max_num_sounds,
+                            scene_maxdur=max_segment_length)
         self.post = Postprocessing()
 
         memories = memories.replace(" ", "")
@@ -210,55 +112,7 @@ class GenDream(cog.Predictor):
 
         print("Memories dict: ", choice_dict)
 
-        # set global proccesing bools
-        if rev_amount == 0.0:
-            global_rev = False
-        else:
-            global_rev = True
-
-        if stretch >= 0.0:
-            global_stretch_dir = 1
-        else:
-            global_stretch_dir = 0
-
-        if shift >= 0.0:
-            global_shift_dir = 1
-        else:
-            global_shift_dir = 0
-
-        # compute scene if desired
-        if sleep_type == "conscious":
-            if not complete_random:
-                mix, score = self.build.build(
-                    length=1,
-                    density=density,
-                    score_diversity=score_diversity,
-                    sel_diversity=timbre_diversity,
-                    single_model=False,
-                    fixed_category=False,
-                    fixed_model=False,
-                    neuro_choice=choice_dict,
-                    fast=fast,
-                    carpet=carpet,
-                    perc_particles=perc_particles,
-                    enhance_random=enhance_random,
-                    complete_random=False,
-                    global_rev=global_rev,
-                    global_rev_amount=global_rev_amount,
-                    global_stretch_dir=global_stretch_dir,
-                    global_stretch=0,
-                    global_shift_dir=global_shift_dir,
-                    global_shift=global_shift,
-                    verbose=False,
-                )
-
-            else:
-                mix, score, p = self.build.random_build(
-                    length=1, neuro_choice=choice_dict
-                )
-        # or compute dream
-        else:
-            mix = self.dream.random_dream(unconscious_dream_length * 60, neuro_choice=choice_dict)
+        mix = self.dream.random_dream(dream_length * 60, neuro_choice=choice_dict)
 
         # cut silences longer than 3 secs
         if cut_silence:
@@ -273,7 +127,6 @@ class GenDream(cog.Predictor):
 
         # convert to mp3 if desired
         if output_type == "mp3":
-
             subprocess.check_output(
                 [
                     "ffmpeg",
@@ -284,7 +137,6 @@ class GenDream(cog.Predictor):
                     str(output_path_mp3),
                 ],
             )
-
             # AudioSegment.from_wav(output_path_wav).export(output_path_mp3, format="mp3", bitrate="320k")
             return output_path_mp3
         else:

@@ -21,20 +21,8 @@ With the UI parameters you have broad control on many macro details of the gener
 
 ### User parameters
 
-* ```sleep_type```: *conscious* or *unconscious* . When set to *conscious*, dreams are shorter segments with a length up to 60 seconds, but you have full control over the UI parameters. *unconscious* dreams instead can have any duration, even of several minutes, but in this modality only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories', parameters have an effect".
-* ```memories```: list of sound memories that a dream or episode can contain. This gives you control over the timbre types that will be included in the dream or episode.
-* ```dream_length```: length of the generated *unconscious* sound dream in minutes.
-* ```max_segment_length```: maximum length of segments in a dream. With lower values, unconscious dreams will contain more different segments.
-* ```max_num_sounds```: maximum number of simultaneous sounds that can occur. Larger values produce fuller mixes.
-* ```density```: the sound density of the generated segments [in a 0-1 range]. Higher values for more dense mixes.
-* ```score_diversity```: diversity of generated sound archetypes [in a 0-1 range]. Lower values produce mixes with sounds that are mode similar one another.
-* ```timbre_diversity```: diversity of timbres selection [in a 0-1 range]. Lower values produce mixes with sounds that are mode similar one another.
-* ```perc_particles```: percentage of sounds that belong to the *particle* archetype [in a 0-1 range]. Higher values produce a higher number of short and percussive sounds.
-* ```global_rev_amount```: amount of reverb applied to the whole generated sound dream [in a 0-1 range]. The reverb type is randomly chosen each time.
-* ```global_stretch```: Amount of global time stretching. Negative to shorten, positive to lengthen duration. You can experiment values up to hundreds.
-* ```global_shift```: Amount of global pitch shifting. Negative to decrease, positive to increase pitch. You can experiment values up to hundreds.
-* ```output_type```: Output audio format. Can be *wav* or *mp3*.
-* ```enhance_random```: If enabled, some unpredictable parameters are set to random.
-* ```complete_random```: If enabled everything is random despite what is selected in the UI.
-* ```fast```: If enabled disables the most resource-demanding processes to speed up generation. It is recommended to keep this enabled.
-* ```cut_silence```. If enabled, all silences longer than 5 seconds are removed from the sound dream. This may shorten the selected dream duration.
+* ```memories```: list of sound memories that a dream or episode can contain. This gives you control over the timbre types that will be included in the sound dream.
+* ```dream_length```: length of the generated sound dream in minutes. The actual duration may be shorter than this setting due to post-processing. Up do one-hour dreams can be generated!
+* ```density```: this parameter is connected with maximum number of simultaneous sounds that can occur [range 0-1]. Larger values produce fuller mixes.
+* ```diversity```: this parameter sets maximum duration of memories in a dream [range 0-1]. With higher values the sound dreams will contain more diverse segments.
+* ```output_type```: File format of the (downloadable) generated sound dream. Can be *wav* or *mp3*.
