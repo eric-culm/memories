@@ -46,7 +46,7 @@ class GenDream(cog.Predictor):
         default=0.5,
         min=0,
         max=1,
-        help="Maximum number of simultaneous sounds. Higher values for fuller outputs",
+        help="Maximum number of simultaneous sounds. Higher values for fuller outputs [0-1 range]",
     )
     @cog.input(
         "diversity",
@@ -54,7 +54,7 @@ class GenDream(cog.Predictor):
         default=0.7,
         min=0,
         max=1,
-        help="Chance to have different types of sound memories. Higher values for more variegate outputs",
+        help="Chance to have different types of sound memories. Higher values for more variegate outputs [0-1 range]",
     )
     @cog.input(
         "output_type",
