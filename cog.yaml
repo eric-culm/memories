@@ -2,21 +2,21 @@ build:
   python_version: "3.7"
   gpu: false
   python_packages:
-    - scikit-learn==0.24.2
-    - scipy==1.6.2
-    - torch==1.7.1  --no-cache-dir
-    - librosa==0.8.0
-    - matplotlib==3.3.4
-    - pydub==0.23.1
-    - soundfile==0.10.3.post1
-    - pyrubberband==0.3.0
-    - sounddevice==0.3.14
-    - configparser==5.0.2
+    - scikit-learn==0.24.2 --default-timeout=100
+    - scipy==1.6.2 --default-timeout=100
+    - torch==1.7.1  --no-cache-dir --default-timeout=100
+    - librosa==0.8.0 --default-timeout=100
+    - matplotlib==3.3.4 --default-timeout=100
+    - pydub==0.23.1 --default-timeout=100
+    - soundfile==0.10.3.post1 --default-timeout=100
+    - pyrubberband==0.3.0 --default-timeout=100
+    - sounddevice==0.3.14 --default-timeout=100
+    - configparser==5.0.2 --default-timeout=100
   system_packages:
     - "sox"
     - "ffmpeg"
     - "libportaudio2"
     - "rubberband-cli"
   run:
-    - "pip install audtorch"
+    - "pip install audtorch --default-timeout=100"
 predict: "cog_interface.py:GenDream"

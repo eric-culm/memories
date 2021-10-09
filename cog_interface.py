@@ -31,21 +31,27 @@ class GenDream(cog.Predictor):
         type=str,
         default="episode",
         options=["episode", "dream"],
-        help="Type of file to generate. Episode is a single scenario, dream is a concatenation of episodes. For 'dream' only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories_instrumental', 'memories_soundscape' parameters have an effect",
+        help="Type of file to generate. Episode is a single scenario, dream is a concatenation of episodes. For 'dream' only 'fast', 'max_num_sounds', 'dream_length', 'max_episode_length', 'memories', parameters have an effect",
+    )
+    @cog.input(
+        "memories",
+        type=str,
+        default="all",
+        help="Type of sound memories that can occur in the dream (list of comme-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
     )
     @cog.input(
         "dream_length",
         type=float,
         default=3,
-        help="Soundfile length in minutes (approximative), only for dream type",
+        help="Approximative length of soundfile to generate in minutes (only for dream type)",
     )
     @cog.input(
         "max_episode_length",
         type=int,
         default=60,
-        min=20,
+        min=10,
         max=60,
-        help="Maximum episodes duration in seconds",
+        help="Maximum episodes duration in seconds. With lower values dreams will contain more episodes",
     )
     @cog.input(
         "max_num_sounds",
@@ -53,15 +59,8 @@ class GenDream(cog.Predictor):
         default=50,
         min=0,
         max=300,
-        help="Maximum number of simultaneous sounds",
+        help="Maximum number of simultaneous sounds. Higher values for more dense outputs",
     )
-    @cog.input(
-        "memories",
-        type=str,
-        default="all",
-        help="Type of memories that can occur in the dream. Should be a list of strings. Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
-    )
-
     @cog.input(
         "density",
         type=float,
@@ -87,30 +86,12 @@ class GenDream(cog.Predictor):
         help="Diversity of chosen timbres",
     )
     @cog.input(
-        "carpet",
-        type=bool,
-        default=True,
-        help="If True it is very probable that there is always a long sound at low volume",
-    )
-    @cog.input(
         "perc_particles",
         type=float,
         default=0.5,
         min=0,
         max=1,
         help="Probability of having fast and percussive sounds",
-    )
-    @cog.input(
-        "enhance_random",
-        type=bool,
-        default=False,
-        help="If true some unpredictable parameters are set to random",
-    )
-    @cog.input(
-        "complete_random",
-        type=bool,
-        default=False,
-        help="If true everything is random despite what is selected in the UI",
     )
     @cog.input(
         "global_rev_amount",
@@ -138,6 +119,24 @@ class GenDream(cog.Predictor):
         default="wav",
         options=["wav", "mp3"],
         help="Wav or mp3 output",
+    )
+    @cog.input(
+        "enhance_random",
+        type=bool,
+        default=False,
+        help="If true some unpredictable parameters are set to random",
+    )
+    @cog.input(
+        "complete_random",
+        type=bool,
+        default=False,
+        help="If true everything is random despite what is selected in the UI",
+    )
+    @cog.input(
+        "carpet",
+        type=bool,
+        default=True,
+        help="If True it is very probable that there is always a long sound at low volume",
     )
     @cog.input(
         "fast",
