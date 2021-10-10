@@ -1,8 +1,6 @@
-Install 2 separate conda environments to run the trainings
+Install 2 separate conda environments
 
-1st env is for the general memories environment
-  -It can have any name
-  -you must install:
+- The 1st one can have any name and must have:
       - scikit-learn==0.24.2
       - scipy==1.6.2
       - torch==1.7.1
@@ -14,9 +12,9 @@ Install 2 separate conda environments to run the trainings
       - sounddevice==0.3.14
       - configparser==5.0.2
 
--2nd is for samplernn (only required to train/inference with the models):
+-The 2nd one is only needed for samplernn (only required to train the models):
   -you must call this 'samplernn'
-  -you must install:  librosa==0.5.1
+  -it must contain:  librosa==0.5.1
                       matplotlib==2.1.0
                       natsort==5.1.0
                       torch==0.4.1

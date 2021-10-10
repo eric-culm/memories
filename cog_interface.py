@@ -63,7 +63,6 @@ class GenDream(cog.Predictor):
         options=["wav", "mp3"],
         help="Sound file output format",
     )
-
     def predict(
         self,
         memories,
@@ -78,16 +77,17 @@ class GenDream(cog.Predictor):
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
 
-        max_num_sounds = np.interp(density, [0.,1.], [10,100])
-        max_segment_length = np.interp(diversity, [0.,1.], [120,10])
+        max_num_sounds = np.interp(density, [0.0, 1.0], [10, 100])
+        max_segment_length = np.interp(diversity, [0.0, 1.0], [120, 10])
 
-        self.dream = Dream(max_num_sounds=max_num_sounds,
-                            scene_maxdur=max_segment_length)
+        self.dream = Dream(
+            max_num_sounds=max_num_sounds, scene_maxdur=max_segment_length
+        )
         self.post = Postprocessing()
 
         memories = memories.replace(" ", "")
 
-        if 'all' in memories:
+        if "all" in memories:
             choice_dict = sc.check_available_models()
         else:
             choice_dict = {"instrumental": [], "fieldrec": []}
@@ -95,11 +95,11 @@ class GenDream(cog.Predictor):
             available_fieldrec = sc.check_available_models()["fieldrec"]
 
             memories = memories.split(",")
-            print (available_instrumental)
-            print (available_fieldrec)
+            print(available_instrumental)
+            print(available_fieldrec)
 
             for i in memories:
-                print (i)
+                print(i)
                 if i in available_instrumental:
                     choice_dict["instrumental"].append(i)
                 if i in available_fieldrec:
