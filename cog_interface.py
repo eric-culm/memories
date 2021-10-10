@@ -30,7 +30,7 @@ class GenDream(cog.Predictor):
         "memories",
         type=str,
         default="all",
-        help="Type of sound memories that can occur in the dream (list of comme-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
+        help="Type of sound memories that can occur in the dream (list of comma-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
     )
     @cog.input(
         "dream_length",
@@ -38,7 +38,7 @@ class GenDream(cog.Predictor):
         min=0.2,
         max=60,
         default=1,
-        help="Approximative length in minutes of the soundfile to generate",
+        help="Approximate length of the soundfile to generate (in minutes)",
     )
     @cog.input(
         "density",
@@ -46,7 +46,7 @@ class GenDream(cog.Predictor):
         default=0.5,
         min=0,
         max=1,
-        help="Maximum number of simultaneous sounds. Higher values for fuller outputs [0-1 range]",
+        help="Increase the amount of simultaneous sounds. Higher values for fuller outputs [0-1 range]",
     )
     @cog.input(
         "diversity",
@@ -59,7 +59,7 @@ class GenDream(cog.Predictor):
     @cog.input(
         "output_type",
         type=str,
-        default="wav",
+        default="mp3",
         options=["wav", "mp3"],
         help="Sound file output format",
     )
