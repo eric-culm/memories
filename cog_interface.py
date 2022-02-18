@@ -33,42 +33,42 @@ class GenDream(cog.Predictor):
         help="Type of sound memories that can occur in the dream (list of comma-divided items). Options: all, africanPercs, ambient1, buchla, buchla2, classical, classical2, guitarAcoustic, guitarBaroque, jazz, organ, percsWar, percussions, pianoChill, pianoDreamy, pianoSmooth, airport, birdsStreet, forest, library, mixed, office, rain, sea, train, wind",
     )
     @cog.input(
-        "dream_length",
+        "length",
         type=float,
         min=0.2,
-        max=60,
+        max=10,
         default=1,
-        help="Approximate length of the soundfile to generate (in minutes)",
+        help="Approximate length of the dream (in minutes)",
     )
     @cog.input(
-        "density",
+        "depth",
         type=float,
         default=0.5,
         min=0,
         max=1,
-        help="Increase the amount of simultaneous sounds. Higher values for fuller outputs [0-1 range]",
+        help="Dream depth",
     )
     @cog.input(
-        "diversity",
+        "unconsciousness",
         type=float,
         default=0.7,
         min=0,
         max=1,
-        help="Chance to have different types of sound memories. Higher values for more variegate outputs [0-1 range]",
+        help="Unconsciousness level",
     )
     @cog.input(
         "output_type",
         type=str,
         default="mp3",
         options=["wav", "mp3"],
-        help="Sound file output format",
+        help="Output format",
     )
     def predict(
         self,
         memories,
         dream_length,
-        diversity,
-        density,
+        depth,
+        unconsciousness,
         output_type,
     ):
         """Compute dream"""
@@ -77,8 +77,8 @@ class GenDream(cog.Predictor):
         output_path_wav = Path(tempfile.mkdtemp()) / "output.wav"
         output_path_mp3 = Path(tempfile.mkdtemp()) / "output.mp3"
 
-        max_num_sounds = np.interp(density, [0.0, 1.0], [10, 100])
-        max_segment_length = np.interp(diversity, [0.0, 1.0], [120, 10])
+        max_num_sounds = np.interp(unconsciousness, [0.0, 1.0], [10, 100])
+        max_segment_length = np.interp(depth, [0.0, 1.0], [120, 10])
 
         self.dream = Dream(
             max_num_sounds=max_num_sounds, scene_maxdur=max_segment_length
