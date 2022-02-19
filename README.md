@@ -22,7 +22,7 @@ With the UI parameters you have broad control on many macro details of the gener
 ### User parameters
 
 * ```memories```: list of sound memories that a dream or episode can contain. This gives you control over the timbre types that will be included in the sound dream.
-* ```dream_length```: length of the generated sound dream in minutes. The actual duration may be shorter than this setting due to post-processing. Up do one-hour dreams can be generated!
-* ```density```: this parameter is connected with maximum number of simultaneous sounds that can occur [range 0-1]. Larger values produce fuller mixes.
-* ```diversity```: this parameter sets maximum duration of memories in a dream [range 0-1]. With higher values the sound dreams will contain more diverse segments.
+* ```length```: length of the generated sound dream in minutes. The actual duration may be shorter than this setting due to post-processing. Up do one-hour dreams can be generated!
+* ```depth```: this parameter is connected with maximum number of simultaneous sounds that can occur [range 0-1]. Larger values produce fuller mixes.
+* ```unconsciousness```: this parameter sets maximum duration of memories in a dream [range 0-1]. With higher values the sound dreams will contain more diverse segments.
 * ```output_type```: File format of the (downloadable) generated sound dream. Can be *wav* or *mp3*.

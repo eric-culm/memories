@@ -66,7 +66,7 @@ class GenDream(cog.Predictor):
     def predict(
         self,
         memories,
-        dream_length,
+        length,
         depth,
         unconsciousness,
         output_type,
