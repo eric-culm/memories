@@ -112,7 +112,7 @@ class GenDream(cog.Predictor):
 
         print("Memories dict: ", choice_dict)
 
-        mix = self.dream.random_dream(dream_length * 60, neuro_choice=choice_dict)
+        mix = self.dream.random_dream(length * 60, neuro_choice=choice_dict)
 
         # cut silences longer than 3 secs
         if cut_silence:
